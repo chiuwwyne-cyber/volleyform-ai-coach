@@ -120,8 +120,14 @@ def main():
         raise SystemExit("PWA manifest and offline shell must be configured")
     if "PoseLandmarker" not in local_analyzer or "HandLandmarker" not in local_analyzer:
         raise SystemExit("Fixed site must include local MediaPipe pose and hand analysis")
-    if "detectForVideo" not in local_analyzer or "analyzeVideoLocally" not in js:
-        raise SystemExit("Frontend must fall back to local video analysis without a backend")
+    if "detectForVideo" not in local_analyzer or "analyzeMediaLocally" not in js:
+        raise SystemExit("Frontend must fall back to local photo/video analysis without a backend")
+    if 'accept="video/*,image/*"' not in html or "analyzeImageLocally" not in local_analyzer:
+        raise SystemExit("Mobile users must be able to select and analyze album photos")
+    if "startRealtimeAnalysis" not in local_analyzer or 'id="startLiveBtn"' not in html:
+        raise SystemExit("Frontend must support on-device realtime camera analysis")
+    if 'id="poseOverlay"' not in html or ".live-feedback" not in css:
+        raise SystemExit("Realtime landmarks and coaching feedback must have dedicated UI")
     if "actions/deploy-pages" not in pages_workflow or "BACKEND_URL" not in pages_workflow:
         raise SystemExit("GitHub Pages workflow must publish the fixed site and API config")
     if "volleyform-ai-api" not in render_config or "healthCheckPath" not in render_config:

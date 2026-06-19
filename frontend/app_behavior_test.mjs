@@ -135,6 +135,10 @@ class FakeDocument {
     this.elements.get("localBackendBtn").tagName = "BUTTON";
     this.elements.get("healthCheckBtn").tagName = "BUTTON";
     this.elements.get("recordPreview").tagName = "VIDEO";
+    this.elements.get("imagePreview").tagName = "IMG";
+    this.elements.get("poseOverlay").tagName = "CANVAS";
+    this.elements.get("startLiveBtn").tagName = "BUTTON";
+    this.elements.get("stopLiveBtn").tagName = "BUTTON";
     this.elements.get("startRecordBtn").tagName = "BUTTON";
     this.elements.get("stopRecordBtn").tagName = "BUTTON";
     this.elements.get("clearRecordBtn").tagName = "BUTTON";
@@ -181,7 +185,15 @@ function makeContext() {
     "modalityList",
     "modalityResults",
     "recordPreview",
+    "imagePreview",
+    "poseOverlay",
+    "liveFeedback",
+    "liveStatus",
+    "liveCue",
+    "liveMetrics",
     "recordStatus",
+    "startLiveBtn",
+    "stopLiveBtn",
     "startRecordBtn",
     "stopRecordBtn",
     "clearRecordBtn",
@@ -264,6 +276,8 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.equal(typeof context.document.querySelector("#localBackendBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#healthCheckBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#startRecordBtn").events.click, "function");
+  assert.equal(typeof context.document.querySelector("#startLiveBtn").events.click, "function");
+  assert.equal(typeof context.document.querySelector("#stopLiveBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#stopRecordBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#clearRecordBtn").events.click, "function");
   assert.match(source, /maxRecordingMs = 12000/);
@@ -271,6 +285,8 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(source, /process_width: "480"/);
   assert.match(source, /runtimeConfig\.apiBase/);
   assert.match(source, /serviceWorker\.register/);
+  assert.match(source, /analyzeMediaLocally/);
+  assert.match(source, /startRealtimeAnalysis/);
 
   const backendUrl = context.document.querySelector("#backendUrl");
   backendUrl.value = "http://192.168.1.10:8000/";

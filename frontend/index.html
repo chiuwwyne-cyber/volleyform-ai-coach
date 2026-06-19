@@ -100,18 +100,28 @@
         <div class="preview-column">
           <div class="preview-frame">
             <video id="recordPreview" playsinline muted></video>
+            <img id="imagePreview" alt="待分析的動作照片" hidden />
+            <canvas id="poseOverlay" aria-hidden="true"></canvas>
             <div class="preview-placeholder" id="previewPlaceholder">
               <span aria-hidden="true">●</span>
-              <strong>影片預覽</strong>
+              <strong>照片或影片預覽</strong>
               <small>建議全身、手腕和腳踝都入鏡</small>
             </div>
           </div>
+          <div class="live-feedback" id="liveFeedback" aria-live="polite">
+            <span class="live-indicator" aria-hidden="true"></span>
+            <div>
+              <small id="liveStatus">即時分析尚未開啟</small>
+              <strong id="liveCue">選擇動作後，可直接用鏡頭取得修正提示</strong>
+              <span id="liveMetrics">手機省電模式約每秒分析 3 次</span>
+            </div>
+          </div>
           <label class="upload-zone" id="dropZone">
-            <input id="video" type="file" accept="video/*" capture="environment" />
+            <input id="video" type="file" accept="video/*,image/*" />
             <span class="upload-icon" aria-hidden="true">↑</span>
             <span>
-              <strong>上傳影片</strong>
-              <small id="fileName">支援 mp4、mov、webm，最大 180MB</small>
+              <strong>從手機相簿選擇</strong>
+              <small id="fileName">支援照片、mp4、mov、webm，最大 180MB</small>
             </span>
           </label>
         </div>
@@ -130,6 +140,12 @@
             <div><strong>3</strong><span>光線充足</span></div>
           </div>
           <div class="record-actions">
+            <button class="live-btn" id="startLiveBtn" type="button">
+              <span aria-hidden="true">◎</span>開啟即時分析
+            </button>
+            <button class="live-btn stop" id="stopLiveBtn" type="button" disabled>
+              <span aria-hidden="true">■</span>停止即時
+            </button>
             <button class="secondary-btn" id="startRecordBtn" type="button">
               <span aria-hidden="true">●</span>開始錄影
             </button>

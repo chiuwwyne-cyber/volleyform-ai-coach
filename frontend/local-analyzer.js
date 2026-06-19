@@ -185,6 +185,29 @@ const FEEDBACK = {
 let visionFilesetPromise;
 let poseLandmarkerPromise;
 let handLandmarkerPromise;
+let lastPoseTimestamp = -1;
+let lastHandTimestamp = -1;
+
+const POSE_CONNECTIONS = [
+  [0, 1], [1, 2], [2, 3], [3, 7],
+  [0, 4], [4, 5], [5, 6], [6, 8],
+  [9, 10], [11, 12], [11, 13], [13, 15],
+  [15, 17], [15, 19], [15, 21], [17, 19],
+  [12, 14], [14, 16], [16, 18], [16, 20],
+  [16, 22], [18, 20], [11, 23], [12, 24],
+  [23, 24], [23, 25], [24, 26], [25, 27],
+  [26, 28], [27, 29], [28, 30], [29, 31],
+  [30, 32], [27, 31], [28, 32],
+];
+
+const HAND_CONNECTIONS = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20],
+  [0, 17],
+];
 
 function assetUrl(relativePath) {
   return new URL(relativePath, import.meta.url).href;
@@ -236,6 +259,23 @@ async function handLandmarker() {
     );
   }
   return handLandmarkerPromise;
+}
+
+function nextTimestamp(requested, previous) {
+  return Math.max(Math.round(requested), previous + 1);
+}
+
+function detectPose(detector, source, requestedTimestamp) {
+  const timestamp = nextTimestamp(requestedTimestamp, lastPoseTimestamp);
+  lastPoseTimestamp = timestamp;
+  return detector.detectForVideo(source, timestamp);
+}
+
+function detectHands(detector, source, requestedTimestamp) {
+  if (!detector) return null;
+  const timestamp = nextTimestamp(requestedTimestamp, lastHandTimestamp);
+  lastHandTimestamp = timestamp;
+  return detector.detectForVideo(source, timestamp);
 }
 
 function average(values) {
@@ -459,6 +499,61 @@ function sampleCountForMode(mode) {
   return 26;
 }
 
+function analysisResult({
+  action,
+  powerMode,
+  modalities,
+  sampleCount,
+  issueCounts,
+  timeline,
+  angleSums,
+  handSums,
+  poseFrames,
+  handFrames,
+  goodFrames,
+  engine = "mediapipe-web-local",
+}) {
+  const primaryIssues = [...issueCounts.entries()]
+    .map(([code, count]) => issuePayload(code, count))
+    .sort(
+      (a, b) =>
+        SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
+    )
+    .slice(0, 6);
+  const actionLabel = ACTION_LABELS[action] || action;
+  const score = poseFrames ? Math.round((goodFrames / poseFrames) * 100) : 0;
+  const modality = modalityPayload(
+    poseFrames,
+    handFrames,
+    modalities,
+    angleSums,
+    handSums,
+  );
+
+  return {
+    action,
+    action_label: actionLabel,
+    processed_frames: poseFrames,
+    good_frames: goodFrames,
+    score,
+    primary_issues: primaryIssues,
+    timeline,
+    coach_summary: poseFrames
+      ? primaryIssues.length
+        ? `最需要先修正的是「${primaryIssues[0].title}」。${primaryIssues[0].message}`
+        : `${actionLabel}整體看起來穩定，請繼續保持完整熱身與落地控制。`
+      : "沒有成功讀到可分析的姿勢。請確認人物全身入鏡、光線足夠。",
+    coach_plan: coachPlan(primaryIssues, actionLabel, poseFrames),
+    ...modality,
+    settings: {
+      engine,
+      power_mode: powerMode,
+      sample_count: sampleCount,
+      modalities,
+    },
+  };
+}
+
 export async function analyzeVideoLocally({
   file,
   action,
@@ -496,8 +591,8 @@ export async function analyzeVideoLocally({
     for (let index = 0; index < sampleCount; index += 1) {
       const time = sampleCount === 1 ? 0 : (duration * index) / (sampleCount - 1);
       await seekVideo(video, Math.min(time, Math.max(0, duration - 0.001)));
-      const timestampMs = index * 1000;
-      const poseResult = pose.detectForVideo(video, timestampMs);
+      const timestampMs = performance.now();
+      const poseResult = detectPose(pose, video, timestampMs);
       const poseLandmarks = poseResult.landmarks?.[0];
       if (!poseLandmarks) {
         onProgress(`分析影格 ${index + 1}/${sampleCount}`, (index + 1) / sampleCount);
@@ -506,7 +601,7 @@ export async function analyzeVideoLocally({
       }
 
       const { angles, positions } = poseFeatures(poseLandmarks);
-      const handResult = hands ? hands.detectForVideo(video, timestampMs) : null;
+      const handResult = detectHands(hands, video, timestampMs);
       const features = handFeatures(handResult?.landmarks || []);
       const frameIssues = checkAction(action, angles, positions, features);
 
@@ -548,48 +643,289 @@ export async function analyzeVideoLocally({
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
-    const primaryIssues = [...issueCounts.entries()]
-      .map(([code, count]) => issuePayload(code, count))
-      .sort(
-        (a, b) =>
-          SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
-      )
-      .slice(0, 6);
-    const actionLabel = ACTION_LABELS[action] || action;
-    const score = poseFrames ? Math.round((goodFrames / poseFrames) * 100) : 0;
-    const modality = modalityPayload(
-      poseFrames,
-      handFrames,
+    return analysisResult({
+      action,
+      powerMode,
       modalities,
+      sampleCount,
+      issueCounts,
+      timeline,
       angleSums,
       handSums,
-    );
-
-    return {
-      action,
-      action_label: actionLabel,
-      processed_frames: poseFrames,
-      good_frames: goodFrames,
-      score,
-      primary_issues: primaryIssues,
-      timeline,
-      coach_summary: poseFrames
-        ? primaryIssues.length
-          ? `最需要先修正的是「${primaryIssues[0].title}」。${primaryIssues[0].message}`
-          : `${actionLabel}整體看起來穩定，請繼續保持完整熱身與落地控制。`
-        : "沒有成功讀到可分析的姿勢。請確認人物全身入鏡、光線足夠。",
-      coach_plan: coachPlan(primaryIssues, actionLabel, poseFrames),
-      ...modality,
-      settings: {
-        engine: "mediapipe-web-local",
-        power_mode: powerMode,
-        sample_count: sampleCount,
-        modalities,
-      },
-    };
+      poseFrames,
+      handFrames,
+      goodFrames,
+    });
   } finally {
     video.removeAttribute("src");
     video.load();
     URL.revokeObjectURL(objectUrl);
   }
+}
+
+function imageMaxDimension(powerMode) {
+  if (powerMode === "quality") return 1280;
+  if (powerMode === "balanced") return 960;
+  return 720;
+}
+
+async function loadImage(file) {
+  const objectUrl = URL.createObjectURL(file);
+  const image = document.createElement("img");
+  image.src = objectUrl;
+  image.decoding = "async";
+  try {
+    if (typeof image.decode === "function") {
+      await image.decode();
+    } else {
+      await waitForEvent(image, "load");
+    }
+    return { image, objectUrl };
+  } catch (error) {
+    URL.revokeObjectURL(objectUrl);
+    throw error;
+  }
+}
+
+export async function analyzeImageLocally({
+  file,
+  action,
+  powerMode = "mobile",
+  modalities = ["pose", "hands"],
+  onProgress = () => {},
+}) {
+  const { image, objectUrl } = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { alpha: false });
+
+  try {
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    if (!sourceWidth || !sourceHeight || !context) {
+      throw new Error("無法讀取這張照片，請改用 JPG 或 PNG 後再試。");
+    }
+
+    const maxDimension = imageMaxDimension(powerMode);
+    const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    onProgress("載入手機端姿勢模型", 0);
+    const pose = await poseLandmarker();
+    const needsHands = modalities.includes("hands");
+    const hands = needsHands ? await handLandmarker() : null;
+    const requestedTimestamp = performance.now();
+    const poseResult = detectPose(pose, canvas, requestedTimestamp);
+    const poseLandmarks = poseResult.landmarks?.[0];
+    const issueCounts = new Map();
+    const timeline = [];
+    const angleSums = { elbow: 0, knee: 0 };
+    const handSums = { extension: 0, gap: 0 };
+    let poseFrames = 0;
+    let handFrames = 0;
+    let goodFrames = 0;
+
+    if (poseLandmarks) {
+      const { angles, positions } = poseFeatures(poseLandmarks);
+      const handResult = detectHands(hands, canvas, requestedTimestamp);
+      const features = handFeatures(handResult?.landmarks || []);
+      const frameIssues = checkAction(action, angles, positions, features);
+
+      poseFrames = 1;
+      angleSums.elbow = angles.elbow;
+      angleSums.knee = angles.knee;
+      if (features.hands_detected > 0) {
+        handFrames = 1;
+        handSums.extension = features.finger_extension || 0;
+        handSums.gap = features.hand_center_gap || 0;
+      }
+      goodFrames = frameIssues.length ? 0 : 1;
+      for (const code of frameIssues) issueCounts.set(code, 1);
+      timeline.push({
+        frame: 1,
+        ok: frameIssues.length === 0,
+        issues: frameIssues.map((code) => ({
+          code,
+          title: FEEDBACK[code].title,
+          severity: FEEDBACK[code].severity,
+        })),
+      });
+    }
+
+    onProgress("照片分析完成", 1);
+    return analysisResult({
+      action,
+      powerMode,
+      modalities,
+      sampleCount: 1,
+      issueCounts,
+      timeline,
+      angleSums,
+      handSums,
+      poseFrames,
+      handFrames,
+      goodFrames,
+      engine: "mediapipe-web-local-image",
+    });
+  } finally {
+    context?.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = 1;
+    canvas.height = 1;
+    image.removeAttribute("src");
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+export function analyzeMediaLocally(options) {
+  if (options.file?.type?.startsWith("image/")) {
+    return analyzeImageLocally(options);
+  }
+  return analyzeVideoLocally(options);
+}
+
+const REALTIME_INTERVALS = {
+  mobile: 360,
+  balanced: 240,
+  quality: 150,
+};
+
+function drawLandmarks(context, landmarks, connections, color, pointColor, width) {
+  if (!landmarks?.length) return;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.lineWidth = width;
+  context.strokeStyle = color;
+  for (const [from, to] of connections) {
+    const first = landmarks[from];
+    const second = landmarks[to];
+    if (!first || !second) continue;
+    context.beginPath();
+    context.moveTo(first.x * context.canvas.width, first.y * context.canvas.height);
+    context.lineTo(second.x * context.canvas.width, second.y * context.canvas.height);
+    context.stroke();
+  }
+  context.fillStyle = pointColor;
+  for (const point of landmarks) {
+    context.beginPath();
+    context.arc(
+      point.x * context.canvas.width,
+      point.y * context.canvas.height,
+      Math.max(2.5, width * 0.85),
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+  }
+}
+
+function drawRealtimeOverlay(canvas, video, poseLandmarks, handLandmarks) {
+  const width = video.videoWidth || 1;
+  const height = video.videoHeight || 1;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  const context = canvas.getContext("2d");
+  context.clearRect(0, 0, width, height);
+  const lineWidth = Math.max(2, Math.round(width / 360));
+  drawLandmarks(context, poseLandmarks, POSE_CONNECTIONS, "#ffffff", "#ed5d38", lineWidth);
+  for (const hand of handLandmarks || []) {
+    drawLandmarks(context, hand, HAND_CONNECTIONS, "#ffd34f", "#1bd6a0", lineWidth);
+  }
+}
+
+function realtimeIssuePayload(history) {
+  const counts = new Map();
+  for (const codes of history) {
+    for (const code of codes) counts.set(code, (counts.get(code) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([code, count]) => issuePayload(code, count))
+    .sort(
+      (a, b) =>
+        SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
+    )
+    .slice(0, 3);
+}
+
+export async function startRealtimeAnalysis({
+  video,
+  canvas,
+  getAction,
+  getModalities = () => ["pose", "hands"],
+  getPowerMode = () => "mobile",
+  onUpdate = () => {},
+}) {
+  const pose = await poseLandmarker();
+  const needsHands = getModalities().includes("hands");
+  const hands = needsHands ? await handLandmarker() : null;
+  const issueHistory = [];
+  let animationFrame = 0;
+  let stopped = false;
+  let lastProcessedAt = 0;
+  let frameCounter = 0;
+  let fpsWindowStart = performance.now();
+  let measuredFps = 0;
+
+  const processFrame = (now) => {
+    if (stopped) return;
+    animationFrame = requestAnimationFrame(processFrame);
+    const interval = REALTIME_INTERVALS[getPowerMode()] || REALTIME_INTERVALS.mobile;
+    if (video.readyState < 2 || now - lastProcessedAt < interval) return;
+    lastProcessedAt = now;
+
+    const poseResult = detectPose(pose, video, now);
+    const poseLandmarks = poseResult.landmarks?.[0];
+    if (!poseLandmarks) {
+      issueHistory.length = 0;
+      drawRealtimeOverlay(canvas, video, null, []);
+      onUpdate({ poseDetected: false, issues: [], fps: measuredFps });
+      return;
+    }
+
+    const modalities = getModalities();
+    const handResult = modalities.includes("hands") ? detectHands(hands, video, now) : null;
+    const handLandmarks = handResult?.landmarks || [];
+    const { angles, positions } = poseFeatures(poseLandmarks);
+    const handData = handFeatures(handLandmarks);
+    const frameIssues = checkAction(getAction(), angles, positions, handData);
+    issueHistory.push(frameIssues);
+    if (issueHistory.length > 5) issueHistory.shift();
+
+    frameCounter += 1;
+    if (now - fpsWindowStart >= 2000) {
+      measuredFps = Math.round((frameCounter * 1000) / (now - fpsWindowStart));
+      frameCounter = 0;
+      fpsWindowStart = now;
+    }
+
+    drawRealtimeOverlay(canvas, video, poseLandmarks, handLandmarks);
+    const currentIssues = realtimeIssuePayload(issueHistory);
+    onUpdate({
+      poseDetected: true,
+      issues: currentIssues,
+      cue: currentIssues[0]?.instant_cue || "動作穩定，保持全身與手腳完整入鏡。",
+      angles: {
+        elbow: Math.round(angles.elbow),
+        knee: Math.round(angles.knee),
+        shoulder: Math.round(angles.shoulder),
+      },
+      handsDetected: handData.hands_detected,
+      fps: measuredFps,
+    });
+  };
+
+  animationFrame = requestAnimationFrame(processFrame);
+  return {
+    stop() {
+      stopped = true;
+      cancelAnimationFrame(animationFrame);
+      issueHistory.length = 0;
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.width = 1;
+      canvas.height = 1;
+    },
+  };
 }

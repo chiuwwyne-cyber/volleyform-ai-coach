@@ -24,7 +24,15 @@ const dropZone = document.querySelector("#dropZone");
 const modalityList = document.querySelector("#modalityList");
 const modalityResults = document.querySelector("#modalityResults");
 const recordPreview = document.querySelector("#recordPreview");
+const imagePreview = document.querySelector("#imagePreview");
+const poseOverlay = document.querySelector("#poseOverlay");
+const liveFeedback = document.querySelector("#liveFeedback");
+const liveStatus = document.querySelector("#liveStatus");
+const liveCue = document.querySelector("#liveCue");
+const liveMetrics = document.querySelector("#liveMetrics");
 const recordStatus = document.querySelector("#recordStatus");
+const startLiveBtn = document.querySelector("#startLiveBtn");
+const stopLiveBtn = document.querySelector("#stopLiveBtn");
 const startRecordBtn = document.querySelector("#startRecordBtn");
 const stopRecordBtn = document.querySelector("#stopRecordBtn");
 const clearRecordBtn = document.querySelector("#clearRecordBtn");
@@ -51,6 +59,8 @@ let recordedVideoUrl = "";
 let recordingStopTimer = null;
 let deferredInstallPrompt = null;
 let backendAvailable = false;
+let realtimeController = null;
+let liveAnalysisActive = false;
 
 const actionMeta = {
   spike: { symbol: "扣", description: "起跳、揮臂、落地" },
@@ -275,9 +285,9 @@ function selectedModalities() {
 
 videoInput.addEventListener("change", () => {
   const file = selectedFile();
-  fileName.textContent = file ? file.name : "支援 mp4、mov、webm，最大 180MB";
+  fileName.textContent = file ? file.name : "支援照片、mp4、mov、webm，最大 180MB";
   if (file) {
-    showVideoPreview(file);
+    showMediaPreview(file);
   }
   updateAnalysisSummary();
 });
@@ -298,7 +308,7 @@ function updateAnalysisSummary() {
   const file = selectedFile();
   analysisSummary.textContent = file
     ? `${actionLabel} · ${file.name}`
-    : `${actionLabel} · 尚未選擇影片`;
+    : `${actionLabel} · 尚未選擇照片或影片`;
 }
 
 dropZone.addEventListener("dragover", (event) => {
@@ -319,10 +329,12 @@ dropZone.addEventListener("drop", (event) => {
   transfer.items.add(file);
   videoInput.files = transfer.files;
   fileName.textContent = file.name;
-  showVideoPreview(file);
+  showMediaPreview(file);
   updateAnalysisSummary();
 });
 
+startLiveBtn.addEventListener("click", startLiveAnalysis);
+stopLiveBtn.addEventListener("click", () => stopLiveAnalysis());
 startRecordBtn.addEventListener("click", startRecording);
 stopRecordBtn.addEventListener("click", stopRecording);
 clearRecordBtn.addEventListener("click", clearRecording);
@@ -334,6 +346,7 @@ async function startRecording() {
   }
 
   try {
+    stopLiveAnalysis(false);
     clearRecordedUrl();
     recordedChunks = [];
     mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -346,6 +359,8 @@ async function startRecording() {
       audio: false,
     });
 
+    recordPreview.hidden = false;
+    imagePreview.hidden = true;
     recordPreview.srcObject = mediaStream;
     recordPreview.controls = false;
     recordPreview.muted = true;
@@ -398,7 +413,7 @@ function finishRecording() {
   const file = new File([blob], `volleyball-recording.${extension}`, { type: mimeType });
   recordedChunks = [];
   setVideoInputFile(file);
-  showVideoPreview(file);
+  showMediaPreview(file);
   stopMediaStream();
   mediaRecorder = null;
   startRecordBtn.disabled = false;
@@ -408,6 +423,7 @@ function finishRecording() {
 }
 
 function clearRecording() {
+  stopLiveAnalysis(false);
   clearRecordingTimer();
   recordedChunks = [];
   clearRecordedUrl();
@@ -415,9 +431,13 @@ function clearRecording() {
   videoInput.value = "";
   recordPreview.removeAttribute("src");
   recordPreview.srcObject = null;
+  recordPreview.hidden = false;
   recordPreview.controls = false;
+  imagePreview.removeAttribute("src");
+  imagePreview.hidden = true;
+  clearPoseOverlay();
   previewPlaceholder?.classList.remove("hidden");
-  fileName.textContent = "支援 mp4、mov、webm，最大 180MB";
+  fileName.textContent = "支援照片、mp4、mov、webm，最大 180MB";
   recordStatus.textContent = "可以直接錄製 12 秒內的動作，錄完後可先回放，再送出分析。";
   updateAnalysisSummary();
 }
@@ -430,14 +450,154 @@ function setVideoInputFile(file) {
   updateAnalysisSummary();
 }
 
-function showVideoPreview(file) {
+function showMediaPreview(file) {
+  stopLiveAnalysis(false);
   clearRecordedUrl();
   recordedVideoUrl = URL.createObjectURL(file);
   recordPreview.srcObject = null;
-  recordPreview.src = recordedVideoUrl;
-  recordPreview.controls = true;
-  recordPreview.muted = false;
+  recordPreview.removeAttribute("src");
+  imagePreview.removeAttribute("src");
+  clearPoseOverlay();
+
+  if (file.type.startsWith("image/")) {
+    recordPreview.hidden = true;
+    recordPreview.controls = false;
+    imagePreview.hidden = false;
+    imagePreview.src = recordedVideoUrl;
+  } else {
+    imagePreview.hidden = true;
+    recordPreview.hidden = false;
+    recordPreview.src = recordedVideoUrl;
+    recordPreview.controls = true;
+    recordPreview.muted = false;
+  }
   previewPlaceholder?.classList.add("hidden");
+}
+
+function clearPoseOverlay() {
+  const context = poseOverlay?.getContext?.("2d");
+  if (context) context.clearRect(0, 0, poseOverlay.width, poseOverlay.height);
+  if (poseOverlay) {
+    poseOverlay.width = 1;
+    poseOverlay.height = 1;
+  }
+}
+
+async function startLiveAnalysis() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    liveCue.textContent = "這個瀏覽器無法開啟相機，請改用手機相簿上傳照片或影片。";
+    liveFeedback.classList.add("alert");
+    return;
+  }
+
+  try {
+    stopLiveAnalysis(false);
+    clearRecordedUrl();
+    videoInput.value = "";
+    fileName.textContent = "即時分析中，停止後可改選照片或影片";
+    updateAnalysisSummary();
+
+    recordPreview.removeAttribute("src");
+    recordPreview.hidden = false;
+    recordPreview.controls = false;
+    recordPreview.muted = true;
+    imagePreview.hidden = true;
+    imagePreview.removeAttribute("src");
+    previewPlaceholder?.classList.add("hidden");
+    clearPoseOverlay();
+
+    liveAnalysisActive = true;
+    startLiveBtn.disabled = true;
+    stopLiveBtn.disabled = false;
+    startRecordBtn.disabled = true;
+    clearRecordBtn.disabled = true;
+    liveFeedback.classList.remove("alert");
+    liveFeedback.classList.add("active");
+    liveStatus.textContent = "正在開啟相機";
+    liveCue.textContent = "請將手機固定，讓全身與雙手完整入鏡。";
+    liveMetrics.textContent = "模型只會低頻率取樣，降低手機發熱與耗電。";
+
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 960, max: 1280 },
+        height: { ideal: 540, max: 720 },
+        frameRate: { ideal: 20, max: 24 },
+      },
+      audio: false,
+    });
+    if (!liveAnalysisActive) {
+      stopMediaStream();
+      return;
+    }
+
+    recordPreview.srcObject = mediaStream;
+    await recordPreview.play();
+    liveStatus.textContent = "載入手機端 AI";
+
+    const { startRealtimeAnalysis } = await import("./local-analyzer.js");
+    if (!liveAnalysisActive) {
+      stopMediaStream();
+      return;
+    }
+    realtimeController = await startRealtimeAnalysis({
+      video: recordPreview,
+      canvas: poseOverlay,
+      getAction: () => actionInput.value,
+      getModalities: selectedModalities,
+      getPowerMode: () => powerModeInput.value,
+      onUpdate: renderLiveUpdate,
+    });
+    liveStatus.textContent = "即時分析中";
+    recordStatus.textContent = "相機畫面只在這台裝置上分析，不會上傳。";
+  } catch (error) {
+    stopLiveAnalysis();
+    liveFeedback.classList.add("alert");
+    liveStatus.textContent = "無法啟動即時分析";
+    liveCue.textContent = error.message || "請允許相機權限後再試一次。";
+  }
+}
+
+function renderLiveUpdate(result) {
+  if (!liveAnalysisActive) return;
+  liveFeedback.classList.remove("active", "alert");
+  if (!result.poseDetected) {
+    liveFeedback.classList.add("alert");
+    liveStatus.textContent = "等待完整人體";
+    liveCue.textContent = "請退後一點，讓頭、雙手與雙腳完整入鏡。";
+    liveMetrics.textContent = `裝置端取樣 ${result.fps || "--"} FPS`;
+    return;
+  }
+
+  const primaryIssue = result.issues?.[0];
+  liveFeedback.classList.add(primaryIssue ? "alert" : "active");
+  liveStatus.textContent = primaryIssue ? primaryIssue.title : "動作穩定";
+  liveCue.textContent = result.cue;
+  liveMetrics.textContent =
+    `手肘 ${result.angles.elbow}° · 膝蓋 ${result.angles.knee}° · ` +
+    `手部 ${result.handsDetected || 0} · ${result.fps || "--"} FPS`;
+}
+
+function stopLiveAnalysis(showPlaceholder = true) {
+  liveAnalysisActive = false;
+  realtimeController?.stop();
+  realtimeController = null;
+  stopMediaStream();
+  recordPreview.srcObject = null;
+  recordPreview.controls = false;
+  clearPoseOverlay();
+  startLiveBtn.disabled = false;
+  stopLiveBtn.disabled = true;
+  startRecordBtn.disabled = false;
+  clearRecordBtn.disabled = false;
+  liveFeedback.classList.remove("active", "alert");
+  liveStatus.textContent = "即時分析尚未啟動";
+  liveCue.textContent = "選擇動作後開啟相機，AI 會顯示目前最重要的修正提示。";
+  liveMetrics.textContent = "手機模式約每秒分析 3 幀，兼顧溫度與續航。";
+  if (showPlaceholder) {
+    previewPlaceholder?.classList.remove("hidden");
+    recordStatus.textContent = "即時分析已停止，相機資源已釋放。";
+  }
 }
 
 function clearRecordedUrl() {
@@ -474,7 +634,7 @@ function preferredRecordingMimeType() {
 analyzeBtn.addEventListener("click", async () => {
   const file = selectedFile();
   if (!file) {
-    coachSummary.textContent = "請先錄影或上傳一段影片。";
+    coachSummary.textContent = "請先拍照、錄影，或從手機相簿選擇檔案。";
     return;
   }
   if (file.size && file.size > maxFrontendUploadBytes) {
@@ -503,7 +663,7 @@ analyzeBtn.addEventListener("click", async () => {
   modalityResults.textContent = "正在整理模組結果";
 
   try {
-    if (backendAvailable) {
+    if (backendAvailable && !file.type.startsWith("image/")) {
       const response = await fetch(apiUrl("/api/analyze"), {
         method: "POST",
         body: form,
@@ -512,8 +672,8 @@ analyzeBtn.addEventListener("click", async () => {
       if (!payload.ok) throw new Error(payload.error || "分析失敗");
       renderResult(payload.result);
     } else {
-      const { analyzeVideoLocally } = await import("./local-analyzer.js");
-      const result = await analyzeVideoLocally({
+      const { analyzeMediaLocally } = await import("./local-analyzer.js");
+      const result = await analyzeMediaLocally({
         file,
         action: actionInput.value,
         powerMode: powerModeInput.value,
@@ -685,6 +845,17 @@ if (typeof window !== "undefined") {
   window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
     if (installAppBtn) installAppBtn.hidden = true;
+  });
+
+  window.addEventListener("pagehide", () => {
+    stopLiveAnalysis(false);
+    stopMediaStream();
+  });
+}
+
+if (typeof document !== "undefined") {
+  document.addEventListener?.("visibilitychange", () => {
+    if (document.hidden && liveAnalysisActive) stopLiveAnalysis();
   });
 }
 

@@ -9,7 +9,8 @@ https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 ## Highlights
 
 - Mobile-first single-page interface
-- Direct recording, playback and video upload
+- Mobile album photo/video upload, recording and playback
+- Low-power realtime camera analysis with live joint overlays
 - 3D body pose and hand landmark analysis
 - Action support for spike, block, serve, receive and set
 - Focused coaching cues, drills and video recommendations

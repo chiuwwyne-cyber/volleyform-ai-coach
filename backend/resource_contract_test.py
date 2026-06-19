@@ -73,6 +73,12 @@ def main():
         raise SystemExit("Local mobile timeline must stay compact")
     if "URL.revokeObjectURL" not in local_analyzer or "video.removeAttribute" not in local_analyzer:
         raise SystemExit("Local analyzer must release video memory after analysis")
+    if "REALTIME_INTERVALS" not in local_analyzer or "mobile: 360" not in local_analyzer:
+        raise SystemExit("Realtime mobile analysis must throttle inference to control heat")
+    if "cancelAnimationFrame" not in local_analyzer or "issueHistory.length = 0" not in local_analyzer:
+        raise SystemExit("Realtime analysis must release animation and history resources")
+    if "pagehide" not in app or "visibilitychange" not in app:
+        raise SystemExit("Mobile camera resources must be released when the page is hidden")
 
     print("resource contract ok")
     print("checks: mobile resources, remote tunnel, fixed Pages site, cloud deploy, PWA")
