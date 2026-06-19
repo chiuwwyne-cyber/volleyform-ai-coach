@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+.pytest_cache/
+.DS_Store
+Thumbs.db
+
+tools/cloudflared.exe
+tools/portable/
+backend_server*.log
+cloudflared_tunnel.log
+
+*.mp4
+*.mov
+*.webm
+tmp/
+
+# Legacy desktop screenshots/action images may contain third-party watermarks.
+main/*.png
+main/desktop.ini
+ui-*.png
+gh-auth.*

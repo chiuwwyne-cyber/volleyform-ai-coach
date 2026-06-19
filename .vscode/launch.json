@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Volleyball AI Analysis",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main/main.py",
+      "cwd": "${workspaceFolder}/main",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  ]
+}

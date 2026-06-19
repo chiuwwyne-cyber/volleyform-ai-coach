@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#10201a" />
+    <meta name="description" content="以 3D 身體骨架與手部關節分析排球動作的開源 AI 教練。" />
+    <title>VolleyForm AI Coach</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon-192.png" />
+    <link rel="apple-touch-icon" href="./assets/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-bar">
+      <a class="brand" href="./" aria-label="VolleyForm AI Coach 首頁">
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span>
+          <strong>VolleyForm</strong>
+          <small>AI Coach</small>
+        </span>
+      </a>
+      <div class="header-actions">
+        <button class="icon-text-btn" id="installAppBtn" type="button" hidden>安裝到手機</button>
+        <div class="connection-state">
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong class="status" id="serverStatus" role="status" aria-live="polite">檢查中</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="coach-hero" aria-labelledby="pageTitle">
+        <img src="./assets/coach-header.png" alt="" />
+        <div class="hero-copy">
+          <p class="eyebrow">OPEN-SOURCE 3D VOLLEYBALL COACH</p>
+          <h1 id="pageTitle">看懂動作，練得更準。</h1>
+          <p>錄下動作，AI 會分析身體骨架、手部關節與關鍵角度，直接指出下一個要修正的位置。</p>
+        </div>
+      </section>
+
+      <section class="connection-panel" aria-label="固定網站與後端連線">
+        <div class="connection-summary">
+          <span class="section-kicker">固定網站</span>
+          <h2>手機可直接開啟</h2>
+          <p id="connectionNote">
+            頁面可以部署到 GitHub Pages；分析 API 則使用固定的雲端網址，不再依賴臨時 tunnel。
+          </p>
+        </div>
+        <div class="connection-controls">
+          <label class="field backend-field">
+            <span>分析 API 網址</span>
+            <input
+              id="backendUrl"
+              type="url"
+              inputmode="url"
+              placeholder="https://你的固定後端網址"
+              autocomplete="url"
+            />
+          </label>
+          <div class="connection-actions" aria-label="連線操作">
+            <button class="utility-btn" id="sameOriginBtn" type="button">網站同網域</button>
+            <button class="utility-btn" id="localBackendBtn" type="button">本機測試</button>
+            <button class="utility-btn accent" id="healthCheckBtn" type="button">測試連線</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="workflow-panel" aria-labelledby="setupTitle">
+        <div class="panel-heading">
+          <div>
+            <span class="step-label">STEP 1</span>
+            <h2 id="setupTitle">選擇要分析的動作</h2>
+          </div>
+          <label class="mode-field">
+            <span>分析效能</span>
+            <select id="powerMode">
+              <option value="mobile">手機省電</option>
+              <option value="balanced" selected>平衡模式</option>
+              <option value="quality">高精度</option>
+            </select>
+          </label>
+        </div>
+        <select id="action" class="visually-hidden" aria-label="分析動作">
+          <option value="spike">載入動作中</option>
+        </select>
+        <div class="action-choices" id="actionChoices" role="listbox" aria-label="排球動作">
+          <button class="action-choice active" type="button" data-action="spike" role="option" aria-selected="true">
+            <span>扣</span>
+            <strong>扣球</strong>
+            <small>起跳、揮臂、落地</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="capture-panel" aria-labelledby="captureTitle">
+        <div class="preview-column">
+          <div class="preview-frame">
+            <video id="recordPreview" playsinline muted></video>
+            <div class="preview-placeholder" id="previewPlaceholder">
+              <span aria-hidden="true">●</span>
+              <strong>影片預覽</strong>
+              <small>建議全身、手腕和腳踝都入鏡</small>
+            </div>
+          </div>
+          <label class="upload-zone" id="dropZone">
+            <input id="video" type="file" accept="video/*" capture="environment" />
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <span>
+              <strong>上傳影片</strong>
+              <small id="fileName">支援 mp4、mov、webm，最大 180MB</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="record-tools">
+          <div>
+            <span class="step-label">STEP 2</span>
+            <h2 id="captureTitle">錄影或選擇影片</h2>
+            <p id="recordStatus" role="status" aria-live="polite">
+              可直接錄製 12 秒內的動作。錄完先回放確認，再送出分析。
+            </p>
+          </div>
+          <div class="capture-tips">
+            <div><strong>1</strong><span>鏡頭固定</span></div>
+            <div><strong>2</strong><span>全身入鏡</span></div>
+            <div><strong>3</strong><span>光線充足</span></div>
+          </div>
+          <div class="record-actions">
+            <button class="secondary-btn" id="startRecordBtn" type="button">
+              <span aria-hidden="true">●</span>開始錄影
+            </button>
+            <button class="secondary-btn stop" id="stopRecordBtn" type="button" disabled>
+              <span aria-hidden="true">■</span>停止
+            </button>
+            <button class="ghost-btn" id="clearRecordBtn" type="button">清除影片</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="modality-panel">
+        <div>
+          <span class="step-label">STEP 3</span>
+          <h2>選擇分析模組</h2>
+          <p>目前分析 3D 身體骨架與手部關節，並保留球路、聲音及穿戴裝置擴充空間。</p>
+        </div>
+        <div class="modality-list" id="modalityList">
+          <label><input type="checkbox" value="pose" checked /> 3D 身體骨架</label>
+          <label><input type="checkbox" value="hands" checked /> 手部關節</label>
+        </div>
+      </section>
+
+      <section class="analyze-bar" aria-label="開始分析">
+        <div>
+          <span>準備完成</span>
+          <strong id="analysisSummary">選擇影片後即可分析</strong>
+        </div>
+        <button class="primary-btn" id="analyzeBtn" type="button" aria-describedby="fileName backendUrl">
+          開始 AI 分析
+        </button>
+      </section>
+
+      <section class="result-section" aria-labelledby="resultTitle">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">COACH REPORT</span>
+            <h2 id="resultTitle">分析結果</h2>
+          </div>
+          <span id="frameCount">尚未分析</span>
+        </div>
+
+        <div class="result-grid">
+          <article class="summary-panel">
+            <div class="score-ring" aria-label="動作品質分數">
+              <span id="score">--</span>
+              <small>分數</small>
+            </div>
+            <div class="coach-copy">
+              <h3 id="summaryTitle">等待分析</h3>
+              <p id="coachSummary">錄影或上傳影片後，AI 會先找出最值得修正的動作問題。</p>
+              <div id="coachPlan" class="coach-plan empty" role="status" aria-live="polite">
+                完成分析後會顯示優先修正方向、練習方法與教學影片。
+              </div>
+            </div>
+          </article>
+
+          <article class="issues-panel">
+            <div class="panel-head">
+              <h3>主要問題</h3>
+              <span>先修最重要的一項</span>
+            </div>
+            <div id="issues" class="issues empty" aria-live="polite">
+              這裡會列出身體部位、立即提醒、原因與修正練習。
+            </div>
+          </article>
+
+          <article class="modality-results-panel">
+            <div class="panel-head">
+              <h3>偵測數據</h3>
+              <span>骨架與手部關節</span>
+            </div>
+            <div id="modalityResults" class="modality-results empty" aria-live="polite">
+              分析後會顯示各模組狀態與關鍵角度。
+            </div>
+          </article>
+
+          <article class="timeline-panel">
+            <div class="panel-head">
+              <h3>動作時間軸</h3>
+              <span>快速定位問題影格</span>
+            </div>
+            <div id="timeline" class="timeline empty" aria-live="polite">
+              系統只保留代表影格，降低手機記憶體和處理負擔。
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <strong>VolleyForm AI Coach</strong>
+      <span>Open-source volleyball motion analysis</span>
+    </footer>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
