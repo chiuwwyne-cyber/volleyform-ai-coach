@@ -30,48 +30,22 @@
     </header>
 
     <main class="app-shell">
-      <section class="coach-hero" aria-labelledby="pageTitle">
-        <img src="./assets/coach-header.png" alt="" />
-        <div class="hero-copy">
-          <p class="eyebrow">OPEN-SOURCE 3D VOLLEYBALL COACH</p>
-          <h1 id="pageTitle">把好動作，拆成 4 個維度。</h1>
-          <p>從姿勢、角度、即時修正到手機可用性，讓每一次練習都有清楚的下一步。</p>
+      <section class="workspace-header" aria-labelledby="pageTitle">
+        <div>
+          <span class="section-kicker">VOLLEYFORM / FORM LAB</span>
+          <h1 id="pageTitle">排球動作分析工作台</h1>
+          <p>選擇動作，開啟鏡頭或匯入一段練習素材。</p>
         </div>
-      </section>
-
-      <section class="quality-framework" aria-labelledby="frameworkTitle">
-        <div class="framework-heading">
-          <span aria-hidden="true"></span>
-          <h2 id="frameworkTitle">VolleyForm 的 4 個分析維度</h2>
-        </div>
-        <div class="quality-grid">
-          <article class="quality-item">
-            <span class="quality-icon" aria-hidden="true">姿</span>
-            <strong>動作姿勢</strong>
-            <p>全身骨架、手腳位置與動作順序</p>
-          </article>
-          <article class="quality-item">
-            <span class="quality-icon" aria-hidden="true">角</span>
-            <strong>關節角度</strong>
-            <p>手肘、肩膀、膝蓋與手部關節</p>
-          </article>
-          <article class="quality-item">
-            <span class="quality-icon" aria-hidden="true">即</span>
-            <strong>即時修正</strong>
-            <p>鏡頭骨架、風險提示與下一個動作</p>
-          </article>
-          <article class="quality-item">
-            <span class="quality-icon" aria-hidden="true">機</span>
-            <strong>手機可用</strong>
-            <p>相簿上傳、省電推論與本機隱私</p>
-          </article>
+        <div class="workspace-badges" aria-label="目前分析狀態">
+          <span>ON DEVICE</span>
+          <strong>3D POSE + HANDS</strong>
         </div>
       </section>
 
       <section class="connection-panel" aria-label="固定網站與後端連線">
         <div class="connection-summary">
-          <span class="section-kicker">手機本地 AI</span>
-          <h2>固定網址直接分析</h2>
+          <span class="section-kicker">SESSION ENGINE</span>
+          <h2>手機本地 AI</h2>
           <p id="connectionNote">
             預設在手機瀏覽器內執行 MediaPipe，影片不需上傳，也不再依賴臨時 tunnel。
           </p>
@@ -101,8 +75,8 @@
       <section class="workflow-panel" aria-labelledby="setupTitle">
         <div class="panel-heading">
           <div>
-            <span class="step-label">STEP 1</span>
-            <h2 id="setupTitle">選擇要分析的動作</h2>
+            <span class="step-label">01 / ACTION</span>
+            <h2 id="setupTitle">本次訓練動作</h2>
           </div>
           <label class="mode-field">
             <span>分析效能</span>
@@ -132,41 +106,28 @@
             <img id="imagePreview" alt="待分析的動作照片" hidden />
             <canvas id="poseOverlay" aria-hidden="true"></canvas>
             <div class="preview-placeholder" id="previewPlaceholder">
-              <span aria-hidden="true">●</span>
-              <strong>照片或影片預覽</strong>
-              <small>建議全身、手腕和腳踝都入鏡</small>
+              <img class="preview-guide-image" src="./assets/coach-header.png" alt="" />
+              <div class="preview-empty-copy">
+                <span>LIVE FORM VIEW</span>
+                <strong>等待鏡頭或練習素材</strong>
+                <small>全身與手腳完整入鏡</small>
+              </div>
             </div>
+          </div>
+        </div>
+
+        <div class="record-tools">
+          <div class="console-heading">
+            <span class="step-label">02 / CAPTURE</span>
+            <h2 id="captureTitle">取得動作</h2>
           </div>
           <div class="live-feedback" id="liveFeedback" aria-live="polite">
             <span class="live-indicator" aria-hidden="true"></span>
             <div>
               <small id="liveStatus">即時分析尚未開啟</small>
-              <strong id="liveCue">選擇動作後，可直接用鏡頭取得修正提示</strong>
+              <strong id="liveCue">鏡頭開啟後，修正提示會顯示在這裡</strong>
               <span id="liveMetrics">手機省電模式約每秒分析 3 次</span>
             </div>
-          </div>
-          <label class="upload-zone" id="dropZone">
-            <input id="video" type="file" accept="video/*,image/*" />
-            <span class="upload-icon" aria-hidden="true">↑</span>
-            <span>
-              <strong>上傳手機照片或影片</strong>
-              <small id="fileName">支援照片、mp4、mov、webm，最大 180MB</small>
-            </span>
-          </label>
-        </div>
-
-        <div class="record-tools">
-          <div>
-            <span class="step-label">STEP 2</span>
-            <h2 id="captureTitle">即時分析或從相簿選擇</h2>
-            <p id="recordStatus" role="status" aria-live="polite">
-              可直接錄製 12 秒內的動作。錄完先回放確認，再送出分析。
-            </p>
-          </div>
-          <div class="capture-tips">
-            <div><strong>1</strong><span>鏡頭固定</span></div>
-            <div><strong>2</strong><span>全身入鏡</span></div>
-            <div><strong>3</strong><span>光線充足</span></div>
           </div>
           <div class="record-actions">
             <button class="live-btn" id="startLiveBtn" type="button">
@@ -183,14 +144,30 @@
             </button>
             <button class="ghost-btn" id="clearRecordBtn" type="button">清除影片</button>
           </div>
+          <label class="upload-zone" id="dropZone">
+            <input id="video" type="file" accept="video/*,image/*" />
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <span>
+              <strong>從手機相簿匯入</strong>
+              <small id="fileName">照片、mp4、mov、webm，最大 180MB</small>
+            </span>
+          </label>
+          <div class="capture-tips">
+            <div><strong>01</strong><span>鏡頭固定</span></div>
+            <div><strong>02</strong><span>全身入鏡</span></div>
+            <div><strong>03</strong><span>光線充足</span></div>
+          </div>
+          <p id="recordStatus" role="status" aria-live="polite">
+            可直接錄製 12 秒內的動作。錄完先回放確認，再送出分析。
+          </p>
         </div>
       </section>
 
       <section class="modality-panel">
         <div>
-          <span class="step-label">STEP 3</span>
-          <h2>選擇分析模組</h2>
-          <p>目前分析 3D 身體骨架與手部關節，並保留球路、聲音及穿戴裝置擴充空間。</p>
+          <span class="step-label">03 / SIGNALS</span>
+          <h2>分析通道</h2>
+          <p>選擇這次要納入判斷的資料。</p>
         </div>
         <div class="modality-list" id="modalityList">
           <label><input type="checkbox" value="pose" checked /> 3D 身體骨架</label>
@@ -201,7 +178,7 @@
       <section class="analyze-bar" aria-label="開始分析">
         <div>
           <span>準備完成</span>
-          <strong id="analysisSummary">選擇影片後即可分析</strong>
+          <strong id="analysisSummary">選擇素材後即可分析</strong>
         </div>
         <button class="primary-btn" id="analyzeBtn" type="button" aria-describedby="fileName backendUrl">
           開始 AI 分析

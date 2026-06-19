@@ -139,11 +139,10 @@ def main():
         raise SystemExit("Remote connection UI must be styled consistently")
     if ".capture-panel" not in css or ".record-actions" not in css:
         raise SystemExit("Recording UI must be styled consistently")
-    if 'id="frameworkTitle"' not in html or ".quality-grid" not in css:
-        raise SystemExit("UI must include the four-dimension visual framework")
-    for dimension in ("動作姿勢", "關節角度", "即時修正", "手機可用"):
-        if dimension not in html:
-            raise SystemExit(f"Missing four-dimension UI item: {dimension}")
+    if 'class="workspace-header"' not in html or ".workspace-badges" not in css:
+        raise SystemExit("Frontend must present the analysis workspace before configuration")
+    if "4 個分析維度" in html or "拆成 4 個維度" in html:
+        raise SystemExit("Design evaluation dimensions must not be shown as product content")
     if "renderCoachPlan" not in js or "instant_cue" not in js or "practice_drill" not in js:
         raise SystemExit("Frontend must render clear coach guidance fields")
     if ".coach-plan" not in css or ".issue-meta" not in css or ".drill-box" not in css:

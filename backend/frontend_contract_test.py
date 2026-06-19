@@ -28,7 +28,6 @@ def main():
 
     required = {
         "serverStatus",
-        "frameworkTitle",
         "backendUrl",
         "sameOriginBtn",
         "localBackendBtn",
