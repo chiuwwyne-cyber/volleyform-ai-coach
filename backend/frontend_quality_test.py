@@ -54,6 +54,7 @@ def main():
     html = _read(HTML_PATH)
     css = _read(CSS_PATH)
     js = _read(JS_PATH)
+    local_analyzer = _read(os.path.join(ROOT_DIR, "frontend", "local-analyzer.js"))
     manifest = _read(MANIFEST_PATH)
     service_worker = _read(SERVICE_WORKER_PATH)
     pages_workflow = _read(PAGES_WORKFLOW_PATH)
@@ -103,8 +104,8 @@ def main():
         raise SystemExit("Frontend must discover actions and modalities from backend capabilities")
     if 'id="backendUrl"' not in html or "volleyballCoachBackendUrl" not in js:
         raise SystemExit("Frontend must let remote web/mobile clients configure backend URL")
-    if "GitHub Pages" not in html or "固定的雲端網址" not in html:
-        raise SystemExit("Frontend must explain the fixed public site and API architecture")
+    if "手機本地 AI" not in html or "影片不需上傳" not in html:
+        raise SystemExit("Frontend must explain private on-device mobile analysis")
     if 'href="./styles.css"' not in html or 'src="./app.js"' not in html:
         raise SystemExit("Frontend assets must use relative paths for GitHub Pages subpaths")
     if 'id="actionChoices"' not in html or "renderActionChoices" not in js:
@@ -117,6 +118,10 @@ def main():
         raise SystemExit("Frontend must include a project-local original visual asset")
     if "start_url" not in manifest or "APP_SHELL" not in service_worker:
         raise SystemExit("PWA manifest and offline shell must be configured")
+    if "PoseLandmarker" not in local_analyzer or "HandLandmarker" not in local_analyzer:
+        raise SystemExit("Fixed site must include local MediaPipe pose and hand analysis")
+    if "detectForVideo" not in local_analyzer or "analyzeVideoLocally" not in js:
+        raise SystemExit("Frontend must fall back to local video analysis without a backend")
     if "actions/deploy-pages" not in pages_workflow or "BACKEND_URL" not in pages_workflow:
         raise SystemExit("GitHub Pages workflow must publish the fixed site and API config")
     if "volleyform-ai-api" not in render_config or "healthCheckPath" not in render_config:

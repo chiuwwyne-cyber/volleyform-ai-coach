@@ -23,6 +23,7 @@ def main():
     service_worker = _read(os.path.join("frontend", "service-worker.js"))
     gitignore = _read(".gitignore")
     publish_script = _read("publish_fixed_site.ps1")
+    local_analyzer = _read(os.path.join("frontend", "local-analyzer.js"))
 
     if "include_image=False" not in analyzer:
         raise SystemExit("Backend analyzer must disable frame images during API analysis")
@@ -66,6 +67,10 @@ def main():
         raise SystemExit("Open-source repository must exclude local binaries and environments")
     if "repo create" not in publish_script or "workflow run pages.yml" not in publish_script:
         raise SystemExit("Publishing helper must create the public repo and trigger Pages")
+    if "sampleCountForMode" not in local_analyzer or "return 16" not in local_analyzer:
+        raise SystemExit("Local mobile analysis must bound sampled frames")
+    if "URL.revokeObjectURL" not in local_analyzer or "video.removeAttribute" not in local_analyzer:
+        raise SystemExit("Local analyzer must release video memory after analysis")
 
     print("resource contract ok")
     print("checks: mobile resources, remote tunnel, fixed Pages site, cloud deploy, PWA")

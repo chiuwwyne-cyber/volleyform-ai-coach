@@ -10,7 +10,8 @@ VolleyForm is an open-source volleyball motion analysis web app. It uses MediaPi
 - Action support for spike, block, serve, receive and set
 - Focused coaching cues, drills and video recommendations
 - GitHub Pages frontend with a fixed URL
-- Render/Docker backend with a fixed HTTPS API
+- On-device MediaPipe analysis with no required backend
+- Optional Render/Docker backend for shared or heavier processing
 - Installable PWA shell
 - Low-memory mobile analysis mode
 
@@ -39,13 +40,13 @@ After GitHub login, the project-local publishing helper can create the public re
 Deployment architecture:
 
 ```text
-GitHub Pages (fixed UI URL)
+GitHub Pages (fixed URL)
         |
         v
-Render HTTPS API (fixed backend URL)
+MediaPipe Web pose and hand models
         |
         v
-MediaPipe pose and hand analysis
+Analysis stays in the mobile browser
 ```
 
 ## Tests

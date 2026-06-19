@@ -50,6 +50,7 @@ let recordedChunks = [];
 let recordedVideoUrl = "";
 let recordingStopTimer = null;
 let deferredInstallPrompt = null;
+let backendAvailable = false;
 
 const actionMeta = {
   spike: { symbol: "扣", description: "起跳、揮臂、落地" },
@@ -133,6 +134,7 @@ async function checkHealth() {
     const response = await fetch(apiUrl("/api/capabilities"));
     if (!response.ok) throw new Error("bad status");
     const payload = await response.json();
+    backendAvailable = true;
     serverStatus.textContent = "已連線";
     serverStatus.classList.remove("bad");
     serverStatus.classList.add("ok");
@@ -140,13 +142,14 @@ async function checkHealth() {
     const target = backendUrlInput.value.trim() || "目前網頁同網域";
     updateConnectionNote(`後端連線正常：${target}`);
   } catch {
-    serverStatus.textContent = "未連線";
-    serverStatus.classList.remove("ok");
-    serverStatus.classList.add("bad");
+    backendAvailable = false;
+    serverStatus.textContent = "手機本地";
+    serverStatus.classList.remove("bad");
+    serverStatus.classList.add("ok");
     renderActionOptions(fallbackActions);
     renderModalityOptions(fallbackModalities);
     updateConnectionNote(
-      "固定網站已可使用，但分析 API 尚未連線。請貼上固定的 HTTPS 後端網址，再按測試連線。",
+      "目前使用手機本地 MediaPipe 模型分析，影片不會上傳到伺服器。也可以填入固定 API 網址切換到雲端分析。",
     );
   }
 }
@@ -500,17 +503,31 @@ analyzeBtn.addEventListener("click", async () => {
   modalityResults.textContent = "正在整理模組結果";
 
   try {
-    const response = await fetch(apiUrl("/api/analyze"), {
-      method: "POST",
-      body: form,
-    });
-    const payload = await response.json();
-    if (!payload.ok) throw new Error(payload.error || "分析失敗");
-    renderResult(payload.result);
+    if (backendAvailable) {
+      const response = await fetch(apiUrl("/api/analyze"), {
+        method: "POST",
+        body: form,
+      });
+      const payload = await response.json();
+      if (!payload.ok) throw new Error(payload.error || "分析失敗");
+      renderResult(payload.result);
+    } else {
+      const { analyzeVideoLocally } = await import("./local-analyzer.js");
+      const result = await analyzeVideoLocally({
+        file,
+        action: actionInput.value,
+        powerMode: powerModeInput.value,
+        modalities: selectedModalities(),
+        onProgress: (message) => {
+          coachSummary.textContent = message;
+        },
+      });
+      renderResult(result);
+    }
   } catch (error) {
     summaryTitle.textContent = "分析失敗";
     coachSummary.textContent = error.message;
-    coachPlan.textContent = "請確認後端網址、影片格式與檔案大小，必要時改用手機省電模式重新分析。";
+    coachPlan.textContent = "請確認影片格式與檔案大小，並改用手機省電模式重新分析。";
     issues.textContent = "目前沒有可顯示的問題。";
     timeline.textContent = "";
     modalityResults.textContent = "";

@@ -41,20 +41,20 @@
 
       <section class="connection-panel" aria-label="固定網站與後端連線">
         <div class="connection-summary">
-          <span class="section-kicker">固定網站</span>
-          <h2>手機可直接開啟</h2>
+          <span class="section-kicker">手機本地 AI</span>
+          <h2>固定網址直接分析</h2>
           <p id="connectionNote">
-            頁面可以部署到 GitHub Pages；分析 API 則使用固定的雲端網址，不再依賴臨時 tunnel。
+            預設在手機瀏覽器內執行 MediaPipe，影片不需上傳，也不再依賴臨時 tunnel。
           </p>
         </div>
         <div class="connection-controls">
           <label class="field backend-field">
-            <span>分析 API 網址</span>
+            <span>選用：固定雲端 API 網址</span>
             <input
               id="backendUrl"
               type="url"
               inputmode="url"
-              placeholder="https://你的固定後端網址"
+              placeholder="留空即使用手機本地分析"
               autocomplete="url"
             />
           </label>
