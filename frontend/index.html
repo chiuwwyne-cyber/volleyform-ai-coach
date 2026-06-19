@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#10201a" />
+    <meta name="theme-color" content="#171817" />
     <meta name="description" content="以 3D 身體骨架與手部關節分析排球動作的開源 AI 教練。" />
     <title>VolleyForm AI Coach</title>
     <link rel="manifest" href="./manifest.webmanifest" />
@@ -34,8 +34,37 @@
         <img src="./assets/coach-header.png" alt="" />
         <div class="hero-copy">
           <p class="eyebrow">OPEN-SOURCE 3D VOLLEYBALL COACH</p>
-          <h1 id="pageTitle">看懂動作，練得更準。</h1>
-          <p>錄下動作，AI 會分析身體骨架、手部關節與關鍵角度，直接指出下一個要修正的位置。</p>
+          <h1 id="pageTitle">把好動作，拆成 4 個維度。</h1>
+          <p>從姿勢、角度、即時修正到手機可用性，讓每一次練習都有清楚的下一步。</p>
+        </div>
+      </section>
+
+      <section class="quality-framework" aria-labelledby="frameworkTitle">
+        <div class="framework-heading">
+          <span aria-hidden="true"></span>
+          <h2 id="frameworkTitle">VolleyForm 的 4 個分析維度</h2>
+        </div>
+        <div class="quality-grid">
+          <article class="quality-item">
+            <span class="quality-icon" aria-hidden="true">姿</span>
+            <strong>動作姿勢</strong>
+            <p>全身骨架、手腳位置與動作順序</p>
+          </article>
+          <article class="quality-item">
+            <span class="quality-icon" aria-hidden="true">角</span>
+            <strong>關節角度</strong>
+            <p>手肘、肩膀、膝蓋與手部關節</p>
+          </article>
+          <article class="quality-item">
+            <span class="quality-icon" aria-hidden="true">即</span>
+            <strong>即時修正</strong>
+            <p>鏡頭骨架、風險提示與下一個動作</p>
+          </article>
+          <article class="quality-item">
+            <span class="quality-icon" aria-hidden="true">機</span>
+            <strong>手機可用</strong>
+            <p>相簿上傳、省電推論與本機隱私</p>
+          </article>
         </div>
       </section>
 
@@ -120,7 +149,7 @@
             <input id="video" type="file" accept="video/*,image/*" />
             <span class="upload-icon" aria-hidden="true">↑</span>
             <span>
-              <strong>從手機相簿選擇</strong>
+              <strong>上傳手機照片或影片</strong>
               <small id="fileName">支援照片、mp4、mov、webm，最大 180MB</small>
             </span>
           </label>
@@ -129,7 +158,7 @@
         <div class="record-tools">
           <div>
             <span class="step-label">STEP 2</span>
-            <h2 id="captureTitle">錄影或選擇影片</h2>
+            <h2 id="captureTitle">即時分析或從相簿選擇</h2>
             <p id="recordStatus" role="status" aria-live="polite">
               可直接錄製 12 秒內的動作。錄完先回放確認，再送出分析。
             </p>

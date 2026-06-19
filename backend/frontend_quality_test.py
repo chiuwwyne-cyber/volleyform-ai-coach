@@ -71,6 +71,7 @@ def main():
         "court",
         "court-dark",
         "blue",
+        "link",
         "green",
         "red",
         "gold",
@@ -84,7 +85,7 @@ def main():
     _assert_contrast("primary button", "#ffffff", tokens["blue"])
     _assert_contrast("topbar dark", "#ffffff", tokens["court-dark"])
     _assert_contrast("topbar warm", "#ffffff", tokens["court"])
-    _assert_contrast("link", tokens["blue"], tokens["panel"])
+    _assert_contrast("link", tokens["link"], tokens["panel"])
 
     if "@media (max-width: 860px)" not in css:
         raise SystemExit("Missing mobile responsive breakpoint")
@@ -138,6 +139,11 @@ def main():
         raise SystemExit("Remote connection UI must be styled consistently")
     if ".capture-panel" not in css or ".record-actions" not in css:
         raise SystemExit("Recording UI must be styled consistently")
+    if 'id="frameworkTitle"' not in html or ".quality-grid" not in css:
+        raise SystemExit("UI must include the four-dimension visual framework")
+    for dimension in ("動作姿勢", "關節角度", "即時修正", "手機可用"):
+        if dimension not in html:
+            raise SystemExit(f"Missing four-dimension UI item: {dimension}")
     if "renderCoachPlan" not in js or "instant_cue" not in js or "practice_drill" not in js:
         raise SystemExit("Frontend must render clear coach guidance fields")
     if ".coach-plan" not in css or ".issue-meta" not in css or ".drill-box" not in css:
