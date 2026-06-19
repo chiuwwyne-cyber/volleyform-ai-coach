@@ -527,7 +527,11 @@ export async function analyzeVideoLocally({
         }
       }
 
-      if (index === 0 || index === sampleCount - 1 || frameIssues.length) {
+      if (
+        index === 0 ||
+        index === sampleCount - 1 ||
+        (frameIssues.length && index % 3 === 0)
+      ) {
         timeline.push({
           frame: index + 1,
           ok: frameIssues.length === 0,
@@ -538,7 +542,7 @@ export async function analyzeVideoLocally({
           })),
         });
       }
-      if (timeline.length > 24) timeline.shift();
+      if (timeline.length > 8) timeline.shift();
 
       onProgress(`分析影格 ${index + 1}/${sampleCount}`, (index + 1) / sampleCount);
       await new Promise((resolve) => setTimeout(resolve, 0));

@@ -47,23 +47,26 @@
             預設在手機瀏覽器內執行 MediaPipe，影片不需上傳，也不再依賴臨時 tunnel。
           </p>
         </div>
-        <div class="connection-controls">
-          <label class="field backend-field">
-            <span>選用：固定雲端 API 網址</span>
-            <input
-              id="backendUrl"
-              type="url"
-              inputmode="url"
-              placeholder="留空即使用手機本地分析"
-              autocomplete="url"
-            />
-          </label>
-          <div class="connection-actions" aria-label="連線操作">
-            <button class="utility-btn" id="sameOriginBtn" type="button">網站同網域</button>
-            <button class="utility-btn" id="localBackendBtn" type="button">本機測試</button>
-            <button class="utility-btn accent" id="healthCheckBtn" type="button">測試連線</button>
+        <details class="connection-controls">
+          <summary>進階連線設定</summary>
+          <div class="advanced-connection">
+            <label class="field backend-field">
+              <span>選用：固定雲端 API 網址</span>
+              <input
+                id="backendUrl"
+                type="url"
+                inputmode="url"
+                placeholder="留空即使用手機本地分析"
+                autocomplete="url"
+              />
+            </label>
+            <div class="connection-actions" aria-label="連線操作">
+              <button class="utility-btn" id="sameOriginBtn" type="button">網站同網域</button>
+              <button class="utility-btn" id="localBackendBtn" type="button">本機測試</button>
+              <button class="utility-btn accent" id="healthCheckBtn" type="button">測試連線</button>
+            </div>
           </div>
-        </div>
+        </details>
       </section>
 
       <section class="workflow-panel" aria-labelledby="setupTitle">

@@ -69,6 +69,8 @@ def main():
         raise SystemExit("Publishing helper must create the public repo and trigger Pages")
     if "sampleCountForMode" not in local_analyzer or "return 16" not in local_analyzer:
         raise SystemExit("Local mobile analysis must bound sampled frames")
+    if "timeline.length > 8" not in local_analyzer:
+        raise SystemExit("Local mobile timeline must stay compact")
     if "URL.revokeObjectURL" not in local_analyzer or "video.removeAttribute" not in local_analyzer:
         raise SystemExit("Local analyzer must release video memory after analysis")
 
