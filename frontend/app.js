@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260715-black-panel-v21"),
+  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260715-match-bg-v22"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
