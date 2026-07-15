@@ -568,8 +568,34 @@ function checkAction(action, angles, positions, hands) {
   return issues;
 }
 
-function issuePayload(code, count) {
-  return { code, count, ...FEEDBACK[code] };
+function normalizeSeconds(value) {
+  if (!Number.isFinite(value)) return null;
+  return Number(Math.max(0, value).toFixed(1));
+}
+
+function pushIssueTime(issueTimes, code, timeSeconds) {
+  const normalized = normalizeSeconds(timeSeconds);
+  if (normalized === null) return;
+  const times = issueTimes.get(code) || [];
+  if (!times.some((time) => Math.abs(time - normalized) < 0.05)) {
+    times.push(normalized);
+  }
+  issueTimes.set(code, times);
+}
+
+function issuePayload(code, count, timeSeconds = []) {
+  const times = (timeSeconds || [])
+    .filter(Number.isFinite)
+    .map(normalizeSeconds)
+    .filter((value) => value !== null)
+    .slice(0, 8);
+  return {
+    code,
+    count,
+    time_seconds: times,
+    first_time_seconds: times.length ? times[0] : null,
+    ...FEEDBACK[code],
+  };
 }
 
 function coachPlan(primaryIssues, actionLabel, processedFrames) {
@@ -653,7 +679,7 @@ const ISSUE_SEVERITY = {
 const SEVERITY_TO_STATUS = { high: "red", medium: "yellow", low: "yellow" };
 const STATUS_RANK = { green: 0, yellow: 1, red: 2 };
 const WRIST_MARGIN = 0.05;
-const MAX_ACTUAL_SEQUENCE_FRAMES = 14;
+const MAX_ACTUAL_SEQUENCE_FRAMES = 40;
 const ISSUE_JOINT_STATUS = {
   elbow_bad: { elbow: "yellow" },
   elbow_not_straight: { elbow: "yellow", shoulder: "yellow" },
@@ -695,27 +721,33 @@ function issueCaption(issueCodes) {
   return `影片錯誤：${issue.title}。${issue.instant_cue}`;
 }
 
+function issueCaptionAtTime(issueCodes, timeSeconds = null) {
+  const issue = (issueCodes || []).map((code) => FEEDBACK[code]).find(Boolean);
+  const normalized = normalizeSeconds(timeSeconds);
+  const prefix = normalized === null ? "影片姿勢" : `第 ${normalized.toFixed(1)} 秒`;
+  if (!issue) return `${prefix}：影片中的動作`;
+  return `${prefix}：${issue.title}，${issue.instant_cue}`;
+}
+
 function worldLandmarksToTriples(worldLandmarks) {
   return worldLandmarks.map((point) => [point.x, point.y, point.z || 0]);
 }
 
-function rememberActualFrame(frames, worldLandmarks, issueCodes, severity) {
+function rememberActualFrame(frames, worldLandmarks, issueCodes, severity, timeSeconds = null, hold = 720) {
   if (!worldLandmarks || worldLandmarks.length < 33) return;
   const safeIssueCodes = Array.isArray(issueCodes) ? issueCodes : [];
+  const normalized = normalizeSeconds(timeSeconds);
   const frame = {
     landmarks: worldLandmarksToTriples(worldLandmarks),
     joint_status: jointStatusForIssues(safeIssueCodes),
-    caption: issueCaption(safeIssueCodes),
+    caption: issueCaptionAtTime(safeIssueCodes, normalized),
     severity: severity || 0,
-    hold: 720,
+    time_seconds: normalized,
+    hold,
   };
   frames.push(frame);
   if (frames.length > MAX_ACTUAL_SEQUENCE_FRAMES) {
-    let weakestIndex = 0;
-    for (let index = 1; index < frames.length; index += 1) {
-      if (frames[index].severity < frames[weakestIndex].severity) weakestIndex = index;
-    }
-    frames.splice(weakestIndex, 1);
+    frames.shift();
   }
 }
 
@@ -955,6 +987,7 @@ function analysisResult({
   modalities,
   sampleCount,
   issueCounts,
+  issueTimes = new Map(),
   poseCompare,
   angleSums,
   handSums,
@@ -963,7 +996,7 @@ function analysisResult({
   engine = "mediapipe-web-local",
 }) {
   const primaryIssues = [...issueCounts.entries()]
-    .map(([code, count]) => issuePayload(code, count))
+    .map(([code, count]) => issuePayload(code, count, issueTimes.get(code)))
     .sort(
       (a, b) =>
         SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
@@ -1080,6 +1113,7 @@ function analysisResult({
   modalities,
   sampleCount,
   issueCounts,
+  issueTimes = new Map(),
   poseCompare,
   angleSums,
   handSums,
@@ -1088,7 +1122,7 @@ function analysisResult({
   engine = "mediapipe-web-local",
 }) {
   const primaryIssues = [...issueCounts.entries()]
-    .map(([code, count]) => issuePayload(code, count))
+    .map(([code, count]) => issuePayload(code, count, issueTimes.get(code)))
     .sort(
       (a, b) =>
         SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
@@ -1152,6 +1186,7 @@ export async function analyzeVideoLocally({
     const requestedSamples = sampleCountForMode(powerMode);
     const sampleCount = Math.max(1, Math.min(requestedSamples, Math.ceil(duration * 5)));
     const issueCounts = new Map();
+    const issueTimes = new Map();
     const angleSums = { elbow: 0, knee: 0 };
     const handSums = { extension: 0, gap: 0 };
     let poseFrames = 0;
@@ -1160,10 +1195,14 @@ export async function analyzeVideoLocally({
     let keyFrameIssueCodes = [];
     let keyFrameSeverity = -1;
     const actualSequence = [];
+    const sequenceHold = sampleCount > 1
+      ? Math.max(180, Math.min(1200, (duration / (sampleCount - 1)) * 1000))
+      : 720;
 
     for (let index = 0; index < sampleCount; index += 1) {
       const time = sampleCount === 1 ? 0 : (duration * index) / (sampleCount - 1);
-      await seekVideo(video, Math.min(time, Math.max(0, duration - 0.001)));
+      const sampleTime = Math.min(time, Math.max(0, duration - 0.001));
+      await seekVideo(video, sampleTime);
       const timestampMs = performance.now();
       const poseResult = detectPose(pose, video, timestampMs);
       const poseLandmarks = poseResult.landmarks?.[0];
@@ -1189,6 +1228,7 @@ export async function analyzeVideoLocally({
 
       for (const code of frameIssues) {
         issueCounts.set(code, (issueCounts.get(code) || 0) + 1);
+        pushIssueTime(issueTimes, code, sampleTime);
       }
 
       const worldLandmarks = poseResult.worldLandmarks?.[0];
@@ -1196,7 +1236,7 @@ export async function analyzeVideoLocally({
         (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
         0,
       );
-      rememberActualFrame(actualSequence, worldLandmarks, frameIssues, frameSeverity);
+      rememberActualFrame(actualSequence, worldLandmarks, frameIssues, frameSeverity, sampleTime, sequenceHold);
       if (worldLandmarks && frameSeverity > keyFrameSeverity) {
         keyFrameSeverity = frameSeverity;
         keyFrameLandmarks = worldLandmarks;
@@ -1213,6 +1253,7 @@ export async function analyzeVideoLocally({
       modalities,
       sampleCount,
       issueCounts,
+      issueTimes,
       poseCompare: buildPoseCompare(action, keyFrameLandmarks, keyFrameIssueCodes, actualSequence),
       angleSums,
       handSums,
@@ -1282,6 +1323,7 @@ export async function analyzeImageLocally({
     const poseResult = detectPose(pose, canvas, requestedTimestamp);
     const poseLandmarks = poseResult.landmarks?.[0];
     const issueCounts = new Map();
+    const issueTimes = new Map();
     const angleSums = { elbow: 0, knee: 0 };
     const handSums = { extension: 0, gap: 0 };
     let poseFrames = 0;
@@ -1302,14 +1344,17 @@ export async function analyzeImageLocally({
         handSums.extension = features.finger_extension || 0;
         handSums.gap = features.hand_center_gap || 0;
       }
-      for (const code of frameIssues) issueCounts.set(code, 1);
+      for (const code of frameIssues) {
+        issueCounts.set(code, 1);
+        pushIssueTime(issueTimes, code, 0);
+      }
       const actualSequence = [];
       const worldLandmarks = poseResult.worldLandmarks?.[0];
       const frameSeverity = frameIssues.reduce(
         (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
         0,
       );
-      rememberActualFrame(actualSequence, worldLandmarks, frameIssues, frameSeverity);
+      rememberActualFrame(actualSequence, worldLandmarks, frameIssues, frameSeverity, 0, 720);
       poseCompare = buildPoseCompare(action, worldLandmarks, frameIssues, actualSequence);
     }
 
@@ -1320,6 +1365,7 @@ export async function analyzeImageLocally({
       modalities,
       sampleCount: 1,
       issueCounts,
+      issueTimes,
       poseCompare,
       angleSums,
       handSums,

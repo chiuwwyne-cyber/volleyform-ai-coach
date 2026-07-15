@@ -379,6 +379,8 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
         title: "Platform too soft",
         severity: "high",
         count: 3,
+        time_seconds: [1.2, 3.4],
+        first_time_seconds: 1.2,
         body_part: "Forearms",
         instant_cue: "Lock elbows",
         message: "The platform is unstable.",
@@ -419,6 +421,8 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   const issueCard = context.document.querySelector("#issues").children[0];
   assert.match(issueCard.innerHTML, /Forearms/);
   assert.match(issueCard.innerHTML, /Hold platform shape/);
+  assert.match(issueCard.innerHTML, /第 1\.2 秒/);
+  assert.doesNotMatch(issueCard.innerHTML, /影格/);
 
   console.log("frontend behavior ok");
   console.log(`fetch calls: ${context.calls.length}`);

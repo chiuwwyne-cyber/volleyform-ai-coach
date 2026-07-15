@@ -964,6 +964,75 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     animation.frameId = requestAnimationFrame(tick);
   }
 
+  function playPoseSequenceForVideo(sequence, { caption = "影片中的實際動作", loop = false, speedFactor = 1 } = {}) {
+    stopAnimation();
+    if (!sequence?.length || typeof requestAnimationFrame !== "function") {
+      setStaticPose(null, null);
+      return;
+    }
+
+    let frames = sequence
+      .filter((frame) => frame.landmarks?.length >= 33)
+      .map((frame) => ({
+        points: preparePoseForDisplay(frame.landmarks),
+        jointStatus: frame.joint_status || frame.jointStatus || {},
+        hold: frame.hold || 720,
+        caption: frame.caption || caption,
+      }));
+    if (!frames.length) {
+      setStaticPose(null, null);
+      return;
+    }
+    frames = buildSinglePoseMotion(frames);
+
+    const bounds = computeFramesBounds(frames);
+    const framed = frameCamera(bounds, camera.fov, framePadding);
+    lookTarget = framed.center;
+    distance = Math.max(framed.distance, cameraDistance);
+    applyCamera();
+
+    const durationScale = Math.max(0.25, speedFactor);
+    const totalDuration = frames.reduce((sum, frame) => sum + frame.hold * durationScale, 0);
+    const state = { startTime: null, lastDraw: 0 };
+    animation = { frameId: 0 };
+
+    const tick = (timestamp) => {
+      if (state.startTime === null) state.startTime = timestamp;
+      if (timestamp - state.lastDraw < FRAME_INTERVAL_MS) {
+        animation.frameId = requestAnimationFrame(tick);
+        return;
+      }
+      state.lastDraw = timestamp;
+
+      const rawElapsed = timestamp - state.startTime;
+      const elapsed = loop ? rawElapsed % totalDuration : Math.min(rawElapsed, Math.max(0, totalDuration - 1));
+      let cursor = 0;
+      let index = frames.length - 1;
+      for (let i = 0; i < frames.length; i += 1) {
+        const hold = frames[i].hold * durationScale;
+        if (elapsed < cursor + hold) {
+          index = i;
+          break;
+        }
+        cursor += hold;
+      }
+      const nextIndex = (index + 1) % frames.length;
+      const localT = easeInOut(Math.min(1, (elapsed - cursor) / (frames[index].hold * durationScale)));
+      const points = lerpTriples(frames[index].points, frames[nextIndex].points, localT);
+      figure.update(points, frames[index].jointStatus);
+      ball.setPosition(null);
+      setCue(frames[index].caption);
+      draw();
+
+      if (!loop && rawElapsed >= totalDuration) {
+        animation = null;
+        return;
+      }
+      animation.frameId = requestAnimationFrame(tick);
+    };
+    animation.frameId = requestAnimationFrame(tick);
+  }
+
   function setView(nextView) {
     view = nextView === "side" ? "side" : "front";
     applyCamera();
@@ -979,5 +1048,5 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     if (cueEl.parentNode === container) container.removeChild(cueEl);
   }
 
-  return { setStaticPose, playDemo, playPoseSequence, setView, resize, dispose };
+  return { setStaticPose, playDemo, playPoseSequence: playPoseSequenceForVideo, setView, resize, dispose };
 }

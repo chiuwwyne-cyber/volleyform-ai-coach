@@ -1237,6 +1237,122 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function severityLabel(severity) {
+  if (severity === "high") return "高風險";
+  if (severity === "medium") return "中風險";
+  return "提醒";
+}
+
+function formatSeconds(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds)) return null;
+  return `第 ${Math.max(0, seconds).toFixed(1)} 秒`;
+}
+
+function issueTimeSummary(item) {
+  const times = Array.isArray(item.time_seconds) ? item.time_seconds : [];
+  const labels = times.map(formatSeconds).filter(Boolean);
+  if (labels.length) return labels.slice(0, 4).join("、");
+  const first = formatSeconds(item.first_time_seconds);
+  return first || `發生 ${item.count || 0} 次`;
+}
+
+function renderResult(result) {
+  summaryTitle.textContent = `${result.action_label} 分析結果`;
+  coachSummary.textContent = result.coach_summary;
+  frameCount.textContent = `已分析 ${result.processed_frames || 0} 個姿勢取樣`;
+  renderCoachPlan(result.coach_plan);
+  renderIssues(result.primary_issues);
+  renderPoseCompare(result.pose_compare, result.action);
+}
+
+function renderIssues(items) {
+  issues.innerHTML = "";
+  issues.classList.remove("empty");
+
+  if (!items || items.length === 0) {
+    issues.classList.add("empty");
+    issues.textContent = "目前沒有偵測到明顯錯誤；請保持全身、手部與腳步完整入鏡。";
+    return;
+  }
+
+  for (const item of items) {
+    const card = document.createElement("article");
+    card.className = `issue-card ${item.severity}`;
+    card.innerHTML = `
+      <div class="issue-title">
+        <span>${escapeHtml(item.title)}</span>
+        <small>${severityLabel(item.severity)} · ${escapeHtml(issueTimeSummary(item))}</small>
+      </div>
+      <div class="issue-meta">
+        <span>${escapeHtml(item.body_part || "動作位置")}</span>
+        <strong>${escapeHtml(item.instant_cue || "先修正主要受力點")}</strong>
+      </div>
+      <p>${escapeHtml(item.message)}</p>
+      <p class="issue-why">${escapeHtml(item.why_it_matters || "")}</p>
+      <div class="drill-box">${escapeHtml(item.practice_drill || "")}</div>
+      <ul class="fix-list">${(item.fixes || []).map((fix) => `<li>${escapeHtml(fix)}</li>`).join("")}</ul>
+      <a class="video-link" href="${item.video_url}" target="_blank" rel="noreferrer">觀看修正影片</a>
+    `;
+    issues.appendChild(card);
+  }
+}
+
+function renderPoseCompareView() {
+  actualViewport?.setView(poseCompareView);
+  demoViewport?.setView(poseCompareView);
+  if (!lastPoseCompare?.available) return;
+
+  const actualSequence = playableActualSequence(lastPoseCompare);
+  if (actualSequence.length > 0 && typeof actualViewport?.playPoseSequence === "function") {
+    actualViewport.playPoseSequence(actualSequence, {
+      caption: "影片中的實際動作",
+      loop: false,
+      speedFactor: 1,
+    });
+    return;
+  }
+  actualViewport?.setStaticPose(
+    lastPoseCompare.actual_landmarks,
+    lastPoseCompare.joint_status,
+    { caption: "影片中的實際動作" },
+  );
+}
+
+function renderPoseCompare(poseCompare, action) {
+  lastPoseCompare = poseCompare;
+  lastPoseCompareAction = action || actionInput?.value || lastPoseCompareAction;
+  startDemoAnimation(lastPoseCompareAction);
+
+  if (!poseCompare || !poseCompare.available) {
+    poseCompareNote.textContent = noPoseCompareText;
+    ensureViewports().then(() => actualViewport.setStaticPose(null, null));
+    return;
+  }
+
+  const actualSequence = playableActualSequence(poseCompare);
+  poseCompareNote.textContent = actualSequence.length > 0
+    ? "左側 3D 小人會依照影片時間順序重播你的實際動作一次；錯誤會標示在第幾秒。黃色代表需要修正，紅色是高風險受力點。右側是同動作的正確慢動作示範。"
+    : "左側是影片或照片分析到的姿勢；黃色代表需要修正，紅色是高風險受力點。右側是同動作的正確慢動作示範。";
+
+  ensureViewports().then(() => {
+    actualViewport.setView(poseCompareView);
+    if (actualSequence.length > 0 && typeof actualViewport.playPoseSequence === "function") {
+      actualViewport.playPoseSequence(actualSequence, {
+        caption: "影片中的實際動作",
+        loop: false,
+        speedFactor: 1,
+      });
+      return;
+    }
+    actualViewport.setStaticPose(
+      poseCompare.actual_landmarks,
+      poseCompare.joint_status,
+      { caption: "影片中的實際動作" },
+    );
+  });
+}
+
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();

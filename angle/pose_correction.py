@@ -189,14 +189,18 @@ def _correct_wrist_low(points):
     return True
 
 
-def build_pose_compare(action_type, world_landmarks):
-    if not world_landmarks or len(world_landmarks) < 33:
+def build_pose_compare(action_type, world_landmarks, issue_codes=None, actual_sequence=None):
+    actual_sequence = actual_sequence or []
+    if (not world_landmarks or len(world_landmarks) < 33) and not actual_sequence:
         return {"available": False}
 
-    actual = [
-        [float(point.x), float(point.y), float(getattr(point, "z", 0.0))]
-        for point in world_landmarks
-    ]
+    if world_landmarks and len(world_landmarks) >= 33:
+        actual = [
+            [float(point.x), float(point.y), float(getattr(point, "z", 0.0))]
+            for point in world_landmarks
+        ]
+    else:
+        actual = actual_sequence[0]["landmarks"]
     corrected = [list(point) for point in actual]
 
     spec = JOINT_SPECS.get(action_type, {})
@@ -232,4 +236,5 @@ def build_pose_compare(action_type, world_landmarks):
         "joint_status": joint_status,
         "actual_landmarks": actual,
         "corrected_landmarks": corrected,
+        "actual_sequence": actual_sequence,
     }
