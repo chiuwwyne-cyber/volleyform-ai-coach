@@ -1050,7 +1050,7 @@ function loadPose3d() {
 
 async function ensureViewports() {
   const mod = await loadPose3d();
-  if (!actualViewport) actualViewport = mod.createPoseViewport(poseCompareActual, { cameraDistance: 2.1 });
+  if (!actualViewport) actualViewport = mod.createPoseViewport(poseCompareActual, { cameraDistance: 2.7, framePadding: 1.9 });
   if (!demoViewport) demoViewport = mod.createPoseViewport(poseCompareCorrected, { cameraDistance: 2.7 });
   return mod;
 }

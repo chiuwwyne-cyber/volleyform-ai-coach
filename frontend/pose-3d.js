@@ -352,13 +352,13 @@ function computeFramesBounds(frames) {
 
 // Automatically size and center the camera so the whole bounding box (across
 // every keyframe, including the ball) stays in frame from front or side.
-function frameCamera(bounds, fovDeg) {
+function frameCamera(bounds, fovDeg, padding = 1.35) {
   const center = bounds.min.clone().add(bounds.max).multiplyScalar(0.5);
   const size = bounds.max.clone().sub(bounds.min);
   const halfV = Math.max(size.y / 2, 0.2);
   const halfH = Math.max(size.x, size.z) / 2 || 0.2;
   const halfFov = (fovDeg * Math.PI) / 360;
-  const distance = Math.max(halfV, halfH) / Math.tan(halfFov) * 1.35;
+  const distance = Math.max(halfV, halfH) / Math.tan(halfFov) * padding;
   return { center, distance };
 }
 
@@ -382,41 +382,36 @@ function easeInOut(t) {
 // ---------------------------------------------------------------------------
 
 const BODY_PARTS = [
-  { a: 11, b: 13, radius: 0.034, joint: "shoulder" },
-  { a: 12, b: 14, radius: 0.034, joint: "shoulder" },
-  { a: 13, b: 15, radius: 0.026, joint: "elbow" },
-  { a: 14, b: 16, radius: 0.026, joint: "elbow" },
-  { a: 15, b: 19, radius: 0.018, joint: "wrist" },
-  { a: 16, b: 20, radius: 0.018, joint: "wrist" },
-  { a: 15, b: 17, radius: 0.013, joint: "wrist" },
-  { a: 15, b: 21, radius: 0.013, joint: "wrist" },
-  { a: 16, b: 18, radius: 0.013, joint: "wrist" },
-  { a: 16, b: 22, radius: 0.013, joint: "wrist" },
-  { a: 17, b: 19, radius: 0.009, joint: "wrist" },
-  { a: 18, b: 20, radius: 0.009, joint: "wrist" },
-  { a: 23, b: 25, radius: 0.044, joint: "knee" },
-  { a: 24, b: 26, radius: 0.044, joint: "knee" },
-  { a: 25, b: 27, radius: 0.033, joint: "knee" },
-  { a: 26, b: 28, radius: 0.033, joint: "knee" },
-  { a: 27, b: 31, radius: 0.022, joint: null },
-  { a: 28, b: 32, radius: 0.022, joint: null },
+  { a: 11, b: 13, radius: 0.055, joint: "shoulder" },
+  { a: 12, b: 14, radius: 0.055, joint: "shoulder" },
+  { a: 13, b: 15, radius: 0.045, joint: "elbow" },
+  { a: 14, b: 16, radius: 0.045, joint: "elbow" },
+  { a: 15, b: 19, radius: 0.019, joint: "wrist" },
+  { a: 16, b: 20, radius: 0.019, joint: "wrist" },
+  { a: 15, b: 17, radius: 0.014, joint: "wrist" },
+  { a: 15, b: 21, radius: 0.014, joint: "wrist" },
+  { a: 16, b: 18, radius: 0.014, joint: "wrist" },
+  { a: 16, b: 22, radius: 0.014, joint: "wrist" },
+  { a: 17, b: 19, radius: 0.01, joint: "wrist" },
+  { a: 18, b: 20, radius: 0.01, joint: "wrist" },
+  { a: 23, b: 25, radius: 0.075, joint: "knee" },
+  { a: 24, b: 26, radius: 0.075, joint: "knee" },
+  { a: 25, b: 27, radius: 0.056, joint: "knee" },
+  { a: 26, b: 28, radius: 0.056, joint: "knee" },
+  { a: 27, b: 31, radius: 0.035, joint: null },
+  { a: 28, b: 32, radius: 0.035, joint: null },
 ];
-const CORE_PARTS = [
-  { a: 11, b: 12, radius: 0.026, joint: "shoulder" },
-  { a: 23, b: 24, radius: 0.026, joint: null },
-  { a: 11, b: 23, radius: 0.018, joint: null },
-  { a: 12, b: 24, radius: 0.018, joint: null },
-  { a: 11, b: 24, radius: 0.011, joint: null },
-  { a: 12, b: 23, radius: 0.011, joint: null },
-];
-const CORE_COLOR = 0xd8d1c4;
-const SPINE_RADIUS = 0.022;
-const NECK_RADIUS = 0.024;
+const BODY_COLOR = 0xf4efe4;
+const BODY_SHADOW_COLOR = 0xd7d0c3;
+const NECK_RADIUS = 0.038;
+const TORSO_RADIUS = 0.17;
+const CHEST_RADIUS = 0.14;
+const PELVIS_RADIUS = 0.13;
 const HEAD_INDEX = 0;
-const HEAD_RADIUS = 0.12;
+const HEAD_RADIUS = 0.145;
 
 const NEUTRAL_COLOR = 0xf1e6d3;
-const STATUS_COLOR = { green: 0x3ddc84, yellow: 0xffd34f, red: 0xff5d5d };
+const STATUS_COLOR = { green: BODY_COLOR, yellow: 0xffd34f, red: 0xff5d5d };
 const RISK_RING_COLOR = { yellow: 0xffc43d, red: 0xff3b3b };
 const DEMO_SLOW_FACTOR = 1.75;
 const FRAME_INTERVAL_MS = 1000 / 60;
@@ -484,7 +479,7 @@ const JOINT_MARKERS = [
 ];
 
 function statusColor(joint, jointStatus) {
-  if (!joint) return NEUTRAL_COLOR;
+  if (!joint) return BODY_COLOR;
   return STATUS_COLOR[jointStatus?.[joint] || "green"];
 }
 
@@ -612,35 +607,55 @@ function midVec3(p1, p2) {
   return toVec3(p1).add(toVec3(p2)).multiplyScalar(0.5);
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function safeHeadPosition(points, shoulderMid) {
+  const rawHead = toVec3(points[HEAD_INDEX]);
+  const shoulderWidth = Math.max(toVec3(points[11]).distanceTo(toVec3(points[12])), 0.25);
+  const maxSideOffset = shoulderWidth * 0.55;
+  const maxDepthOffset = shoulderWidth * 0.7;
+  return new THREE.Vector3(
+    shoulderMid.x + clamp(rawHead.x - shoulderMid.x, -maxSideOffset, maxSideOffset),
+    clamp(rawHead.y, shoulderMid.y + 0.18, shoulderMid.y + 0.46),
+    shoulderMid.z + clamp(rawHead.z - shoulderMid.z, -maxDepthOffset, maxDepthOffset),
+  );
+}
+
 function makeUnitCapsule(radius, color) {
   const geometry = new THREE.CapsuleGeometry(radius, 1, 4, 8);
   const material = new THREE.MeshStandardMaterial({ color, roughness: 0.65, metalness: 0.04 });
   return new THREE.Mesh(geometry, material);
 }
 
+function makeSphere(radius, color, widthSegments = 20, heightSegments = 16) {
+  const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0.035 });
+  return new THREE.Mesh(geometry, material);
+}
+
 function createFigure(scene) {
   const group = new THREE.Group();
-  const coreLinks = CORE_PARTS.map((part) => ({
-    part,
-    mesh: makeUnitCapsule(part.radius, CORE_COLOR),
-  }));
-  for (const link of coreLinks) group.add(link.mesh);
-
   const limbs = BODY_PARTS.map((part) => ({
     part,
-    mesh: makeUnitCapsule(part.radius, NEUTRAL_COLOR),
+    mesh: makeUnitCapsule(part.radius, BODY_COLOR),
   }));
   for (const limb of limbs) group.add(limb.mesh);
 
-  const torsoMesh = makeUnitCapsule(SPINE_RADIUS, CORE_COLOR);
+  const torsoMesh = makeUnitCapsule(TORSO_RADIUS, BODY_COLOR);
   group.add(torsoMesh);
 
-  const neckMesh = makeUnitCapsule(NECK_RADIUS, NEUTRAL_COLOR);
+  const chestMesh = makeSphere(CHEST_RADIUS, BODY_COLOR);
+  group.add(chestMesh);
+
+  const pelvisMesh = makeSphere(PELVIS_RADIUS, BODY_SHADOW_COLOR);
+  group.add(pelvisMesh);
+
+  const neckMesh = makeUnitCapsule(NECK_RADIUS, BODY_COLOR);
   group.add(neckMesh);
 
-  const headGeometry = new THREE.SphereGeometry(HEAD_RADIUS, 20, 16);
-  const headMaterial = new THREE.MeshStandardMaterial({ color: NEUTRAL_COLOR, roughness: 0.55, metalness: 0.04 });
-  const headMesh = new THREE.Mesh(headGeometry, headMaterial);
+  const headMesh = makeSphere(HEAD_RADIUS, BODY_COLOR, 24, 18);
   group.add(headMesh);
 
   const jointMarkers = JOINT_MARKERS.map((marker) => {
@@ -673,20 +688,22 @@ function createFigure(scene) {
   return {
     group,
     update(points, jointStatus) {
-      for (const link of coreLinks) {
-        orientCapsule(link.mesh, points[link.part.a], points[link.part.b]);
-        link.mesh.material.color.setHex(link.part.joint ? statusColor(link.part.joint, jointStatus) : CORE_COLOR);
-      }
-
       for (const limb of limbs) {
         orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
         limb.mesh.material.color.setHex(statusColor(limb.part.joint, jointStatus));
       }
       const shoulderMid = midVec3(points[11], points[12]);
       const hipMid = midVec3(points[23], points[24]);
-      const headPos = toVec3(points[HEAD_INDEX]);
-      orientCapsuleVec(torsoMesh, shoulderMid, hipMid);
-      orientCapsuleVec(neckMesh, shoulderMid, headPos);
+      const headPos = safeHeadPosition(points, shoulderMid);
+      const torsoTop = shoulderMid.clone().lerp(hipMid, 0.12);
+      const torsoBottom = shoulderMid.clone().lerp(hipMid, 0.9);
+      const chestPos = shoulderMid.clone().lerp(hipMid, 0.2);
+      orientCapsuleVec(torsoMesh, torsoTop, torsoBottom);
+      chestMesh.position.copy(chestPos);
+      pelvisMesh.position.copy(hipMid);
+      const neckTop = headPos.clone();
+      neckTop.y -= HEAD_RADIUS * 0.62;
+      orientCapsuleVec(neckMesh, shoulderMid.clone().lerp(headPos, 0.18), neckTop);
       headMesh.position.copy(headPos);
 
       for (const marker of jointMarkers) {
@@ -694,6 +711,7 @@ function createFigure(scene) {
         const status = marker.joint ? jointStatus?.[marker.joint] || "green" : "green";
         marker.mesh.position.copy(position);
         marker.mesh.material.color.setHex(statusColor(marker.joint, jointStatus));
+        marker.mesh.visible = status !== "green";
         marker.halo.position.copy(position);
         marker.halo.visible = status === "yellow" || status === "red";
         if (marker.halo.visible) {
@@ -710,11 +728,12 @@ function createFigure(scene) {
       shadowMesh.scale.set(scale, scale, scale);
     },
     dispose() {
-      for (const link of coreLinks) link.mesh.geometry.dispose();
       for (const limb of limbs) limb.mesh.geometry.dispose();
       torsoMesh.geometry.dispose();
+      chestMesh.geometry.dispose();
+      pelvisMesh.geometry.dispose();
       neckMesh.geometry.dispose();
-      headGeometry.dispose();
+      headMesh.geometry.dispose();
       for (const marker of jointMarkers) {
         marker.geometry.dispose();
         marker.haloGeometry.dispose();
@@ -753,7 +772,7 @@ function createBall(scene) {
 // Public viewport: one Three.js scene bound to a container element.
 // ---------------------------------------------------------------------------
 
-export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
+export function createPoseViewport(container, { cameraDistance = 2.1, framePadding = 1.35 } = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 30);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -828,7 +847,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
     }
     const displayLandmarks = preparePoseForDisplay(landmarks);
     const bounds = computeFramesBounds([{ points: displayLandmarks }]);
-    const framed = frameCamera(bounds, camera.fov);
+    const framed = frameCamera(bounds, camera.fov, framePadding);
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
@@ -842,7 +861,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
 
     const frames = buildSequence(action, variant);
     const bounds = computeFramesBounds(frames);
-    const framed = frameCamera(bounds, camera.fov);
+    const framed = frameCamera(bounds, camera.fov, framePadding);
     lookTarget = framed.center;
     distance = framed.distance;
     applyCamera();
@@ -908,7 +927,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
     frames = buildSinglePoseMotion(frames);
 
     const bounds = computeFramesBounds(frames);
-    const framed = frameCamera(bounds, camera.fov);
+    const framed = frameCamera(bounds, camera.fov, framePadding);
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
