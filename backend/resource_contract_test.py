@@ -24,6 +24,7 @@ def main():
     gitignore = _read(".gitignore")
     publish_script = _read("publish_fixed_site.ps1")
     local_analyzer = _read(os.path.join("frontend", "local-analyzer.js"))
+    pose_3d = _read(os.path.join("frontend", "pose-3d.js"))
 
     if "include_image=False" not in analyzer:
         raise SystemExit("Backend analyzer must disable frame images during API analysis")
@@ -79,6 +80,8 @@ def main():
         raise SystemExit("Realtime analysis must release animation and history resources")
     if "pagehide" not in app or "visibilitychange" not in app:
         raise SystemExit("Mobile camera resources must be released when the page is hidden")
+    if "function landmarkTriple" not in pose_3d or "point.x" not in pose_3d or "shouldConvertYUpToYDown" not in pose_3d:
+        raise SystemExit("3D pose viewer must normalize MediaPipe object landmarks and coordinate direction")
 
     print("resource contract ok")
     print("checks: mobile resources, remote tunnel, fixed Pages site, cloud deploy, PWA")

@@ -850,6 +850,107 @@ h3 {
   font-size: 13px;
 }
 
+.dimension-panel {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #181a18;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 6px;
+}
+
+.dimension-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.dimension-heading h3 {
+  margin-top: 3px;
+  font-size: 24px;
+}
+
+.dimension-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dimension-card {
+  position: relative;
+  display: grid;
+  min-height: 176px;
+  gap: 8px;
+  align-content: start;
+  padding: 16px;
+  background: #202220;
+  border: 1px solid #3d3f3b;
+  border-top: 4px solid var(--accent);
+  border-radius: 6px;
+}
+
+.dimension-card.good {
+  border-top-color: var(--green);
+}
+
+.dimension-card.watch {
+  border-top-color: var(--gold);
+}
+
+.dimension-card.risk {
+  border-top-color: var(--red);
+}
+
+.dimension-card.pending {
+  border-top-color: var(--muted);
+}
+
+.dimension-icon {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #171817;
+  font-size: 13px;
+  font-weight: 950;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.dimension-card.good .dimension-icon {
+  background: var(--green);
+}
+
+.dimension-card.watch .dimension-icon {
+  background: var(--gold);
+}
+
+.dimension-card.risk .dimension-icon {
+  color: #fff;
+  background: var(--red);
+}
+
+.dimension-card.pending .dimension-icon {
+  color: var(--ink);
+  background: #3a3d39;
+}
+
+.dimension-card strong {
+  font-size: 18px;
+}
+
+.dimension-card small {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.dimension-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .result-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
@@ -1460,6 +1561,7 @@ h3 {
   .connection-panel,
   .capture-panel,
   .modality-panel,
+  .dimension-grid,
   .result-grid {
     grid-template-columns: 1fr;
   }

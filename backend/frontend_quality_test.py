@@ -105,7 +105,7 @@ def main():
         raise SystemExit("Frontend must discover actions and modalities from backend capabilities")
     if 'id="backendUrl"' not in html or "volleyballCoachBackendUrl" not in js:
         raise SystemExit("Frontend must let remote web/mobile clients configure backend URL")
-    if "手機本地 AI" not in html or "影片不需上傳" not in html:
+    if 'id="connectionNote"' not in html or "MediaPipe" not in html or "影片不需上傳" not in html:
         raise SystemExit("Frontend must explain private on-device mobile analysis")
     if "./styles.css?v=" not in html or "./app.js?v=" not in html:
         raise SystemExit("Frontend assets must use versioned relative paths for GitHub Pages subpaths")
@@ -141,8 +141,8 @@ def main():
         raise SystemExit("Recording UI must be styled consistently")
     if 'class="workspace-header"' not in html or ".workspace-badges" not in css:
         raise SystemExit("Frontend must present the analysis workspace before configuration")
-    if "4 個分析維度" in html or "拆成 4 個維度" in html:
-        raise SystemExit("Design evaluation dimensions must not be shown as product content")
+    if 'id="dimensionGrid"' not in html or ".dimension-card" not in css:
+        raise SystemExit("Frontend must classify analysis feedback into four dimension cards")
     if "renderCoachPlan" not in js or "instant_cue" not in js or "practice_drill" not in js:
         raise SystemExit("Frontend must render clear coach guidance fields")
     if ".coach-plan" not in css or ".issue-meta" not in css or ".drill-box" not in css:

@@ -483,17 +483,30 @@ function statusColor(joint, jointStatus) {
   return STATUS_COLOR[jointStatus?.[joint] || "green"];
 }
 
+function landmarkTriple(point) {
+  if (Array.isArray(point) && point.length >= 3) {
+    const triple = [Number(point[0]), Number(point[1]), Number(point[2])];
+    return triple.every(Number.isFinite) ? triple : null;
+  }
+  if (point && typeof point === "object") {
+    const triple = [Number(point.x), Number(point.y), Number(point.z ?? 0)];
+    return triple.every(Number.isFinite) ? triple : null;
+  }
+  return null;
+}
+
 function toVec3(point) {
+  const triple = landmarkTriple(point) || [0, 0, 0];
   // Flip y so the y-down landmark convention becomes Three.js's y-up.
-  return new THREE.Vector3(point[0], -point[1], point[2]);
+  return new THREE.Vector3(triple[0], -triple[1], triple[2]);
 }
 
 function isFiniteTriple(point) {
-  return Array.isArray(point) && point.length >= 3 && point.every(Number.isFinite);
+  return !!landmarkTriple(point);
 }
 
 function averageTriple(points) {
-  const valid = points.filter(isFiniteTriple);
+  const valid = points.map(landmarkTriple).filter(Boolean);
   if (!valid.length) return [0, 0, 0];
   return valid.reduce(
     (sum, point) => [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]],
@@ -513,14 +526,53 @@ function poseBounds(points) {
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
   for (const point of points) {
-    if (!isFiniteTriple(point)) continue;
+    const triple = landmarkTriple(point);
+    if (!triple) continue;
     for (let axis = 0; axis < 3; axis += 1) {
-      min[axis] = Math.min(min[axis], point[axis]);
-      max[axis] = Math.max(max[axis], point[axis]);
+      min[axis] = Math.min(min[axis], triple[axis]);
+      max[axis] = Math.max(max[axis], triple[axis]);
     }
   }
   if (!Number.isFinite(min[0])) return { min: [0, 0, 0], max: [0, 0, 0], size: [1, 1, 1] };
   return { min, max, size: [max[0] - min[0], max[1] - min[1], max[2] - min[2]] };
+}
+
+function averageAxis(points, indices, axis) {
+  const values = indices
+    .map((index) => landmarkTriple(points[index]))
+    .filter(Boolean)
+    .map((point) => point[axis])
+    .filter(Number.isFinite);
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function shouldConvertYUpToYDown(points) {
+  const headY = averageAxis(points, [0, 7, 8, 9, 10], 1);
+  const footY = averageAxis(points, [27, 28, 29, 30, 31, 32], 1);
+  return headY !== null && footY !== null && headY > footY;
+}
+
+function poseDisplayHeight(points, bounds) {
+  const headY = averageAxis(points, [0, 7, 8, 9, 10], 1);
+  const footY = averageAxis(points, [27, 28, 29, 30, 31, 32], 1);
+  if (headY !== null && footY !== null && footY > headY) {
+    return Math.max(footY - headY, 0.35);
+  }
+  const shoulderY = averageAxis(points, [11, 12], 1);
+  const hipY = averageAxis(points, [23, 24], 1);
+  if (shoulderY !== null && hipY !== null && hipY > shoulderY) {
+    return Math.max((hipY - shoulderY) * 2.45, 0.35);
+  }
+  return Math.max(bounds.size[1], 0.35);
+}
+
+function compressDepth(points, maxDepth) {
+  const bounds = poseBounds(points);
+  if (bounds.size[2] <= maxDepth) return points;
+  const centerZ = (bounds.min[2] + bounds.max[2]) / 2;
+  const scale = maxDepth / bounds.size[2];
+  return points.map((point) => [point[0], point[1], centerZ + (point[2] - centerZ) * scale]);
 }
 
 function enforcePairWidth(points, leftIdx, rightIdx, targetWidth) {
@@ -545,18 +597,20 @@ function addFallbackDepth(points) {
 
 function preparePoseForDisplay(landmarks) {
   if (!landmarks || landmarks.length < 33) return landmarks;
-  const raw = landmarks.map((point) => (
-    isFiniteTriple(point) ? [point[0], point[1], point[2]] : [0, 0, 0]
-  ));
+  let raw = landmarks.map((point) => landmarkTriple(point) || [0, 0, 0]);
+  if (shouldConvertYUpToYDown(raw)) {
+    raw = raw.map((point) => [point[0], -point[1], point[2]]);
+  }
   const center = poseDisplayCenter(raw);
   const rawBounds = poseBounds(raw);
-  const height = Math.max(rawBounds.size[1], 0.35);
-  const scale = DISPLAY_TARGET_HEIGHT / height;
-  const prepared = raw.map((point) => [
+  const height = poseDisplayHeight(raw, rawBounds);
+  const scale = clamp(DISPLAY_TARGET_HEIGHT / height, 0.4, 5);
+  let prepared = raw.map((point) => [
     (point[0] - center[0]) * scale,
     (point[1] - center[1]) * scale,
     (point[2] - center[2]) * scale,
   ]);
+  prepared = compressDepth(prepared, DISPLAY_TARGET_HEIGHT * 0.75);
 
   for (const [leftIdx, rightIdx, width] of MIN_DISPLAY_WIDTHS) {
     enforcePairWidth(prepared, leftIdx, rightIdx, width);
