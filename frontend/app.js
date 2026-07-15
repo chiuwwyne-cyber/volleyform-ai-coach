@@ -1,3 +1,7 @@
+const APP_BUILD = encodeURIComponent(
+  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260715-cache-v18"),
+);
+
 const serverStatus = document.querySelector("#serverStatus");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const backendUrlInput = document.querySelector("#backendUrl");
@@ -1043,7 +1047,7 @@ let pose3dPromise = null;
 function loadPose3d() {
   if (!pose3dPromise) {
     pose3dPromise =
-      typeof globalThis.__pose3dLoader === "function" ? globalThis.__pose3dLoader() : import("./pose-3d.js");
+      typeof globalThis.__pose3dLoader === "function" ? globalThis.__pose3dLoader() : import(`./pose-3d.js?v=${APP_BUILD}`);
   }
   return pose3dPromise;
 }
@@ -1394,7 +1398,7 @@ if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
     swRefreshing = true;
     window.location.reload();
   });
-  navigator.serviceWorker.register("./service-worker.js").catch(() => {
+  navigator.serviceWorker.register(`./service-worker.js?v=${APP_BUILD}`, { updateViaCache: "none" }).catch(() => {
     // The app still works online when service worker registration is unavailable.
   });
 }

@@ -12,6 +12,22 @@ $TunnelPidFile = Join-Path $RuntimeDir "cloudflared.pid"
 $DesktopLatestShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "VolleyForm 本次網址.url"
 $Port = 8000
 
+function Get-AppBuildVersion {
+    try {
+        $Git = Get-Command git -ErrorAction SilentlyContinue
+        if ($Git) {
+            $Commit = (& $Git.Source -C $Root rev-parse --short HEAD 2>$null).Trim()
+            if ($Commit) {
+                return $Commit
+            }
+        }
+    }
+    catch {}
+    return Get-Date -Format "yyyyMMddHHmmss"
+}
+
+$BuildVersion = "$(Get-AppBuildVersion)-$SessionId"
+
 if (-not (Test-Path $Python)) {
     Write-Host "Cannot find .venv Python. Please install requirements first." -ForegroundColor Red
     exit 1
@@ -185,9 +201,13 @@ function Start-PublicBackendTunnel {
 function New-FrontendUrl {
     param(
         [string]$BackendUrl,
-        [string]$SessionId
+        [string]$SessionId,
+        [string]$BuildVersion
     )
-    $QueryParts = @("session=$([System.Uri]::EscapeDataString($SessionId))")
+    $QueryParts = @(
+        "session=$([System.Uri]::EscapeDataString($SessionId))",
+        "build=$([System.Uri]::EscapeDataString($BuildVersion))"
+    )
     if ($BackendUrl) {
         $QueryParts += "backend=$([System.Uri]::EscapeDataString($BackendUrl))"
     }
@@ -201,6 +221,7 @@ function Write-ShareConfig {
         [string]$FrontendUrl,
         [string]$BackendUrl,
         [string]$SessionId,
+        [string]$BuildVersion,
         [int]$Port
     )
     $LocalUrl = "http://127.0.0.1:$Port"
@@ -212,6 +233,7 @@ function Write-ShareConfig {
         backendUrl = $BackendUrl
         preferredUrl = $FrontendUrl
         sessionId = $SessionId
+        buildVersion = $BuildVersion
         desktopLatestUrl = $DesktopLatestShortcut
         generatedAt = (Get-Date).ToString("o")
         source = "start_volleyform"
@@ -233,8 +255,8 @@ function Write-DesktopLatestUrl {
 
 $BackendProcess = Start-BackendIfNeeded -Port $Port
 $BackendUrl = Start-PublicBackendTunnel -Port $Port
-$FrontendUrl = New-FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId
-Write-ShareConfig -FrontendUrl $FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId -Port $Port
+$FrontendUrl = New-FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId -BuildVersion $BuildVersion
+Write-ShareConfig -FrontendUrl $FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId -BuildVersion $BuildVersion -Port $Port
 Write-DesktopLatestUrl -FrontendUrl $FrontendUrl
 
 Write-Host ""

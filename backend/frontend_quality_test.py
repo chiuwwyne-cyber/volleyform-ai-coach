@@ -107,8 +107,8 @@ def main():
         raise SystemExit("Frontend must let remote web/mobile clients configure backend URL")
     if "手機本地 AI" not in html or "影片不需上傳" not in html:
         raise SystemExit("Frontend must explain private on-device mobile analysis")
-    if 'href="./styles.css"' not in html or 'src="./app.js"' not in html:
-        raise SystemExit("Frontend assets must use relative paths for GitHub Pages subpaths")
+    if "./styles.css?v=" not in html or "./app.js?v=" not in html:
+        raise SystemExit("Frontend assets must use versioned relative paths for GitHub Pages subpaths")
     if 'id="actionChoices"' not in html or "renderActionChoices" not in js:
         raise SystemExit("Action selection must support direct mouse/touch buttons")
     if "./manifest.webmanifest" not in html or "serviceWorker.register" not in js:

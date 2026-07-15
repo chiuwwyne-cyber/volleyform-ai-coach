@@ -6,10 +6,19 @@
     <meta name="theme-color" content="#171817" />
     <meta name="description" content="以 3D 身體骨架與手部關節分析排球動作的開源 AI 教練。" />
     <title>VolleyForm AI Coach</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icon-192.png" />
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
-    <link rel="stylesheet" href="./styles.css" />
+    <script>
+      (function () {
+        const fallbackBuild = "20260715-cache-v18";
+        const params = new URLSearchParams(window.location.search);
+        const build = params.get("build") || fallbackBuild;
+        const version = encodeURIComponent(build);
+        window.VOLLEYFORM_BUILD = build;
+        document.write('<link rel="manifest" href="./manifest.webmanifest?v=' + version + '" />');
+        document.write('<link rel="stylesheet" href="./styles.css?v=' + version + '" />');
+      })();
+    </script>
   </head>
   <body>
     <header class="app-bar">
@@ -254,7 +263,13 @@
       </div>
     </div>
 
-    <script src="./config.js"></script>
-    <script src="./app.js"></script>
+    <script>
+      (function () {
+        const build = window.VOLLEYFORM_BUILD || "20260715-cache-v18";
+        const version = encodeURIComponent(build);
+        document.write('<script src="./config.js?v=' + version + '"><\/script>');
+        document.write('<script src="./app.js?v=' + version + '"><\/script>');
+      })();
+    </script>
   </body>
 </html>

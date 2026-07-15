@@ -7,6 +7,22 @@ $PublicFrontendUrl = "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/"
 $SessionId = Get-Date -Format "yyyyMMddHHmmss"
 $DesktopLatestShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "VolleyForm 本次網址.url"
 
+function Get-AppBuildVersion {
+    try {
+        $Git = Get-Command git -ErrorAction SilentlyContinue
+        if ($Git) {
+            $Commit = (& $Git.Source -C $Root rev-parse --short HEAD 2>$null).Trim()
+            if ($Commit) {
+                return $Commit
+            }
+        }
+    }
+    catch {}
+    return Get-Date -Format "yyyyMMddHHmmss"
+}
+
+$BuildVersion = "$(Get-AppBuildVersion)-$SessionId"
+
 if (-not (Test-Path $Python)) {
     Write-Host "Cannot find .venv Python. Please install requirements first." -ForegroundColor Red
     exit 1
@@ -33,9 +49,15 @@ function Get-LanUrl {
 }
 
 function New-FrontendUrl {
-    param([string]$SessionId)
+    param(
+        [string]$SessionId,
+        [string]$BuildVersion
+    )
     $Builder = [System.UriBuilder]::new($PublicFrontendUrl)
-    $Builder.Query = "session=$([System.Uri]::EscapeDataString($SessionId))"
+    $Builder.Query = @(
+        "session=$([System.Uri]::EscapeDataString($SessionId))",
+        "build=$([System.Uri]::EscapeDataString($BuildVersion))"
+    ) -join "&"
     return $Builder.Uri.AbsoluteUri
 }
 
@@ -55,6 +77,7 @@ function Write-ShareConfig {
     param(
         [string]$PublicUrl = "",
         [string]$SessionId,
+        [string]$BuildVersion,
         [int]$Port = 8000
     )
     $LocalUrl = "http://127.0.0.1:$Port"
@@ -67,6 +90,7 @@ function Write-ShareConfig {
         publicUrl = $PublicUrl
         preferredUrl = $PreferredUrl
         sessionId = $SessionId
+        buildVersion = $BuildVersion
         desktopLatestUrl = $DesktopLatestShortcut
         generatedAt = (Get-Date).ToString("o")
         source = "run_web_app"
@@ -76,8 +100,8 @@ function Write-ShareConfig {
 }
 
 function Open-App {
-    $Url = New-FrontendUrl -SessionId $SessionId
-    Write-ShareConfig -PublicUrl $Url -SessionId $SessionId -Port 8000 | Out-Null
+    $Url = New-FrontendUrl -SessionId $SessionId -BuildVersion $BuildVersion
+    Write-ShareConfig -PublicUrl $Url -SessionId $SessionId -BuildVersion $BuildVersion -Port 8000 | Out-Null
     Write-DesktopLatestUrl -FrontendUrl $Url
     Start-Process $Url
 }
@@ -97,8 +121,8 @@ Write-Host "Your browser will open automatically once the server is ready." -For
 Write-Host "Use the 'Generate QR code' button on the public frontend; it will not use 127.0.0.1." -ForegroundColor Cyan
 Write-Host "For backend-powered analysis on different networks, use VolleyForm.bat so it can create a public backend tunnel." -ForegroundColor Cyan
 
-$FrontendUrl = New-FrontendUrl -SessionId $SessionId
-$ShareUrl = Write-ShareConfig -PublicUrl $FrontendUrl -SessionId $SessionId -Port 8000
+$FrontendUrl = New-FrontendUrl -SessionId $SessionId -BuildVersion $BuildVersion
+$ShareUrl = Write-ShareConfig -PublicUrl $FrontendUrl -SessionId $SessionId -BuildVersion $BuildVersion -Port 8000
 Write-DesktopLatestUrl -FrontendUrl $FrontendUrl
 Write-Host "Open-source frontend: $FrontendUrl" -ForegroundColor Cyan
 Write-Host "Same-Wi-Fi backend URL: $ShareUrl" -ForegroundColor Cyan
