@@ -687,7 +687,11 @@ function createFigure(scene) {
 
   return {
     group,
+    setVisible(visible) {
+      group.visible = visible;
+    },
     update(points, jointStatus) {
+      group.visible = true;
       for (const limb of limbs) {
         orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
         limb.mesh.material.color.setHex(statusColor(limb.part.joint, jointStatus));
@@ -793,6 +797,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
   scene.add(rimLight);
 
   const figure = createFigure(scene);
+  figure.setVisible(false);
   const ball = createBall(scene);
   ball.setPosition(null);
 
@@ -841,7 +846,8 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     ball.setPosition(null);
     setCue(caption);
     if (!landmarks || landmarks.length < 33) {
-      setCue("");
+      setCue(caption || "沒有可用的 3D 姿勢");
+      figure.setVisible(false);
       draw();
       return;
     }
@@ -851,6 +857,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
+    figure.setVisible(true);
     figure.update(displayLandmarks, jointStatus);
     draw();
   }
@@ -858,6 +865,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
   function playDemo(action, { variant = "correct" } = {}) {
     stopAnimation();
     if (typeof requestAnimationFrame !== "function") return;
+    figure.setVisible(true);
 
     const frames = buildSequence(action, variant);
     const bounds = computeFramesBounds(frames);
@@ -925,6 +933,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       return;
     }
     frames = buildSinglePoseMotion(frames);
+    figure.setVisible(true);
 
     const bounds = computeFramesBounds(frames);
     const framed = frameCamera(bounds, camera.fov, framePadding);
@@ -984,6 +993,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       return;
     }
     frames = buildSinglePoseMotion(frames);
+    figure.setVisible(true);
 
     const bounds = computeFramesBounds(frames);
     const framed = frameCamera(bounds, camera.fov, framePadding);

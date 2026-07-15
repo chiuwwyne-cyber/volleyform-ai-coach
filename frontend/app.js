@@ -1176,7 +1176,7 @@ function renderPoseCompare(poseCompare, action) {
 
   if (!poseCompare || !poseCompare.available) {
     poseCompareNote.textContent = noPoseCompareText;
-    ensureViewports().then(() => actualViewport.setStaticPose(null, null));
+    ensureViewports().then(() => actualViewport.setStaticPose(null, null, { caption: "沒有可用的 3D 姿勢，請重新分析影片。" }));
     return;
   }
 
