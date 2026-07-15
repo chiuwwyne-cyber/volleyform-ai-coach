@@ -14,7 +14,7 @@ https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 - 3D body pose and hand landmark analysis
 - Action support for spike, block, serve, receive and set
 - Focused coaching cues, drills and video recommendations
-- GitHub Pages frontend with a fixed URL
+- GitHub Pages frontend with a fixed base URL and a fresh launch URL each run
 - On-device MediaPipe analysis with no required backend
 - Optional Render/Docker backend for shared or heavier processing
 - Installable PWA shell
@@ -23,6 +23,8 @@ https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 ## Run locally
 
 Double-click [VolleyForm.bat](VolleyForm.bat) (or the desktop shortcut it creates) to start the backend, try to start a public Cloudflare backend tunnel, and open the public open-source frontend automatically. The launcher opens the GitHub Pages URL, not `127.0.0.1`, so the in-page QR Code can be scanned by a phone.
+
+Every launch creates a fresh URL with `session=` and, when Cloudflare Tunnel is available, the current `backend=` address. This matters when the computer changes networks and the temporary backend URL changes. The launcher also updates a desktop shortcut named `VolleyForm 本次網址.url` so the latest phone/share URL is always easy to reopen.
 
 Or run it manually:
 
@@ -36,7 +38,7 @@ Open:
 https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 ```
 
-The local `127.0.0.1:8000` address is only used internally for the backend API and tunnel origin; the user-facing frontend and QR Code use the public URL.
+The local `127.0.0.1:8000` address is only used internally for the backend API and tunnel origin; the user-facing frontend and QR Code use the fresh public launch URL.
 
 ## Publish a fixed website
 

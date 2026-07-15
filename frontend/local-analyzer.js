@@ -182,6 +182,182 @@ const FEEDBACK = {
   },
 };
 
+Object.assign(ACTION_LABELS, {
+  spike: "扣球",
+  block: "攔網",
+  serve: "發球",
+  receive: "接球",
+  set: "舉球",
+});
+
+Object.assign(FEEDBACK, {
+  elbow_bad: {
+    title: "手肘伸展不足",
+    severity: "medium",
+    message: "手肘沒有充分打開，力量會卡在前臂，扣球、發球或接球平台都會變得不穩。",
+    fixes: ["讓手肘自然伸開，前臂保持穩定。", "先用慢動作練習完整伸展，再逐步加速。"],
+    body_part: "手肘與前臂",
+    instant_cue: "手肘打開，前臂不要縮。",
+    practice_drill: "做 10 次慢速揮臂或接球平台定格，每次停 1 秒確認手肘角度。",
+    why_it_matters: "手肘角度不足會讓力量集中在前臂與手腕，容易造成代償與擊球不穩。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+elbow+arm+position+drill",
+  },
+  elbow_not_straight: {
+    title: "手臂沒有向上延伸",
+    severity: "medium",
+    message: "攔網時手臂若沒有往上延伸，攔網高度與封阻面積都會下降。",
+    fixes: ["手掌往上推到最高點。", "肩胛保持上提，不要只靠手腕補高度。"],
+    body_part: "手肘與肩膀",
+    instant_cue: "手往上穿過球，不要停在臉前。",
+    practice_drill: "靠牆做 10 次攔網伸手定格，手肘伸直後停住。",
+    why_it_matters: "手臂沒有延伸時，肩膀和手腕容易代償，也會讓攔網封阻角度變小。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+blocking+arm+extension+drill",
+  },
+  hands_not_high: {
+    title: "雙手高度不足",
+    severity: "medium",
+    message: "雙手太低會錯過最佳觸球點，攔網和舉球都會變被動。",
+    fixes: ["雙手提到額頭上方或球的前上方。", "保持胸口打開，肩膀不要塌下來。"],
+    body_part: "雙手高度",
+    instant_cue: "手高一點，提前準備。",
+    practice_drill: "連續 8 次原地攔網或舉球預備姿勢定格。",
+    why_it_matters: "手太低會讓肩膀臨時硬拉，增加肩膀和手腕負擔。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+blocking+reach+high+drill",
+  },
+  shoulder_low: {
+    title: "擊球點偏低",
+    severity: "medium",
+    message: "擊球點太低時，肩膀容易硬拉，球也比較難往下壓。",
+    fixes: ["把觸球點放在身體前上方。", "先用非慣用手指向球，幫助身體對位。"],
+    body_part: "肩膀與擊球點",
+    instant_cue: "球在身體前上方再打。",
+    practice_drill: "用慢動作空揮 6 次，確認手掌在頭前上方通過。",
+    why_it_matters: "擊球點偏低會讓肩膀承受過多扭轉，也會降低攻擊角度。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+hitting+contact+point+tutorial",
+  },
+  knee_bad: {
+    title: "膝蓋角度不理想",
+    severity: "medium",
+    message: "膝蓋沒有配合彎曲與伸展，起跳和落地會比較不穩。",
+    fixes: ["髖、膝、腳踝一起吸收力量。", "膝蓋方向對齊腳尖，不要內扣。"],
+    body_part: "膝蓋與腳踝",
+    instant_cue: "膝蓋對腳尖，落地一起彎。",
+    practice_drill: "做 8 次小跳落地，落地後停住 2 秒檢查膝蓋方向。",
+    why_it_matters: "膝蓋沒有對齊時，落地衝擊會集中在膝關節，增加受傷風險。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+landing+knee+alignment+drill",
+  },
+  knee_too_bent: {
+    title: "膝蓋過度彎曲",
+    severity: "high",
+    message: "膝蓋彎得太深或內扣，代表落地衝擊沒有被髖和腳踝一起分散。",
+    fixes: ["落地時屁股往後坐。", "雙腳與肩同寬，安靜落地。"],
+    body_part: "膝蓋與髖部",
+    instant_cue: "屁股往後坐，膝蓋不要夾。",
+    practice_drill: "做 6 次安靜落地，落地時保持膝蓋對腳尖。",
+    why_it_matters: "膝蓋內扣會把壓力集中到韌帶和膝關節，是需要優先修正的受傷風險。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+landing+mechanics+knee+alignment",
+  },
+  wrist_low: {
+    title: "手腕低於額頭",
+    severity: "medium",
+    message: "舉球時手腕太低，球容易往前飄或旋轉變多。",
+    fixes: ["雙手舉到額頭上方。", "手指張開成三角形，手腕放鬆。"],
+    body_part: "手腕與額頭位置",
+    instant_cue: "雙手在額頭上方接球。",
+    practice_drill: "靠牆舉球 20 下，要求球幾乎不旋轉。",
+    why_it_matters: "手腕太低會讓手指和手腕承受更多力量，容易讓出球方向不穩。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+wrist+forehead+drill",
+  },
+  elbow_position_bad: {
+    title: "舉球手肘位置不穩",
+    severity: "medium",
+    message: "手肘太開或太夾都會影響出球方向。",
+    fixes: ["雙手在額頭前形成三角形。", "用膝蓋和核心送球，不只靠手臂。"],
+    body_part: "舉球手肘",
+    instant_cue: "雙手成三角，手肘自然打開。",
+    practice_drill: "舉球預備姿勢定格 10 次，再做慢速送球。",
+    why_it_matters: "手肘位置不穩會讓肩膀和手腕代償，也會讓球路忽左忽右。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+hand+position+elbow",
+  },
+  setting_hands_not_detected: {
+    title: "雙手沒有完整入鏡",
+    severity: "low",
+    message: "系統沒有同時看到兩隻手，舉球手型判斷會比較不準。",
+    fixes: ["讓手、額頭和球都在畫面中間。", "使用廣角或把手機放遠一點。"],
+    body_part: "雙手入鏡",
+    instant_cue: "手和額頭都要進畫面。",
+    practice_drill: "先錄 3 秒舉球預備姿勢，確認雙手完整入鏡。",
+    why_it_matters: "舉球主要靠手型判斷，少一隻手時建議會不完整。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+hand+position+tutorial",
+  },
+  setting_fingers_closed: {
+    title: "舉球手指張開不足",
+    severity: "medium",
+    message: "手指太閉合會讓球變成用掌心或手腕推出。",
+    fixes: ["手指自然張開成碗狀。", "掌心不要碰到球，讓手指緩衝。"],
+    body_part: "手指手型",
+    instant_cue: "手指張開，像捧一顆球。",
+    practice_drill: "原地舉球 15 下，觀察球是否幾乎不旋轉。",
+    why_it_matters: "手指沒有張開會讓出球不穩，也容易讓手腕承受過多力量。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+fingers+triangle+hand+shape",
+  },
+  setting_hand_spacing_bad: {
+    title: "舉球雙手距離不理想",
+    severity: "medium",
+    message: "雙手太近會夾球，太開會讓球不受控。",
+    fixes: ["拇指和食指形成三角形。", "雙手保持在額頭前上方。"],
+    body_part: "雙手距離",
+    instant_cue: "雙手留一顆球的空間。",
+    practice_drill: "慢動作舉球 10 次，保持雙手距離固定。",
+    why_it_matters: "雙手距離不穩會讓球偏向單邊，影響二傳品質。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+hand+spacing+drill",
+  },
+  setting_hands_unbalanced: {
+    title: "舉球雙手高度不同",
+    severity: "medium",
+    message: "左右手高度差太大，球容易側旋或偏向一邊。",
+    fixes: ["雙手同時接球、同時推出。", "靠牆練習讓球直上直下。"],
+    body_part: "左右手平衡",
+    instant_cue: "雙手同時接，同時推。",
+    practice_drill: "靠牆舉球 20 下，要求球線垂直。",
+    why_it_matters: "左右手不平衡會造成出球方向不穩，長期也會讓單側手腕負擔變大。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+no+spin+hand+balance",
+  },
+  lobster_receive_risk: {
+    title: "容易吃蘿蔔的接球姿勢",
+    severity: "high",
+    message: "平台太軟或身體沒有對準來球，球容易打到前臂邊緣而噴掉。",
+    fixes: ["手肘伸直，平台鎖穩。", "用腳步先到球後面，再用身體面向目標。"],
+    body_part: "接球平台",
+    instant_cue: "平台硬一點，身體站到球後面。",
+    practice_drill: "做 10 次低姿勢接球平台定格，確認肩膀、手臂和目標方向一致。",
+    why_it_matters: "平台角度不穩會讓球噴向不可控方向，也是初學者最常見的失誤來源。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+passing+platform+avoid+shank",
+  },
+  receive_platform_unbalanced: {
+    title: "接球平台左右不平",
+    severity: "medium",
+    message: "左右手高度不同會讓平台角度歪掉。",
+    fixes: ["雙手扣好，平台保持同一平面。", "接球前先把肩膀面向目標。"],
+    body_part: "前臂平台角度",
+    instant_cue: "手扣好，平台一整片。",
+    practice_drill: "做 10 次平台定格，檢查左右前臂是否同高。",
+    why_it_matters: "平台左右不平會讓球偏離目標方向，增加連續失分機率。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+passing+platform+angle+drill",
+  },
+  receive_hands_apart: {
+    title: "接球雙手距離太開",
+    severity: "medium",
+    message: "雙手沒有扣好，平台面積會變小。",
+    fixes: ["接球前先把雙手扣好。", "手腕往下壓，前臂併成平面。"],
+    body_part: "雙手扣合",
+    instant_cue: "先扣手，再接球。",
+    practice_drill: "做 10 次扣手與手腕下壓練習。",
+    why_it_matters: "雙手分開會讓球打到手部縫隙，容易造成方向亂飄。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+forearm+passing+hands+together+drill",
+  },
+});
+
 let visionFilesetPromise;
 let poseLandmarkerPromise;
 let handLandmarkerPromise;
@@ -477,6 +653,71 @@ const ISSUE_SEVERITY = {
 const SEVERITY_TO_STATUS = { high: "red", medium: "yellow", low: "yellow" };
 const STATUS_RANK = { green: 0, yellow: 1, red: 2 };
 const WRIST_MARGIN = 0.05;
+const MAX_ACTUAL_SEQUENCE_FRAMES = 14;
+const ISSUE_JOINT_STATUS = {
+  elbow_bad: { elbow: "yellow" },
+  elbow_not_straight: { elbow: "yellow", shoulder: "yellow" },
+  hands_not_high: { shoulder: "yellow", wrist: "yellow" },
+  shoulder_low: { shoulder: "yellow" },
+  knee_bad: { knee: "yellow" },
+  knee_too_bent: { knee: "red" },
+  wrist_low: { wrist: "red" },
+  elbow_position_bad: { elbow: "yellow", wrist: "yellow" },
+  setting_hands_not_detected: { wrist: "yellow" },
+  setting_fingers_closed: { wrist: "yellow" },
+  setting_hand_spacing_bad: { wrist: "yellow" },
+  setting_hands_unbalanced: { wrist: "yellow", shoulder: "yellow" },
+  lobster_receive_risk: { elbow: "red", wrist: "yellow" },
+  receive_platform_unbalanced: { elbow: "yellow", wrist: "yellow" },
+  receive_hands_apart: { wrist: "yellow" },
+};
+
+function mergeJointStatus(target, next) {
+  for (const [joint, status] of Object.entries(next || {})) {
+    if (STATUS_RANK[status] > STATUS_RANK[target[joint] || "green"]) {
+      target[joint] = status;
+    }
+  }
+  return target;
+}
+
+function jointStatusForIssues(issueCodes) {
+  const status = { elbow: "green", knee: "green", shoulder: "green", wrist: "green" };
+  for (const code of issueCodes || []) {
+    mergeJointStatus(status, ISSUE_JOINT_STATUS[code]);
+  }
+  return status;
+}
+
+function issueCaption(issueCodes) {
+  const issue = (issueCodes || []).map((code) => FEEDBACK[code]).find(Boolean);
+  if (!issue) return "影片分析到的姿勢影格";
+  return `影片錯誤：${issue.title}。${issue.instant_cue}`;
+}
+
+function worldLandmarksToTriples(worldLandmarks) {
+  return worldLandmarks.map((point) => [point.x, point.y, point.z || 0]);
+}
+
+function rememberActualFrame(frames, worldLandmarks, issueCodes, severity) {
+  if (!worldLandmarks || worldLandmarks.length < 33) return;
+  const safeIssueCodes = Array.isArray(issueCodes) ? issueCodes : [];
+  const frame = {
+    landmarks: worldLandmarksToTriples(worldLandmarks),
+    joint_status: jointStatusForIssues(safeIssueCodes),
+    caption: issueCaption(safeIssueCodes),
+    severity: severity || 0,
+    hold: 720,
+  };
+  frames.push(frame);
+  if (frames.length > MAX_ACTUAL_SEQUENCE_FRAMES) {
+    let weakestIndex = 0;
+    for (let index = 1; index < frames.length; index += 1) {
+      if (frames[index].severity < frames[weakestIndex].severity) weakestIndex = index;
+    }
+    frames.splice(weakestIndex, 1);
+  }
+}
 
 function vecSub(a, b) {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -586,10 +827,14 @@ function correctWristLow(points) {
   return true;
 }
 
-function buildPoseCompare(action, worldLandmarks) {
-  if (!worldLandmarks || worldLandmarks.length < 33) return { available: false };
+function buildPoseCompare(action, worldLandmarks, issueCodes = [], actualSequence = []) {
+  if ((!worldLandmarks || worldLandmarks.length < 33) && !actualSequence.length) {
+    return { available: false };
+  }
 
-  const actual = worldLandmarks.map((point) => [point.x, point.y, point.z || 0]);
+  const actual = worldLandmarks?.length >= 33
+    ? worldLandmarksToTriples(worldLandmarks)
+    : actualSequence[0].landmarks;
   const corrected = actual.map((point) => [...point]);
   const spec = JOINT_SPECS[action] || {};
   const jointStatus = {};
@@ -615,17 +860,23 @@ function buildPoseCompare(action, worldLandmarks) {
     jointStatus[jointName] = status;
   }
 
+  mergeJointStatus(jointStatus, jointStatusForIssues(issueCodes));
+
   let wristStatus = "green";
   if (action === "set" && correctWristLow(corrected)) {
     wristStatus = SEVERITY_TO_STATUS[ISSUE_SEVERITY.wrist_low];
   }
-  jointStatus.wrist = wristStatus;
+  if (STATUS_RANK[wristStatus] > STATUS_RANK[jointStatus.wrist || "green"]) {
+    jointStatus.wrist = wristStatus;
+  }
+  if (!jointStatus.wrist) jointStatus.wrist = "green";
 
   return {
     available: true,
     joint_status: jointStatus,
     actual_landmarks: actual,
     corrected_landmarks: corrected,
+    actual_sequence: actualSequence,
   };
 }
 
@@ -749,6 +1000,131 @@ function analysisResult({
   };
 }
 
+function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, handSums) {
+  const selected = new Set(selectedModalities);
+  const modalities = [
+    { id: "pose", label: "3D 身體骨架", description: "全身關節、軀幹與角度", state: "active" },
+    { id: "hands", label: "手部關節", description: "手指、手腕與雙手距離", state: "active" },
+    { id: "ball", label: "球路追蹤", description: "保留給後續多模態分析", state: "reserved" },
+    { id: "audio", label: "聲音節奏", description: "保留給擊球聲與節奏分析", state: "reserved" },
+    { id: "wearable", label: "穿戴感測", description: "保留給 IMU 或手環資料", state: "reserved" },
+    { id: "coach_text", label: "教練備註", description: "保留給人工標註與文字回饋", state: "reserved" },
+  ].map((item) => ({ ...item, requested: selected.has(item.id) }));
+
+  return {
+    modalities,
+    modality_results: {
+      pose: {
+        frames_with_pose: poseFrames,
+        average_elbow_angle: poseFrames ? Math.round(angleSums.elbow / poseFrames) : null,
+        average_knee_angle: poseFrames ? Math.round(angleSums.knee / poseFrames) : null,
+      },
+      hands: {
+        frames_with_hands: handFrames,
+        average_finger_extension: handFrames
+          ? Number((handSums.extension / handFrames).toFixed(2))
+          : null,
+        average_hand_gap: handFrames
+          ? Number((handSums.gap / handFrames).toFixed(2))
+          : null,
+      },
+      reserved: {
+        ball: "球路追蹤欄位已預留。",
+        audio: "聲音節奏欄位已預留。",
+        wearable: "穿戴感測欄位已預留。",
+        coach_text: "教練備註欄位已預留。",
+      },
+    },
+  };
+}
+
+function coachPlan(primaryIssues, actionLabel, processedFrames) {
+  if (!processedFrames) {
+    return {
+      status: "needs_video",
+      headline: "目前沒有足夠姿勢可分析",
+      focus: "拍攝設定",
+      reason: "請確認全身、雙手與落地動作完整入鏡，廣角鏡頭可保留腳步與手部軌跡。",
+      next_steps: ["讓全身從頭到腳都入鏡。", "錄 5 到 10 秒完整動作。", "手機放穩並避免逆光。"],
+      video_url: "https://www.youtube.com/results?search_query=volleyball+camera+setup+analysis",
+    };
+  }
+
+  if (!primaryIssues.length) {
+    return {
+      status: "stable",
+      headline: `${actionLabel}整體穩定`,
+      focus: "維持動作品質",
+      reason: "這段影片沒有出現明顯高風險動作，建議繼續用不同角度確認腳步、手部與落地。",
+      next_steps: ["保持完整熱身。", "再錄正面與側面各一段。", "逐步提高速度，不要一次加太快。"],
+      video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
+    };
+  }
+
+  const first = primaryIssues[0];
+  return {
+    status: "needs_fix",
+    headline: `優先修正：${first.title}`,
+    focus: first.body_part,
+    reason: first.why_it_matters,
+    next_steps: [first.instant_cue, first.practice_drill, ...first.fixes].slice(0, 4),
+    video_url: first.video_url,
+    severity: first.severity,
+    issue_code: first.code,
+  };
+}
+
+function analysisResult({
+  action,
+  powerMode,
+  modalities,
+  sampleCount,
+  issueCounts,
+  poseCompare,
+  angleSums,
+  handSums,
+  poseFrames,
+  handFrames,
+  engine = "mediapipe-web-local",
+}) {
+  const primaryIssues = [...issueCounts.entries()]
+    .map(([code, count]) => issuePayload(code, count))
+    .sort(
+      (a, b) =>
+        SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
+    )
+    .slice(0, 6);
+  const actionLabel = ACTION_LABELS[action] || action;
+  const modality = modalityPayload(
+    poseFrames,
+    handFrames,
+    modalities,
+    angleSums,
+    handSums,
+  );
+
+  return {
+    action,
+    action_label: actionLabel,
+    processed_frames: poseFrames,
+    primary_issues: primaryIssues,
+    pose_compare: poseCompare || { available: false },
+    coach_summary: poseFrames
+      ? primaryIssues.length
+        ? `最需要先修正的是「${primaryIssues[0].title}」。${primaryIssues[0].message}`
+        : `${actionLabel}整體看起來穩定，請繼續保持完整熱身、腳步節奏與落地控制。`
+      : "沒有讀到可分析的姿勢。請確認全身、雙手與落地動作完整入鏡。",
+    coach_plan: coachPlan(primaryIssues, actionLabel, poseFrames),
+    ...modality,
+    settings: {
+      engine,
+      power_mode: powerMode,
+      sample_count: sampleCount,
+      modalities,
+    },
+  };
+}
+
 export async function analyzeVideoLocally({
   file,
   action,
@@ -781,7 +1157,9 @@ export async function analyzeVideoLocally({
     let poseFrames = 0;
     let handFrames = 0;
     let keyFrameLandmarks = null;
+    let keyFrameIssueCodes = [];
     let keyFrameSeverity = -1;
+    const actualSequence = [];
 
     for (let index = 0; index < sampleCount; index += 1) {
       const time = sampleCount === 1 ? 0 : (duration * index) / (sampleCount - 1);
@@ -818,9 +1196,11 @@ export async function analyzeVideoLocally({
         (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
         0,
       );
+      rememberActualFrame(actualSequence, worldLandmarks, frameIssues, frameSeverity);
       if (worldLandmarks && frameSeverity > keyFrameSeverity) {
         keyFrameSeverity = frameSeverity;
         keyFrameLandmarks = worldLandmarks;
+        keyFrameIssueCodes = frameIssues;
       }
 
       onProgress(`分析影格 ${index + 1}/${sampleCount}`, (index + 1) / sampleCount);
@@ -833,7 +1213,7 @@ export async function analyzeVideoLocally({
       modalities,
       sampleCount,
       issueCounts,
-      poseCompare: buildPoseCompare(action, keyFrameLandmarks),
+      poseCompare: buildPoseCompare(action, keyFrameLandmarks, keyFrameIssueCodes, actualSequence),
       angleSums,
       handSums,
       poseFrames,
@@ -923,7 +1303,14 @@ export async function analyzeImageLocally({
         handSums.gap = features.hand_center_gap || 0;
       }
       for (const code of frameIssues) issueCounts.set(code, 1);
-      poseCompare = buildPoseCompare(action, poseResult.worldLandmarks?.[0]);
+      const actualSequence = [];
+      const worldLandmarks = poseResult.worldLandmarks?.[0];
+      const frameSeverity = frameIssues.reduce(
+        (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
+        0,
+      );
+      rememberActualFrame(actualSequence, worldLandmarks, frameIssues, frameSeverity);
+      poseCompare = buildPoseCompare(action, worldLandmarks, frameIssues, actualSequence);
     }
 
     onProgress("照片分析完成", 1);

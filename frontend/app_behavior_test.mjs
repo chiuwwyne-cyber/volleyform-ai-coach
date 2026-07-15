@@ -412,7 +412,8 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
     },
   });
 
-  assert.match(context.document.querySelector("#poseCompareNote").textContent, /綠色/);
+  assert.match(context.document.querySelector("#poseCompareNote").textContent, /紅色是高風險/);
+  assert.match(context.document.querySelector("#poseCompareNote").textContent, /正確慢動作/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Forearm platform/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Lock elbows/);
   const issueCard = context.document.querySelector("#issues").children[0];

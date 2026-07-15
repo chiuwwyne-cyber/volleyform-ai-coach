@@ -1063,6 +1063,27 @@ h3 {
   height: 100%;
 }
 
+.pose-3d-cue {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  padding: 7px 9px;
+  color: #f8f3e9;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-align: left;
+  background: rgba(12, 13, 12, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.pose-3d-cue[hidden] {
+  display: none;
+}
+
 .pose-compare-cell span {
   color: var(--muted);
   font-weight: 800;

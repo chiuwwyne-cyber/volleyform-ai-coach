@@ -214,6 +214,96 @@ const fallbackModalities = [
   },
 ];
 
+Object.assign(actionMeta, {
+  spike: { symbol: "扣", description: "左、右、左助跑 / 起跳 / 落地" },
+  block: { symbol: "攔", description: "起跳時機 / 手型 / 落地" },
+  serve: { symbol: "發", description: "拋球 / 擊球點 / 重心" },
+  receive: { symbol: "接", description: "平台 / 膝蓋 / 移動" },
+  set: { symbol: "舉", description: "手型 / 手腕 / 出球" },
+});
+
+fallbackActions.splice(
+  0,
+  fallbackActions.length,
+  { id: "spike", label: "扣球" },
+  { id: "block", label: "攔網" },
+  { id: "serve", label: "發球" },
+  { id: "receive", label: "接球" },
+  { id: "set", label: "舉球" },
+);
+
+fallbackModalities.splice(
+  0,
+  fallbackModalities.length,
+  {
+    id: "pose",
+    label: "3D 身體骨架",
+    available: true,
+    requested: true,
+    description: "分析全身關節、軀幹角度與落地控制",
+  },
+  {
+    id: "hands",
+    label: "手部關節",
+    available: true,
+    requested: true,
+    description: "分析手指、手腕、雙手距離與舉球手型",
+  },
+);
+
+const decodeUiText = (value) => decodeURIComponent(value);
+Object.assign(actionMeta, {
+  spike: {
+    symbol: decodeUiText("%E6%89%A3"),
+    description: decodeUiText("%E5%B7%A6%E3%80%81%E5%8F%B3%E3%80%81%E5%B7%A6%E5%8A%A9%E8%B7%91%20%2F%20%E8%B5%B7%E8%B7%B3%20%2F%20%E8%90%BD%E5%9C%B0"),
+  },
+  block: {
+    symbol: decodeUiText("%E6%94%94"),
+    description: decodeUiText("%E8%B5%B7%E8%B7%B3%E6%99%82%E6%A9%9F%20%2F%20%E6%89%8B%E5%9E%8B%20%2F%20%E8%90%BD%E5%9C%B0"),
+  },
+  serve: {
+    symbol: decodeUiText("%E7%99%BC"),
+    description: decodeUiText("%E6%8B%8B%E7%90%83%20%2F%20%E6%93%8A%E7%90%83%E9%BB%9E%20%2F%20%E9%87%8D%E5%BF%83"),
+  },
+  receive: {
+    symbol: decodeUiText("%E6%8E%A5"),
+    description: decodeUiText("%E5%B9%B3%E5%8F%B0%20%2F%20%E8%86%9D%E8%93%8B%20%2F%20%E7%A7%BB%E5%8B%95"),
+  },
+  set: {
+    symbol: decodeUiText("%E8%88%89"),
+    description: decodeUiText("%E6%89%8B%E5%9E%8B%20%2F%20%E6%89%8B%E8%85%95%20%2F%20%E5%87%BA%E7%90%83"),
+  },
+});
+
+fallbackActions.splice(
+  0,
+  fallbackActions.length,
+  { id: "spike", label: decodeUiText("%E6%89%A3%E7%90%83") },
+  { id: "block", label: decodeUiText("%E6%94%94%E7%B6%B2") },
+  { id: "serve", label: decodeUiText("%E7%99%BC%E7%90%83") },
+  { id: "receive", label: decodeUiText("%E6%8E%A5%E7%90%83") },
+  { id: "set", label: decodeUiText("%E8%88%89%E7%90%83") },
+);
+
+fallbackModalities.splice(
+  0,
+  fallbackModalities.length,
+  {
+    id: "pose",
+    label: "3D " + decodeUiText("%E8%BA%AB%E9%AB%94%E9%AA%A8%E6%9E%B6"),
+    available: true,
+    requested: true,
+    description: decodeUiText("%E5%88%86%E6%9E%90%E5%85%A8%E8%BA%AB%E9%97%9C%E7%AF%80%E3%80%81%E8%BB%80%E5%B9%B9%E8%A7%92%E5%BA%A6%E8%88%87%E8%90%BD%E5%9C%B0%E6%8E%A7%E5%88%B6"),
+  },
+  {
+    id: "hands",
+    label: decodeUiText("%E6%89%8B%E9%83%A8%E9%97%9C%E7%AF%80"),
+    available: true,
+    requested: true,
+    description: decodeUiText("%E5%88%86%E6%9E%90%E6%89%8B%E6%8C%87%E3%80%81%E6%89%8B%E8%85%95%E3%80%81%E9%9B%99%E6%89%8B%E8%B7%9D%E9%9B%A2%E8%88%87%E8%88%89%E7%90%83%E6%89%8B%E5%9E%8B"),
+  },
+);
+
 function backendFromQuery() {
   if (typeof URLSearchParams === "undefined" || !globalThis.location?.search) return "";
   return new URLSearchParams(globalThis.location.search).get("backend")?.trim() || "";
@@ -881,6 +971,68 @@ function renderIssues(items) {
   }
 }
 
+function severityLabel(severity) {
+  if (severity === "high") return "高風險";
+  if (severity === "medium") return "中風險";
+  return "提醒";
+}
+
+function renderCoachPlan(plan) {
+  coachPlan.innerHTML = "";
+  coachPlan.classList.remove("empty", "stable", "needs-fix", "needs-video");
+
+  if (!plan) {
+    coachPlan.classList.add("empty");
+    coachPlan.textContent = "目前沒有教練建議。";
+    return;
+  }
+
+  const steps = Array.isArray(plan.next_steps) ? plan.next_steps : [];
+  const statusClass = plan.status ? plan.status.replaceAll("_", "-") : "needs-fix";
+  coachPlan.classList.add(statusClass);
+  coachPlan.innerHTML = `
+    <div class="coach-plan-head">
+      <span>${escapeHtml(plan.focus || "優先修正")}</span>
+      <strong>${escapeHtml(plan.headline || "先修正最明顯的風險點")}</strong>
+    </div>
+    <p>${escapeHtml(plan.reason || "")}</p>
+    <ol>${steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol>
+    <a class="video-link" href="${plan.video_url}" target="_blank" rel="noreferrer">觀看建議影片</a>
+  `;
+}
+
+function renderIssues(items) {
+  issues.innerHTML = "";
+  issues.classList.remove("empty");
+
+  if (!items || items.length === 0) {
+    issues.classList.add("empty");
+    issues.textContent = "沒有找到明顯問題。建議再錄一段正面與側面影片，確認手部、腳步和落地都完整入鏡。";
+    return;
+  }
+
+  for (const item of items) {
+    const card = document.createElement("article");
+    card.className = `issue-card ${item.severity}`;
+    card.innerHTML = `
+      <div class="issue-title">
+        <span>${escapeHtml(item.title)}</span>
+        <small>${severityLabel(item.severity)} / ${item.count} 影格</small>
+      </div>
+      <div class="issue-meta">
+        <span>${escapeHtml(item.body_part || "主要部位")}</span>
+        <strong>${escapeHtml(item.instant_cue || "先慢下來修正")}</strong>
+      </div>
+      <p>${escapeHtml(item.message)}</p>
+      <p class="issue-why">${escapeHtml(item.why_it_matters || "")}</p>
+      <div class="drill-box">${escapeHtml(item.practice_drill || "")}</div>
+      <ul class="fix-list">${(item.fixes || []).map((fix) => `<li>${escapeHtml(fix)}</li>`).join("")}</ul>
+      <a class="video-link" href="${item.video_url}" target="_blank" rel="noreferrer">觀看修正影片</a>
+    `;
+    issues.appendChild(card);
+  }
+}
+
 let poseCompareView = "front";
 let lastPoseCompare = null;
 let lastPoseCompareAction = "spike";
@@ -907,7 +1059,18 @@ function renderPoseCompareView() {
   actualViewport?.setView(poseCompareView);
   demoViewport?.setView(poseCompareView);
   if (lastPoseCompare?.available) {
-    actualViewport?.setStaticPose(lastPoseCompare.actual_landmarks, lastPoseCompare.joint_status);
+    const actualSequence = Array.isArray(lastPoseCompare.actual_sequence)
+      ? lastPoseCompare.actual_sequence
+      : [];
+    if (actualSequence.length > 1 && typeof actualViewport?.playPoseSequence === "function") {
+      actualViewport.playPoseSequence(actualSequence, { caption: "影片分析到的錯誤姿勢" });
+    } else {
+      actualViewport?.setStaticPose(
+        lastPoseCompare.actual_landmarks,
+        lastPoseCompare.joint_status,
+        { caption: "影片分析到的錯誤姿勢" },
+      );
+    }
   }
 }
 
@@ -915,7 +1078,7 @@ async function startDemoAnimation(action) {
   const mod = await ensureViewports();
   void mod;
   demoViewport.setView(poseCompareView);
-  demoViewport.playDemo(action);
+  demoViewport.playDemo(action, { variant: "correct" });
 }
 
 function renderPoseCompare(poseCompare, action) {
@@ -932,6 +1095,107 @@ function renderPoseCompare(poseCompare, action) {
   ensureViewports().then(() => {
     actualViewport.setView(poseCompareView);
     actualViewport.setStaticPose(poseCompare.actual_landmarks, poseCompare.joint_status);
+  });
+}
+
+function renderPoseCompare(poseCompare, action) {
+  lastPoseCompare = poseCompare;
+  lastPoseCompareAction = action || actionInput?.value || lastPoseCompareAction;
+  startDemoAnimation(lastPoseCompareAction);
+
+  if (!poseCompare || !poseCompare.available) {
+    poseCompareNote.textContent = "沒有偵測到可用的 3D 姿勢。請讓全身、雙手與腳步完整入鏡後再分析。";
+    ensureViewports().then(() => actualViewport.setStaticPose(null, null));
+    return;
+  }
+
+  const actualSequence = Array.isArray(poseCompare.actual_sequence)
+    ? poseCompare.actual_sequence
+    : [];
+  poseCompareNote.textContent =
+    actualSequence.length > 1
+      ? "左側正在重播影片分析到的錯誤關鍵影格；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。"
+      : "左側是影片或照片分析到的錯誤姿勢；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。";
+
+  ensureViewports().then(() => {
+    actualViewport.setView(poseCompareView);
+    if (actualSequence.length > 1 && typeof actualViewport.playPoseSequence === "function") {
+      actualViewport.playPoseSequence(actualSequence, { caption: "影片分析到的錯誤姿勢" });
+      return;
+    }
+    actualViewport.setStaticPose(
+      poseCompare.actual_landmarks,
+      poseCompare.joint_status,
+      { caption: "影片分析到的錯誤姿勢" },
+    );
+  });
+}
+
+const actualPoseCaption = decodeUiText("%E5%BD%B1%E7%89%87%E5%88%86%E6%9E%90%E5%88%B0%E7%9A%84%E9%8C%AF%E8%AA%A4%E5%A7%BF%E5%8B%A2");
+const noPoseCompareText = decodeUiText("%E6%B2%92%E6%9C%89%E5%81%B5%E6%B8%AC%E5%88%B0%E5%8F%AF%E7%94%A8%E7%9A%84%203D%20%E5%A7%BF%E5%8B%A2%E3%80%82%E8%AB%8B%E8%AE%93%E5%85%A8%E8%BA%AB%E3%80%81%E9%9B%99%E6%89%8B%E8%88%87%E8%85%B3%E6%AD%A5%E5%AE%8C%E6%95%B4%E5%85%A5%E9%8F%A1%E5%BE%8C%E5%86%8D%E5%88%86%E6%9E%90%E3%80%82");
+const actualPoseReplayText = decodeUiText("%E5%B7%A6%E5%81%B4%E6%AD%A3%E5%9C%A8%E9%87%8D%E6%92%AD%E5%BD%B1%E7%89%87%E5%88%86%E6%9E%90%E5%88%B0%E7%9A%84%E9%8C%AF%E8%AA%A4%E9%97%9C%E9%8D%B5%E5%BD%B1%E6%A0%BC%EF%BC%9B%E7%B4%85%E8%89%B2%E6%98%AF%E9%AB%98%E9%A2%A8%E9%9A%AA%E5%8F%97%E5%8A%9B%E9%BB%9E%EF%BC%8C%E9%BB%83%E8%89%B2%E6%98%AF%E9%9C%80%E8%A6%81%E4%BF%AE%E6%AD%A3%E7%9A%84%E4%BD%8D%E7%BD%AE%E3%80%82%E5%8F%B3%E5%81%B4%E6%98%AF%E5%90%8C%E5%8B%95%E4%BD%9C%E7%9A%84%E6%AD%A3%E7%A2%BA%E6%85%A2%E5%8B%95%E4%BD%9C%E7%A4%BA%E7%AF%84%E3%80%82");
+const actualPoseStillText = decodeUiText("%E5%B7%A6%E5%81%B4%E6%98%AF%E5%BD%B1%E7%89%87%E6%88%96%E7%85%A7%E7%89%87%E5%88%86%E6%9E%90%E5%88%B0%E7%9A%84%E9%8C%AF%E8%AA%A4%E5%A7%BF%E5%8B%A2%EF%BC%9B%E7%B4%85%E8%89%B2%E6%98%AF%E9%AB%98%E9%A2%A8%E9%9A%AA%E5%8F%97%E5%8A%9B%E9%BB%9E%EF%BC%8C%E9%BB%83%E8%89%B2%E6%98%AF%E9%9C%80%E8%A6%81%E4%BF%AE%E6%AD%A3%E7%9A%84%E4%BD%8D%E7%BD%AE%E3%80%82%E5%8F%B3%E5%81%B4%E6%98%AF%E5%90%8C%E5%8B%95%E4%BD%9C%E7%9A%84%E6%AD%A3%E7%A2%BA%E6%85%A2%E5%8B%95%E4%BD%9C%E7%A4%BA%E7%AF%84%E3%80%82");
+
+function playableActualSequence(poseCompare) {
+  const actualSequence = Array.isArray(poseCompare?.actual_sequence)
+    ? poseCompare.actual_sequence
+    : [];
+  if (actualSequence.length > 0) return actualSequence;
+  if (poseCompare?.actual_landmarks?.length >= 33) {
+    return [{
+      landmarks: poseCompare.actual_landmarks,
+      joint_status: poseCompare.joint_status || {},
+      caption: actualPoseCaption,
+      hold: 720,
+    }];
+  }
+  return [];
+}
+
+function renderPoseCompareView() {
+  actualViewport?.setView(poseCompareView);
+  demoViewport?.setView(poseCompareView);
+  if (!lastPoseCompare?.available) return;
+
+  const actualSequence = playableActualSequence(lastPoseCompare);
+  if (actualSequence.length > 0 && typeof actualViewport?.playPoseSequence === "function") {
+    actualViewport.playPoseSequence(actualSequence, { caption: actualPoseCaption });
+    return;
+  }
+  actualViewport?.setStaticPose(
+    lastPoseCompare.actual_landmarks,
+    lastPoseCompare.joint_status,
+    { caption: actualPoseCaption },
+  );
+}
+
+function renderPoseCompare(poseCompare, action) {
+  lastPoseCompare = poseCompare;
+  lastPoseCompareAction = action || actionInput?.value || lastPoseCompareAction;
+  startDemoAnimation(lastPoseCompareAction);
+
+  if (!poseCompare || !poseCompare.available) {
+    poseCompareNote.textContent = noPoseCompareText;
+    ensureViewports().then(() => actualViewport.setStaticPose(null, null));
+    return;
+  }
+
+  const actualSequence = playableActualSequence(poseCompare);
+  poseCompareNote.textContent = actualSequence.length > 0
+    ? actualPoseReplayText
+    : actualPoseStillText;
+
+  ensureViewports().then(() => {
+    actualViewport.setView(poseCompareView);
+    if (actualSequence.length > 0 && typeof actualViewport.playPoseSequence === "function") {
+      actualViewport.playPoseSequence(actualSequence, { caption: actualPoseCaption });
+      return;
+    }
+    actualViewport.setStaticPose(
+      poseCompare.actual_landmarks,
+      poseCompare.joint_status,
+      { caption: actualPoseCaption },
+    );
   });
 }
 
@@ -955,6 +1219,12 @@ if (typeof window !== "undefined") {
 function severityLabel(severity) {
   if (severity === "high") return "高優先";
   if (severity === "medium") return "中優先";
+  return "提醒";
+}
+
+function severityLabel(severity) {
+  if (severity === "high") return "高風險";
+  if (severity === "medium") return "中風險";
   return "提醒";
 }
 

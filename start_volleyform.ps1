@@ -7,6 +7,9 @@ $BundledCloudflared = Join-Path $Root "tools\cloudflared.exe"
 $RuntimeDir = Join-Path $Root "runtime"
 $ShareConfig = Join-Path $Root "frontend\runtime-share.json"
 $PublicFrontendUrl = "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/"
+$SessionId = Get-Date -Format "yyyyMMddHHmmss"
+$TunnelPidFile = Join-Path $RuntimeDir "cloudflared.pid"
+$DesktopLatestShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "VolleyForm 本次網址.url"
 $Port = 8000
 
 if (-not (Test-Path $Python)) {
@@ -45,6 +48,44 @@ function Get-CloudflaredCommand {
         return $Cloudflared.Source
     }
     return $null
+}
+
+function Stop-PreviousPublicBackendTunnels {
+    param(
+        [int]$Port,
+        [string]$CloudflaredCommand
+    )
+    if (Test-Path $TunnelPidFile) {
+        $SavedPid = Get-Content -LiteralPath $TunnelPidFile -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($SavedPid -match "^\d+$") {
+            $SavedProcess = Get-Process -Id ([int]$SavedPid) -ErrorAction SilentlyContinue
+            if ($SavedProcess -and $SavedProcess.ProcessName -eq "cloudflared") {
+                Write-Host "Stopping previous public backend tunnel..." -ForegroundColor Yellow
+                Stop-Process -Id $SavedProcess.Id -Force -ErrorAction SilentlyContinue
+            }
+        }
+        Remove-Item -LiteralPath $TunnelPidFile -Force -ErrorAction SilentlyContinue
+    }
+
+    $ResolvedCloudflaredCommand = $null
+    try {
+        $ResolvedCloudflaredCommand = (Resolve-Path -LiteralPath $CloudflaredCommand -ErrorAction Stop).Path
+    }
+    catch {
+        $ResolvedCloudflaredCommand = $CloudflaredCommand
+    }
+
+    $OldTunnels = Get-CimInstance Win32_Process -Filter "Name = 'cloudflared.exe'" -ErrorAction SilentlyContinue | Where-Object {
+        ($_.CommandLine -like "*--url*" -and $_.CommandLine -like "*127.0.0.1:$Port*") -or
+        ($_.ExecutablePath -and $ResolvedCloudflaredCommand -and ($_.ExecutablePath -ieq $ResolvedCloudflaredCommand))
+    }
+    if ($OldTunnels) {
+        Write-Host "Stopping stale VolleyForm tunnel processes so this launch gets a fresh URL..." -ForegroundColor Yellow
+        foreach ($Tunnel in $OldTunnels) {
+            Stop-Process -Id $Tunnel.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+        Start-Sleep -Milliseconds 500
+    }
 }
 
 function Wait-Backend {
@@ -100,11 +141,7 @@ function Start-PublicBackendTunnel {
         return ""
     }
 
-    $Running = Get-Process cloudflared -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($Running) {
-        Write-Host "A cloudflared process is already running. Reusing local/on-device mode for this launch." -ForegroundColor Yellow
-        return ""
-    }
+    Stop-PreviousPublicBackendTunnels -Port $Port -CloudflaredCommand $CloudflaredCommand
 
     $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $Stdout = Join-Path $RuntimeDir "cloudflared_stdout_$Stamp.log"
@@ -118,6 +155,7 @@ function Start-PublicBackendTunnel {
         -RedirectStandardError $Stderr `
         -WindowStyle Hidden `
         -PassThru
+    Set-Content -LiteralPath $TunnelPidFile -Value $Tunnel.Id -Encoding ASCII
 
     for ($i = 0; $i -lt 90; $i++) {
         $Text = ""
@@ -140,16 +178,21 @@ function Start-PublicBackendTunnel {
     if ($Tunnel -and -not $Tunnel.HasExited) {
         Stop-Process -Id $Tunnel.Id -Force -ErrorAction SilentlyContinue
     }
+    Remove-Item -LiteralPath $TunnelPidFile -Force -ErrorAction SilentlyContinue
     return ""
 }
 
 function New-FrontendUrl {
-    param([string]$BackendUrl)
-    if (-not $BackendUrl) {
-        return $PublicFrontendUrl
+    param(
+        [string]$BackendUrl,
+        [string]$SessionId
+    )
+    $QueryParts = @("session=$([System.Uri]::EscapeDataString($SessionId))")
+    if ($BackendUrl) {
+        $QueryParts += "backend=$([System.Uri]::EscapeDataString($BackendUrl))"
     }
     $Builder = [System.UriBuilder]::new($PublicFrontendUrl)
-    $Builder.Query = "backend=$([System.Uri]::EscapeDataString($BackendUrl))"
+    $Builder.Query = $QueryParts -join "&"
     return $Builder.Uri.AbsoluteUri
 }
 
@@ -157,6 +200,7 @@ function Write-ShareConfig {
     param(
         [string]$FrontendUrl,
         [string]$BackendUrl,
+        [string]$SessionId,
         [int]$Port
     )
     $LocalUrl = "http://127.0.0.1:$Port"
@@ -167,21 +211,36 @@ function Write-ShareConfig {
         publicUrl = $FrontendUrl
         backendUrl = $BackendUrl
         preferredUrl = $FrontendUrl
+        sessionId = $SessionId
+        desktopLatestUrl = $DesktopLatestShortcut
         generatedAt = (Get-Date).ToString("o")
         source = "start_volleyform"
     }
     $Payload | ConvertTo-Json | Set-Content -LiteralPath $ShareConfig -Encoding UTF8
 }
 
+function Write-DesktopLatestUrl {
+    param([string]$FrontendUrl)
+    try {
+        $ShortcutContent = "[InternetShortcut]`r`nURL=$FrontendUrl`r`n"
+        Set-Content -LiteralPath $DesktopLatestShortcut -Value $ShortcutContent -Encoding ASCII
+        Write-Host "Updated desktop latest URL shortcut: $DesktopLatestShortcut" -ForegroundColor Cyan
+    }
+    catch {
+        Write-Host "Could not update the desktop latest URL shortcut. The app can still open normally." -ForegroundColor Yellow
+    }
+}
+
 $BackendProcess = Start-BackendIfNeeded -Port $Port
 $BackendUrl = Start-PublicBackendTunnel -Port $Port
-$FrontendUrl = New-FrontendUrl -BackendUrl $BackendUrl
-Write-ShareConfig -FrontendUrl $FrontendUrl -BackendUrl $BackendUrl -Port $Port
+$FrontendUrl = New-FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId
+Write-ShareConfig -FrontendUrl $FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId -Port $Port
+Write-DesktopLatestUrl -FrontendUrl $FrontendUrl
 
 Write-Host ""
-Write-Host "Opening open-source frontend:" -ForegroundColor Green
+Write-Host "Opening this launch's open-source frontend:" -ForegroundColor Green
 Write-Host $FrontendUrl -ForegroundColor Cyan
-Write-Host "QR Code will use this public frontend URL, not 127.0.0.1." -ForegroundColor Cyan
+Write-Host "QR Code will use this fresh public frontend URL, not 127.0.0.1." -ForegroundColor Cyan
 Start-Process $FrontendUrl
 
 Write-Host ""

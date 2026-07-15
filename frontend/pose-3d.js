@@ -139,26 +139,28 @@ function buildPose(targets) {
 // Demo choreography. Stylized reference cycles, not a biomechanical model.
 // ---------------------------------------------------------------------------
 
-const SIMPLE_CYCLES = {
+const CORRECT_CYCLES = {
   block: [
-    { elbow: 150, knee: 150, shoulder: 55, hold: 450 },
-    { elbow: 140, knee: 108, shoulder: 40, hold: 350 },
-    { elbow: 178, knee: 172, shoulder: 178, hold: 450 },
+    { elbow: 160, knee: 155, shoulder: 95, hold: 720, cue: "攔網預備：膝蓋微彎，雙手在胸前" },
+    { elbow: 150, knee: 112, shoulder: 70, hold: 680, cue: "下蹲蓄力：髖、膝、腳踝一起彎" },
+    { elbow: 178, knee: 174, shoulder: 178, hold: 820, cue: "向上封網：手臂穿過球，手掌壓住路線" },
+    { elbow: 165, knee: 140, shoulder: 120, hold: 620, cue: "落地緩衝：膝蓋對齊腳尖" },
   ],
   serve: [
-    { elbow: 160, knee: 170, shoulder: 30, hold: 450 },
-    { elbow: 125, knee: 165, shoulder: 85, hold: 350 },
-    { elbow: 172, knee: 168, shoulder: 172, hold: 450 },
+    { elbow: 160, knee: 170, shoulder: 35, hold: 700, cue: "發球預備：身體側身，非慣用手托球" },
+    { elbow: 135, knee: 160, shoulder: 105, hold: 720, cue: "拋球與引臂：肩膀放鬆，不要聳肩" },
+    { elbow: 176, knee: 168, shoulder: 172, hold: 760, cue: "最高點擊球：手掌在頭前上方" },
+    { elbow: 165, knee: 150, shoulder: 90, hold: 620, cue: "順勢收臂：核心帶動，不硬拉肩膀" },
   ],
   receive: [
-    { elbow: 170, knee: 160, shoulder: 30, hold: 450 },
-    { elbow: 176, knee: 108, shoulder: 72, hold: 500 },
-    { elbow: 170, knee: 150, shoulder: 40, hold: 350 },
+    { elbow: 170, knee: 150, shoulder: 55, hold: 700, cue: "接球預備：重心低，腳先到球後面" },
+    { elbow: 178, knee: 118, shoulder: 72, hold: 860, cue: "平台鎖穩：手肘伸直，前臂成一整片" },
+    { elbow: 176, knee: 135, shoulder: 65, hold: 700, cue: "面向目標：用身體角度送球" },
   ],
   set: [
-    { elbow: 148, knee: 158, shoulder: 100, hold: 400 },
-    { elbow: 155, knee: 148, shoulder: 152, hold: 350 },
-    { elbow: 170, knee: 165, shoulder: 162, hold: 450 },
+    { elbow: 150, knee: 158, shoulder: 145, hold: 760, cue: "舉球預備：雙手在額頭上方，手型成三角" },
+    { elbow: 158, knee: 146, shoulder: 158, hold: 760, cue: "接球緩衝：手指張開，手腕放鬆" },
+    { elbow: 172, knee: 168, shoulder: 168, hold: 820, cue: "腿部送球：膝蓋伸展，球往上走" },
   ],
 };
 
@@ -166,52 +168,167 @@ const SIMPLE_CYCLES = {
 // strides, the mannequin's root translating across the court, and a ball that
 // is tossed, struck, and flies away. Stylized reference, not a biomechanical
 // simulation.
-const SPIKE_SEQUENCE = [
-  { elbow: 170, knee: 165, shoulder: 12, root: [0, 0, -1.3], hold: 320, ball: [0.15, -1.3, -0.2] },
+const SPIKE_SEQUENCES = {
+  correct: [
+  { elbow: 170, knee: 165, shoulder: 12, root: [0, 0, -1.3], hold: 620, cue: "扣球助跑：左腳啟動，眼睛看球", ball: [0.15, -1.3, -0.2] },
   {
     elbow: 165, knee: 155, shoulder: 18, kneeR: 135, hipSwingL: 26, hipSwingR: -22,
-    root: [0, 0, -1.0], hold: 220, ball: [0.15, -1.31, -0.16],
+    root: [0, 0, -1.0], hold: 520, cue: "扣球腳步 1：左", ball: [0.15, -1.31, -0.16],
   },
   {
     elbow: 158, knee: 150, shoulder: 25, kneeL: 132, hipSwingR: 27, hipSwingL: -23,
-    root: [0, 0, -0.65], hold: 210, ball: [0.15, -1.3, -0.1],
+    root: [0, 0, -0.65], hold: 520, cue: "扣球腳步 2：右，身體開始蓄力", ball: [0.15, -1.3, -0.1],
   },
   {
     elbow: 148, knee: 140, shoulder: 15, kneeR: 118, hipSwingL: 25, hipSwingR: -20, armSwingL: -20, armSwingR: -20,
-    root: [0, 0, -0.28], hold: 200, ball: [0.16, -1.26, -0.04],
+    root: [0, 0, -0.28], hold: 520, cue: "扣球腳步 3：左，雙腳準備起跳", ball: [0.16, -1.26, -0.04],
   },
   {
     elbow: 148, knee: 100, shoulder: 6, armSwingL: -32, armSwingR: -32,
-    root: [0, 0, -0.02], hold: 210, ball: [0.17, -1.2, 0.02],
+    root: [0, 0, -0.02], hold: 560, cue: "擺臂下沉：髖膝一起彎，不要膝蓋內扣", ball: [0.17, -1.2, 0.02],
   },
   {
     elbow: 140, knee: 172, shoulder: 95,
-    root: [0, -0.32, 0.05], hold: 200, ball: [0.19, -1.05, 0.06],
+    root: [0, -0.32, 0.05], hold: 520, cue: "起跳：腿部伸展，把身體往上帶", ball: [0.19, -1.05, 0.06],
   },
   {
     elbow: 178, knee: 175, shoulder: 178, elbowL: 150, shoulderL: 60,
-    root: [0, -0.5, 0.1], hold: 170, ballAttach: "wrist_r",
+    root: [0, -0.5, 0.1], hold: 520, cue: "最高點扣球：手在頭前上方擊球", ballAttach: "wrist_r",
   },
   {
     elbow: 128, knee: 138, shoulder: 55,
-    root: [0, -0.16, 0.2], hold: 230, ball: [0.65, -0.55, 1.0],
+    root: [0, -0.16, 0.2], hold: 620, cue: "落地緩衝：雙腳吸收衝擊", ball: [0.65, -0.55, 1.0],
   },
-  { elbow: 165, knee: 115, shoulder: 20, root: [0, 0, 0.12], hold: 320, ball: [1.05, -0.05, 1.75] },
-];
+  { elbow: 165, knee: 135, shoulder: 20, root: [0, 0, 0.12], hold: 760, cue: "收尾：維持平衡，準備下一球", ball: [1.05, -0.05, 1.75] },
+  ],
+};
 
-function buildSequence(action) {
+function setPoint(points, index, x, y, z) {
+  points[index] = [x, y, z];
+}
+
+function shapeSetHands(points, variant) {
+  const head = points[HEAD_INDEX];
+  const shoulderCenterX = (points[11][0] + points[12][0]) / 2;
+  const z = head[2] + 0.06;
+  const wristY = variant === "mistake" ? head[1] + 0.1 : head[1] - 0.18;
+  const elbowY = variant === "mistake" ? head[1] + 0.22 : head[1] + 0.04;
+  const spread = variant === "mistake" ? 0.22 : 0.12;
+
+  setPoint(points, 13, shoulderCenterX - spread * 1.15, elbowY, z);
+  setPoint(points, 14, shoulderCenterX + spread * 1.15, elbowY, z);
+  setPoint(points, 15, shoulderCenterX - spread, wristY, z);
+  setPoint(points, 16, shoulderCenterX + spread, wristY, z);
+  setPoint(points, 17, shoulderCenterX - spread - 0.035, wristY - 0.03, z + 0.015);
+  setPoint(points, 18, shoulderCenterX + spread + 0.035, wristY - 0.03, z + 0.015);
+  setPoint(points, 19, shoulderCenterX - 0.035, wristY - 0.055, z + 0.02);
+  setPoint(points, 20, shoulderCenterX + 0.035, wristY - 0.055, z + 0.02);
+  setPoint(points, 21, shoulderCenterX - spread * 0.45, wristY + 0.035, z - 0.005);
+  setPoint(points, 22, shoulderCenterX + spread * 0.45, wristY + 0.035, z - 0.005);
+}
+
+function shapeReceivePlatform(points, variant) {
+  const centerX = (points[23][0] + points[24][0]) / 2;
+  const y = variant === "mistake" ? -0.08 : -0.18;
+  const z = variant === "mistake" ? -0.02 : -0.08;
+  const gap = variant === "mistake" ? 0.2 : 0.045;
+  setPoint(points, 13, centerX - 0.2, -0.28, z);
+  setPoint(points, 14, centerX + 0.2, -0.28, z);
+  setPoint(points, 15, centerX - gap, y, z);
+  setPoint(points, 16, centerX + gap, y + (variant === "mistake" ? 0.05 : 0), z);
+  setPoint(points, 17, centerX - gap - 0.03, y + 0.03, z);
+  setPoint(points, 18, centerX + gap + 0.03, y + 0.03, z);
+  setPoint(points, 19, centerX - gap * 0.5, y + 0.045, z);
+  setPoint(points, 20, centerX + gap * 0.5, y + 0.045, z);
+}
+
+function shapeSpikeContact(points, variant) {
+  if (variant !== "correct") return;
+  const head = points[HEAD_INDEX];
+  setPoint(points, 14, 0.2, head[1] - 0.02, 0.08);
+  setPoint(points, 16, 0.26, head[1] - 0.34, 0.12);
+  setPoint(points, 18, 0.29, head[1] - 0.36, 0.12);
+  setPoint(points, 20, 0.22, head[1] - 0.38, 0.12);
+  setPoint(points, 22, 0.28, head[1] - 0.31, 0.1);
+}
+
+function applyActionShape(points, action, variant, frame) {
+  if (action === "set") shapeSetHands(points, variant);
+  if (action === "receive") shapeReceivePlatform(points, variant);
+  if (action === "spike" && frame.ballAttach === "wrist_r") shapeSpikeContact(points, variant);
+}
+
+const decodeCue = (value) => decodeURIComponent(value);
+const CLEAN_REFERENCE_CUES = {
+  block: [
+    "%E6%94%94%E7%B6%B2%E9%A0%90%E5%82%99%EF%BC%9A%E8%86%9D%E8%93%8B%E5%BE%AE%E5%BD%8E%EF%BC%8C%E9%9B%99%E6%89%8B%E5%9C%A8%E8%87%89%E5%89%8D",
+    "%E4%B8%8B%E8%B9%B2%E8%93%84%E5%8A%9B%EF%BC%9A%E9%AB%96%E3%80%81%E8%86%9D%E3%80%81%E8%85%B3%E8%B8%9D%E4%B8%80%E8%B5%B7%E5%BD%8E",
+    "%E5%90%91%E4%B8%8A%E5%B0%81%E7%B6%B2%EF%BC%9A%E6%89%8B%E8%87%82%E7%A9%BF%E9%81%8E%E7%90%83%EF%BC%8C%E6%89%8B%E6%8E%8C%E5%A3%93%E4%BD%8F%E8%B7%AF%E7%B7%9A",
+    "%E8%90%BD%E5%9C%B0%E7%B7%A9%E8%A1%9D%EF%BC%9A%E8%86%9D%E8%93%8B%E5%B0%8D%E9%BD%8A%E8%85%B3%E5%B0%96",
+  ],
+  serve: [
+    "%E7%99%BC%E7%90%83%E9%A0%90%E5%82%99%EF%BC%9A%E8%BA%AB%E9%AB%94%E5%81%B4%E8%BA%AB%EF%BC%8C%E9%9D%9E%E6%85%A3%E7%94%A8%E6%89%8B%E6%89%98%E7%90%83",
+    "%E6%8B%8B%E7%90%83%E8%88%87%E5%BC%95%E8%87%82%EF%BC%9A%E8%82%A9%E8%86%80%E6%94%BE%E9%AC%86%EF%BC%8C%E4%B8%8D%E8%A6%81%E8%81%B3%E8%82%A9",
+    "%E6%9C%80%E9%AB%98%E9%BB%9E%E6%93%8A%E7%90%83%EF%BC%9A%E6%89%8B%E6%8E%8C%E5%9C%A8%E9%A0%AD%E5%89%8D%E4%B8%8A%E6%96%B9",
+    "%E9%A0%86%E5%8B%A2%E6%94%B6%E8%87%82%EF%BC%9A%E6%A0%B8%E5%BF%83%E5%B8%B6%E5%8B%95%EF%BC%8C%E4%B8%8D%E7%A1%AC%E6%8B%89%E8%82%A9%E8%86%80",
+  ],
+  receive: [
+    "%E6%8E%A5%E7%90%83%E9%A0%90%E5%82%99%EF%BC%9A%E9%87%8D%E5%BF%83%E4%BD%8E%EF%BC%8C%E8%85%B3%E5%85%88%E5%88%B0%E7%90%83%E5%BE%8C%E9%9D%A2",
+    "%E5%B9%B3%E5%8F%B0%E9%8E%96%E7%A9%A9%EF%BC%9A%E6%89%8B%E8%82%98%E4%BC%B8%E7%9B%B4%EF%BC%8C%E5%89%8D%E8%87%82%E6%88%90%E4%B8%80%E6%95%B4%E7%89%87",
+    "%E9%9D%A2%E5%90%91%E7%9B%AE%E6%A8%99%EF%BC%9A%E7%94%A8%E8%BA%AB%E9%AB%94%E8%A7%92%E5%BA%A6%E9%80%81%E7%90%83",
+  ],
+  set: [
+    "%E8%88%89%E7%90%83%E9%A0%90%E5%82%99%EF%BC%9A%E9%9B%99%E6%89%8B%E5%9C%A8%E9%A1%8D%E9%A0%AD%E4%B8%8A%E6%96%B9%EF%BC%8C%E6%89%8B%E5%9E%8B%E6%88%90%E4%B8%89%E8%A7%92",
+    "%E6%8E%A5%E7%90%83%E7%B7%A9%E8%A1%9D%EF%BC%9A%E6%89%8B%E6%8C%87%E5%BC%B5%E9%96%8B%EF%BC%8C%E6%89%8B%E8%85%95%E6%94%BE%E9%AC%86",
+    "%E8%85%BF%E9%83%A8%E9%80%81%E7%90%83%EF%BC%9A%E8%86%9D%E8%93%8B%E4%BC%B8%E5%B1%95%EF%BC%8C%E7%90%83%E5%BE%80%E4%B8%8A%E8%B5%B0",
+  ],
+  spike: [
+    "%E6%89%A3%E7%90%83%E5%8A%A9%E8%B7%91%EF%BC%9A%E5%B7%A6%E8%85%B3%E5%95%9F%E5%8B%95%EF%BC%8C%E7%9C%BC%E7%9D%9B%E7%9C%8B%E7%90%83",
+    "%E6%89%A3%E7%90%83%E8%85%B3%E6%AD%A5%201%EF%BC%9A%E5%B7%A6",
+    "%E6%89%A3%E7%90%83%E8%85%B3%E6%AD%A5%202%EF%BC%9A%E5%8F%B3%EF%BC%8C%E8%BA%AB%E9%AB%94%E9%96%8B%E5%A7%8B%E8%93%84%E5%8A%9B",
+    "%E6%89%A3%E7%90%83%E8%85%B3%E6%AD%A5%203%EF%BC%9A%E5%B7%A6%EF%BC%8C%E9%9B%99%E8%85%B3%E6%BA%96%E5%82%99%E8%B5%B7%E8%B7%B3",
+    "%E6%93%BA%E8%87%82%E4%B8%8B%E6%B2%89%EF%BC%9A%E9%AB%96%E8%86%9D%E4%B8%80%E8%B5%B7%E5%BD%8E%EF%BC%8C%E4%B8%8D%E8%A6%81%E8%86%9D%E8%93%8B%E5%85%A7%E6%89%A3",
+    "%E8%B5%B7%E8%B7%B3%EF%BC%9A%E8%85%BF%E9%83%A8%E4%BC%B8%E5%B1%95%EF%BC%8C%E6%8A%8A%E8%BA%AB%E9%AB%94%E5%BE%80%E4%B8%8A%E5%B8%B6",
+    "%E6%9C%80%E9%AB%98%E9%BB%9E%E6%89%A3%E7%90%83%EF%BC%9A%E6%89%8B%E5%9C%A8%E9%A0%AD%E5%89%8D%E4%B8%8A%E6%96%B9%E6%93%8A%E7%90%83",
+    "%E8%90%BD%E5%9C%B0%E7%B7%A9%E8%A1%9D%EF%BC%9A%E9%9B%99%E8%85%B3%E5%90%B8%E6%94%B6%E8%A1%9D%E6%93%8A",
+    "%E6%94%B6%E5%B0%BE%EF%BC%9A%E7%B6%AD%E6%8C%81%E5%B9%B3%E8%A1%A1%EF%BC%8C%E6%BA%96%E5%82%99%E4%B8%8B%E4%B8%80%E7%90%83",
+  ],
+};
+
+function referenceCue(action, index, fallback) {
+  const encoded = CLEAN_REFERENCE_CUES[action]?.[index];
+  return encoded ? decodeCue(encoded) : fallback;
+}
+
+function buildSequence(action, variant = "correct") {
+  void variant;
   if (action === "spike") {
-    return SPIKE_SEQUENCE.map((frame) => {
+    const sequence = SPIKE_SEQUENCES.correct;
+    return sequence.map((frame, index) => {
       const points = buildPose(frame);
+      applyActionShape(points, action, "correct", frame);
       let ball = frame.ball;
       if (frame.ballAttach === "wrist_r") ball = points[ARM_CHAIN.R.wrist];
-      return { points, ball, hold: frame.hold };
+      return {
+        points,
+        ball,
+        hold: frame.hold,
+        caption: referenceCue(action, index, frame.cue),
+        jointStatus: null,
+      };
     });
   }
-  const spec = SIMPLE_CYCLES[action] || SIMPLE_CYCLES.block;
-  return spec.map((frame) => {
+  const spec = CORRECT_CYCLES[action] || CORRECT_CYCLES.block;
+  return spec.map((frame, index) => {
     const points = buildPose(frame);
-    return { points, ball: points[ARM_CHAIN.R.wrist], hold: frame.hold };
+    applyActionShape(points, action, "correct", frame);
+    return {
+      points,
+      ball: points[ARM_CHAIN.R.wrist],
+      hold: frame.hold,
+      caption: referenceCue(action, index, frame.cue),
+      jointStatus: null,
+    };
   });
 }
 
@@ -265,26 +382,106 @@ function easeInOut(t) {
 // ---------------------------------------------------------------------------
 
 const BODY_PARTS = [
-  { a: 11, b: 13, radius: 0.048, joint: "shoulder" },
-  { a: 12, b: 14, radius: 0.048, joint: "shoulder" },
-  { a: 13, b: 15, radius: 0.036, joint: "elbow" },
-  { a: 14, b: 16, radius: 0.036, joint: "elbow" },
-  { a: 15, b: 19, radius: 0.025, joint: "wrist" },
-  { a: 16, b: 20, radius: 0.025, joint: "wrist" },
-  { a: 23, b: 25, radius: 0.065, joint: "knee" },
-  { a: 24, b: 26, radius: 0.065, joint: "knee" },
-  { a: 25, b: 27, radius: 0.043, joint: "knee" },
-  { a: 26, b: 28, radius: 0.043, joint: "knee" },
-  { a: 27, b: 31, radius: 0.03, joint: null },
-  { a: 28, b: 32, radius: 0.03, joint: null },
+  { a: 11, b: 13, radius: 0.034, joint: "shoulder" },
+  { a: 12, b: 14, radius: 0.034, joint: "shoulder" },
+  { a: 13, b: 15, radius: 0.026, joint: "elbow" },
+  { a: 14, b: 16, radius: 0.026, joint: "elbow" },
+  { a: 15, b: 19, radius: 0.018, joint: "wrist" },
+  { a: 16, b: 20, radius: 0.018, joint: "wrist" },
+  { a: 15, b: 17, radius: 0.013, joint: "wrist" },
+  { a: 15, b: 21, radius: 0.013, joint: "wrist" },
+  { a: 16, b: 18, radius: 0.013, joint: "wrist" },
+  { a: 16, b: 22, radius: 0.013, joint: "wrist" },
+  { a: 17, b: 19, radius: 0.009, joint: "wrist" },
+  { a: 18, b: 20, radius: 0.009, joint: "wrist" },
+  { a: 23, b: 25, radius: 0.044, joint: "knee" },
+  { a: 24, b: 26, radius: 0.044, joint: "knee" },
+  { a: 25, b: 27, radius: 0.033, joint: "knee" },
+  { a: 26, b: 28, radius: 0.033, joint: "knee" },
+  { a: 27, b: 31, radius: 0.022, joint: null },
+  { a: 28, b: 32, radius: 0.022, joint: null },
 ];
-const TORSO_RADIUS = 0.13;
-const NECK_RADIUS = 0.045;
+const CORE_PARTS = [
+  { a: 11, b: 12, radius: 0.026, joint: "shoulder" },
+  { a: 23, b: 24, radius: 0.026, joint: null },
+  { a: 11, b: 23, radius: 0.018, joint: null },
+  { a: 12, b: 24, radius: 0.018, joint: null },
+  { a: 11, b: 24, radius: 0.011, joint: null },
+  { a: 12, b: 23, radius: 0.011, joint: null },
+];
+const CORE_COLOR = 0xd8d1c4;
+const SPINE_RADIUS = 0.022;
+const NECK_RADIUS = 0.024;
 const HEAD_INDEX = 0;
-const HEAD_RADIUS = 0.15;
+const HEAD_RADIUS = 0.12;
 
 const NEUTRAL_COLOR = 0xf1e6d3;
 const STATUS_COLOR = { green: 0x3ddc84, yellow: 0xffd34f, red: 0xff5d5d };
+const RISK_RING_COLOR = { yellow: 0xffc43d, red: 0xff3b3b };
+const DEMO_SLOW_FACTOR = 1.75;
+const FRAME_INTERVAL_MS = 1000 / 60;
+const DISPLAY_TARGET_HEIGHT = 1.65;
+const MIN_DISPLAY_WIDTHS = [
+  [11, 12, 0.34],
+  [13, 14, 0.38],
+  [15, 16, 0.32],
+  [17, 18, 0.34],
+  [19, 20, 0.26],
+  [21, 22, 0.26],
+  [23, 24, 0.22],
+  [25, 26, 0.24],
+  [27, 28, 0.22],
+  [31, 32, 0.24],
+];
+const FALLBACK_DEPTH_OFFSETS = {
+  0: -0.03,
+  11: -0.02,
+  12: -0.02,
+  13: -0.06,
+  14: -0.06,
+  15: -0.14,
+  16: -0.14,
+  17: -0.16,
+  18: -0.16,
+  19: -0.18,
+  20: -0.18,
+  21: -0.12,
+  22: -0.12,
+  23: 0,
+  24: 0,
+  25: 0.07,
+  26: 0.07,
+  27: 0.15,
+  28: 0.15,
+  29: 0.18,
+  30: 0.18,
+  31: 0.2,
+  32: 0.2,
+};
+const SINGLE_POSE_MOTION = [
+  { hold: 620, upperX: -0.018, upperY: 0.004, lowerX: -0.006, handY: 0.012, depth: 0.012 },
+  { hold: 620, upperX: 0.012, upperY: -0.008, lowerX: 0.004, handY: -0.006, depth: -0.008 },
+  { hold: 620, upperX: 0.018, upperY: 0.002, lowerX: 0.006, handY: 0.008, depth: 0.01 },
+  { hold: 620, upperX: -0.01, upperY: -0.004, lowerX: -0.004, handY: -0.004, depth: -0.006 },
+];
+const UPPER_BODY_INDICES = [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+const HAND_INDICES = [15, 16, 17, 18, 19, 20, 21, 22];
+const LOWER_BODY_INDICES = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
+
+const JOINT_MARKERS = [
+  { index: 11, joint: "shoulder", radius: 0.044 },
+  { index: 12, joint: "shoulder", radius: 0.044 },
+  { index: 13, joint: "elbow", radius: 0.04 },
+  { index: 14, joint: "elbow", radius: 0.04 },
+  { index: 15, joint: "wrist", radius: 0.036 },
+  { index: 16, joint: "wrist", radius: 0.036 },
+  { index: 23, joint: null, radius: 0.046 },
+  { index: 24, joint: null, radius: 0.046 },
+  { index: 25, joint: "knee", radius: 0.044 },
+  { index: 26, joint: "knee", radius: 0.044 },
+  { index: 27, joint: null, radius: 0.034 },
+  { index: 28, joint: null, radius: 0.034 },
+];
 
 function statusColor(joint, jointStatus) {
   if (!joint) return NEUTRAL_COLOR;
@@ -294,6 +491,108 @@ function statusColor(joint, jointStatus) {
 function toVec3(point) {
   // Flip y so the y-down landmark convention becomes Three.js's y-up.
   return new THREE.Vector3(point[0], -point[1], point[2]);
+}
+
+function isFiniteTriple(point) {
+  return Array.isArray(point) && point.length >= 3 && point.every(Number.isFinite);
+}
+
+function averageTriple(points) {
+  const valid = points.filter(isFiniteTriple);
+  if (!valid.length) return [0, 0, 0];
+  return valid.reduce(
+    (sum, point) => [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]],
+    [0, 0, 0],
+  ).map((value) => value / valid.length);
+}
+
+function poseDisplayCenter(points) {
+  const hips = [points[23], points[24]].filter(isFiniteTriple);
+  if (hips.length) return averageTriple(hips);
+  const shoulders = [points[11], points[12]].filter(isFiniteTriple);
+  if (shoulders.length) return averageTriple(shoulders);
+  return averageTriple(points);
+}
+
+function poseBounds(points) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (const point of points) {
+    if (!isFiniteTriple(point)) continue;
+    for (let axis = 0; axis < 3; axis += 1) {
+      min[axis] = Math.min(min[axis], point[axis]);
+      max[axis] = Math.max(max[axis], point[axis]);
+    }
+  }
+  if (!Number.isFinite(min[0])) return { min: [0, 0, 0], max: [0, 0, 0], size: [1, 1, 1] };
+  return { min, max, size: [max[0] - min[0], max[1] - min[1], max[2] - min[2]] };
+}
+
+function enforcePairWidth(points, leftIdx, rightIdx, targetWidth) {
+  const left = points[leftIdx];
+  const right = points[rightIdx];
+  if (!isFiniteTriple(left) || !isFiniteTriple(right)) return;
+  const current = Math.abs(right[0] - left[0]);
+  if (current >= targetWidth) return;
+  const midX = (left[0] + right[0]) / 2;
+  left[0] = midX - targetWidth / 2;
+  right[0] = midX + targetWidth / 2;
+}
+
+function addFallbackDepth(points) {
+  const bounds = poseBounds(points);
+  if (bounds.size[2] >= 0.18) return;
+  for (const [key, offset] of Object.entries(FALLBACK_DEPTH_OFFSETS)) {
+    const index = Number(key);
+    if (isFiniteTriple(points[index])) points[index][2] += offset;
+  }
+}
+
+function preparePoseForDisplay(landmarks) {
+  if (!landmarks || landmarks.length < 33) return landmarks;
+  const raw = landmarks.map((point) => (
+    isFiniteTriple(point) ? [point[0], point[1], point[2]] : [0, 0, 0]
+  ));
+  const center = poseDisplayCenter(raw);
+  const rawBounds = poseBounds(raw);
+  const height = Math.max(rawBounds.size[1], 0.35);
+  const scale = DISPLAY_TARGET_HEIGHT / height;
+  const prepared = raw.map((point) => [
+    (point[0] - center[0]) * scale,
+    (point[1] - center[1]) * scale,
+    (point[2] - center[2]) * scale,
+  ]);
+
+  for (const [leftIdx, rightIdx, width] of MIN_DISPLAY_WIDTHS) {
+    enforcePairWidth(prepared, leftIdx, rightIdx, width);
+  }
+  addFallbackDepth(prepared);
+  return prepared;
+}
+
+function offsetPoseIndices(points, indices, dx = 0, dy = 0, dz = 0) {
+  for (const index of indices) {
+    if (!isFiniteTriple(points[index])) continue;
+    points[index][0] += dx;
+    points[index][1] += dy;
+    points[index][2] += dz;
+  }
+}
+
+function buildSinglePoseMotion(frames) {
+  if (frames.length !== 1) return frames;
+  const base = frames[0];
+  return SINGLE_POSE_MOTION.map((phase) => {
+    const points = base.points.map((point) => [...point]);
+    offsetPoseIndices(points, UPPER_BODY_INDICES, phase.upperX, phase.upperY, phase.depth);
+    offsetPoseIndices(points, LOWER_BODY_INDICES, phase.lowerX, 0, phase.depth * 0.35);
+    offsetPoseIndices(points, HAND_INDICES, phase.upperX * 0.35, phase.handY, phase.depth * 0.4);
+    return {
+      ...base,
+      points,
+      hold: phase.hold,
+    };
+  });
 }
 
 function orientCapsuleVec(mesh, start, end) {
@@ -321,13 +620,19 @@ function makeUnitCapsule(radius, color) {
 
 function createFigure(scene) {
   const group = new THREE.Group();
+  const coreLinks = CORE_PARTS.map((part) => ({
+    part,
+    mesh: makeUnitCapsule(part.radius, CORE_COLOR),
+  }));
+  for (const link of coreLinks) group.add(link.mesh);
+
   const limbs = BODY_PARTS.map((part) => ({
     part,
     mesh: makeUnitCapsule(part.radius, NEUTRAL_COLOR),
   }));
   for (const limb of limbs) group.add(limb.mesh);
 
-  const torsoMesh = makeUnitCapsule(TORSO_RADIUS, NEUTRAL_COLOR);
+  const torsoMesh = makeUnitCapsule(SPINE_RADIUS, CORE_COLOR);
   group.add(torsoMesh);
 
   const neckMesh = makeUnitCapsule(NECK_RADIUS, NEUTRAL_COLOR);
@@ -337,6 +642,24 @@ function createFigure(scene) {
   const headMaterial = new THREE.MeshStandardMaterial({ color: NEUTRAL_COLOR, roughness: 0.55, metalness: 0.04 });
   const headMesh = new THREE.Mesh(headGeometry, headMaterial);
   group.add(headMesh);
+
+  const jointMarkers = JOINT_MARKERS.map((marker) => {
+    const geometry = new THREE.SphereGeometry(marker.radius, 16, 12);
+    const material = new THREE.MeshStandardMaterial({ color: NEUTRAL_COLOR, roughness: 0.5, metalness: 0.03 });
+    const mesh = new THREE.Mesh(geometry, material);
+    const haloGeometry = new THREE.SphereGeometry(marker.radius * 1.9, 16, 12);
+    const haloMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff5d5d,
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+    });
+    const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+    halo.visible = false;
+    group.add(mesh);
+    group.add(halo);
+    return { ...marker, mesh, geometry, halo, haloGeometry };
+  });
 
   const shadowGeometry = new THREE.CircleGeometry(0.22, 24);
   const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 });
@@ -350,6 +673,11 @@ function createFigure(scene) {
   return {
     group,
     update(points, jointStatus) {
+      for (const link of coreLinks) {
+        orientCapsule(link.mesh, points[link.part.a], points[link.part.b]);
+        link.mesh.material.color.setHex(link.part.joint ? statusColor(link.part.joint, jointStatus) : CORE_COLOR);
+      }
+
       for (const limb of limbs) {
         orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
         limb.mesh.material.color.setHex(statusColor(limb.part.joint, jointStatus));
@@ -361,6 +689,18 @@ function createFigure(scene) {
       orientCapsuleVec(neckMesh, shoulderMid, headPos);
       headMesh.position.copy(headPos);
 
+      for (const marker of jointMarkers) {
+        const position = toVec3(points[marker.index]);
+        const status = marker.joint ? jointStatus?.[marker.joint] || "green" : "green";
+        marker.mesh.position.copy(position);
+        marker.mesh.material.color.setHex(statusColor(marker.joint, jointStatus));
+        marker.halo.position.copy(position);
+        marker.halo.visible = status === "yellow" || status === "red";
+        if (marker.halo.visible) {
+          marker.halo.material.color.setHex(RISK_RING_COLOR[status]);
+        }
+      }
+
       const feetY = Math.max(toVec3(points[27]).y, toVec3(points[28]).y);
       const rootX = (toVec3(points[23]).x + toVec3(points[24]).x) / 2;
       const rootZ = (toVec3(points[23]).z + toVec3(points[24]).z) / 2;
@@ -370,10 +710,15 @@ function createFigure(scene) {
       shadowMesh.scale.set(scale, scale, scale);
     },
     dispose() {
+      for (const link of coreLinks) link.mesh.geometry.dispose();
       for (const limb of limbs) limb.mesh.geometry.dispose();
       torsoMesh.geometry.dispose();
       neckMesh.geometry.dispose();
       headGeometry.dispose();
+      for (const marker of jointMarkers) {
+        marker.geometry.dispose();
+        marker.haloGeometry.dispose();
+      }
       shadowGeometry.dispose();
       scene.remove(group);
     },
@@ -414,6 +759,11 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   container.appendChild(renderer.domElement);
+
+  const cueEl = document.createElement("div");
+  cueEl.className = "pose-3d-cue";
+  cueEl.hidden = true;
+  container.appendChild(cueEl);
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.75));
   const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -462,33 +812,42 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
     renderer.render(scene, camera);
   }
 
-  function setStaticPose(landmarks, jointStatus) {
+  function setCue(text) {
+    cueEl.textContent = text || "";
+    cueEl.hidden = !text;
+  }
+
+  function setStaticPose(landmarks, jointStatus, { caption = "" } = {}) {
     stopAnimation();
     ball.setPosition(null);
-    if (!landmarks || landmarks.length < 33) return;
-    const bounds = computeFramesBounds([{ points: landmarks }]);
+    setCue(caption);
+    if (!landmarks || landmarks.length < 33) {
+      setCue("");
+      draw();
+      return;
+    }
+    const displayLandmarks = preparePoseForDisplay(landmarks);
+    const bounds = computeFramesBounds([{ points: displayLandmarks }]);
     const framed = frameCamera(bounds, camera.fov);
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
-    figure.update(landmarks, jointStatus);
+    figure.update(displayLandmarks, jointStatus);
     draw();
   }
 
-  const FRAME_INTERVAL_MS = 60;
-
-  function playDemo(action) {
+  function playDemo(action, { variant = "correct" } = {}) {
     stopAnimation();
     if (typeof requestAnimationFrame !== "function") return;
 
-    const frames = buildSequence(action);
+    const frames = buildSequence(action, variant);
     const bounds = computeFramesBounds(frames);
     const framed = frameCamera(bounds, camera.fov);
     lookTarget = framed.center;
     distance = framed.distance;
     applyCamera();
 
-    const totalDuration = frames.reduce((sum, frame) => sum + frame.hold, 0);
+    const totalDuration = frames.reduce((sum, frame) => sum + frame.hold * DEMO_SLOW_FACTOR, 0);
     const state = { startTime: null, lastDraw: 0 };
     animation = { frameId: 0 };
 
@@ -502,17 +861,19 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
       let cursor = 0;
       let index = frames.length - 1;
       for (let i = 0; i < frames.length; i += 1) {
-        if (elapsed < cursor + frames[i].hold) {
+        const hold = frames[i].hold * DEMO_SLOW_FACTOR;
+        if (elapsed < cursor + hold) {
           index = i;
           break;
         }
-        cursor += frames[i].hold;
+        cursor += hold;
       }
       const nextIndex = (index + 1) % frames.length;
-      const localT = easeInOut(Math.min(1, (elapsed - cursor) / frames[index].hold));
+      const localT = easeInOut(Math.min(1, (elapsed - cursor) / (frames[index].hold * DEMO_SLOW_FACTOR)));
 
       const points = lerpTriples(frames[index].points, frames[nextIndex].points, localT);
-      figure.update(points, null);
+      figure.update(points, frames[index].jointStatus);
+      setCue(frames[index].caption);
 
       if (frames[index].ball && frames[nextIndex].ball) {
         ball.setPosition(lerpTriple(frames[index].ball, frames[nextIndex].ball, localT));
@@ -520,6 +881,65 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
         ball.setPosition(null);
       }
 
+      draw();
+    };
+    animation.frameId = requestAnimationFrame(tick);
+  }
+
+  function playPoseSequence(sequence, { caption = "影片分析到的錯誤姿勢" } = {}) {
+    stopAnimation();
+    if (!sequence?.length || typeof requestAnimationFrame !== "function") {
+      setStaticPose(null, null);
+      return;
+    }
+
+    let frames = sequence
+      .filter((frame) => frame.landmarks?.length >= 33)
+      .map((frame) => ({
+        points: preparePoseForDisplay(frame.landmarks),
+        jointStatus: frame.joint_status || frame.jointStatus || {},
+        hold: frame.hold || 720,
+        caption: frame.caption || caption,
+      }));
+    if (!frames.length) {
+      setStaticPose(null, null);
+      return;
+    }
+    frames = buildSinglePoseMotion(frames);
+
+    const bounds = computeFramesBounds(frames);
+    const framed = frameCamera(bounds, camera.fov);
+    lookTarget = framed.center;
+    distance = Math.max(framed.distance, cameraDistance);
+    applyCamera();
+
+    const totalDuration = frames.reduce((sum, frame) => sum + frame.hold * DEMO_SLOW_FACTOR, 0);
+    const state = { startTime: null, lastDraw: 0 };
+    animation = { frameId: 0 };
+
+    const tick = (timestamp) => {
+      if (state.startTime === null) state.startTime = timestamp;
+      animation.frameId = requestAnimationFrame(tick);
+      if (timestamp - state.lastDraw < FRAME_INTERVAL_MS) return;
+      state.lastDraw = timestamp;
+
+      const elapsed = (timestamp - state.startTime) % totalDuration;
+      let cursor = 0;
+      let index = frames.length - 1;
+      for (let i = 0; i < frames.length; i += 1) {
+        const hold = frames[i].hold * DEMO_SLOW_FACTOR;
+        if (elapsed < cursor + hold) {
+          index = i;
+          break;
+        }
+        cursor += hold;
+      }
+      const nextIndex = (index + 1) % frames.length;
+      const localT = easeInOut(Math.min(1, (elapsed - cursor) / (frames[index].hold * DEMO_SLOW_FACTOR)));
+      const points = lerpTriples(frames[index].points, frames[nextIndex].points, localT);
+      figure.update(points, frames[index].jointStatus);
+      ball.setPosition(null);
+      setCue(frames[index].caption);
       draw();
     };
     animation.frameId = requestAnimationFrame(tick);
@@ -537,7 +957,8 @@ export function createPoseViewport(container, { cameraDistance = 2.1 } = {}) {
     ball.dispose();
     renderer.dispose();
     if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
+    if (cueEl.parentNode === container) container.removeChild(cueEl);
   }
 
-  return { setStaticPose, playDemo, setView, resize, dispose };
+  return { setStaticPose, playDemo, playPoseSequence, setView, resize, dispose };
 }
