@@ -1460,11 +1460,12 @@ body {
   height: 118px;
   content: "";
   background:
-    linear-gradient(120deg, transparent 0 37%, rgba(241, 169, 31, 0.42) 37% 38%, transparent 38%),
-    linear-gradient(162deg, transparent 0 57%, rgba(255, 255, 255, 0.18) 57% 58%, transparent 58%),
-    linear-gradient(180deg, rgba(169, 71, 43, 0.34), rgba(169, 71, 43, 0.06));
-  border: 1px solid rgba(241, 169, 31, 0.18);
-  opacity: 0.75;
+    linear-gradient(120deg, transparent 0 37%, rgba(241, 169, 31, 0.22) 37% 38%, transparent 38%),
+    linear-gradient(162deg, transparent 0 57%, rgba(255, 255, 255, 0.11) 57% 58%, transparent 58%),
+    linear-gradient(180deg, rgba(13, 14, 13, 0.96), rgba(10, 10, 10, 0.78));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.38), 0 20px 48px rgba(0, 0, 0, 0.26);
+  opacity: 0.94;
   pointer-events: none;
 }
 
