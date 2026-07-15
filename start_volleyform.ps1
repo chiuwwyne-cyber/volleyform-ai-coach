@@ -9,7 +9,13 @@ $ShareConfig = Join-Path $Root "frontend\runtime-share.json"
 $PublicFrontendUrl = "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/"
 $SessionId = Get-Date -Format "yyyyMMddHHmmss"
 $TunnelPidFile = Join-Path $RuntimeDir "cloudflared.pid"
-$DesktopLatestShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "VolleyForm 本次網址.url"
+$DesktopDir = [Environment]::GetFolderPath("Desktop")
+$LauncherBatch = Join-Path $Root "VolleyForm.bat"
+$LauncherIcon = Join-Path $Root "frontend\assets\app.ico"
+$DesktopLauncherName = "VolleyForm " + [char]0x555F + [char]0x52D5 + [char]0x5668 + ".lnk"
+$DesktopLatestName = "VolleyForm " + [char]0x672C + [char]0x6B21 + [char]0x7DB2 + [char]0x5740 + ".url"
+$DesktopLauncherShortcut = Join-Path $DesktopDir $DesktopLauncherName
+$DesktopLatestShortcut = Join-Path $DesktopDir $DesktopLatestName
 $Port = 8000
 
 function Get-AppBuildVersion {
@@ -34,6 +40,25 @@ if (-not (Test-Path $Python)) {
 }
 
 New-Item -ItemType Directory -Force -Path $RuntimeDir | Out-Null
+
+function Sync-DesktopLauncher {
+    try {
+        $Shell = New-Object -ComObject WScript.Shell
+        $Shortcut = $Shell.CreateShortcut($DesktopLauncherShortcut)
+        $Shortcut.TargetPath = $LauncherBatch
+        $Shortcut.Arguments = ""
+        $Shortcut.WorkingDirectory = $Root
+        $Shortcut.Description = "Start VolleyForm with a fresh public URL and current build."
+        if (Test-Path $LauncherIcon) {
+            $Shortcut.IconLocation = "$LauncherIcon,0"
+        }
+        $Shortcut.Save()
+        Write-Host "Updated desktop launcher: $DesktopLauncherShortcut" -ForegroundColor Cyan
+    }
+    catch {
+        Write-Host "Could not update the desktop launcher. The app can still open normally." -ForegroundColor Yellow
+    }
+}
 
 function Get-LanUrl {
     param([int]$Port)
@@ -234,6 +259,7 @@ function Write-ShareConfig {
         preferredUrl = $FrontendUrl
         sessionId = $SessionId
         buildVersion = $BuildVersion
+        desktopLauncher = $DesktopLauncherShortcut
         desktopLatestUrl = $DesktopLatestShortcut
         generatedAt = (Get-Date).ToString("o")
         source = "start_volleyform"
@@ -253,6 +279,7 @@ function Write-DesktopLatestUrl {
     }
 }
 
+Sync-DesktopLauncher
 $BackendProcess = Start-BackendIfNeeded -Port $Port
 $BackendUrl = Start-PublicBackendTunnel -Port $Port
 $FrontendUrl = New-FrontendUrl -BackendUrl $BackendUrl -SessionId $SessionId -BuildVersion $BuildVersion
