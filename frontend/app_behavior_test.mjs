@@ -215,7 +215,6 @@ function makeContext() {
     "coachSummary",
     "coachPlan",
     "frameCount",
-    "dimensionGrid",
     "issues",
     "poseViewToggle",
     "poseCompareActual",
@@ -419,9 +418,6 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(context.document.querySelector("#poseCompareNote").textContent, /正確慢動作/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Forearm platform/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Lock elbows/);
-  assert.match(context.document.querySelector("#dimensionGrid").innerHTML, /設計品質/);
-  assert.match(context.document.querySelector("#dimensionGrid").innerHTML, /技術執行/);
-  assert.match(context.document.querySelector("#dimensionGrid").innerHTML, /Platform too soft/);
   const issueCard = context.document.querySelector("#issues").children[0];
   assert.match(issueCard.innerHTML, /Forearms/);
   assert.match(issueCard.innerHTML, /Hold platform shape/);

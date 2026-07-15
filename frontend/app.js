@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260715-4d-pose-v19"),
+  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260715-site-design-v20"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -26,7 +26,6 @@ const summaryTitle = document.querySelector("#summaryTitle");
 const coachSummary = document.querySelector("#coachSummary");
 const coachPlan = document.querySelector("#coachPlan");
 const frameCount = document.querySelector("#frameCount");
-const dimensionGrid = document.querySelector("#dimensionGrid");
 const issues = document.querySelector("#issues");
 const poseViewToggle = document.querySelector("#poseViewToggle");
 const poseCompareActual = document.querySelector("#poseCompareActual");
@@ -1214,78 +1213,6 @@ poseViewToggle?.addEventListener("click", (event) => {
   renderPoseCompareView();
 });
 
-function strongestIssue(items = []) {
-  const order = { high: 3, medium: 2, low: 1 };
-  return [...items].sort((a, b) => (order[b.severity] || 0) - (order[a.severity] || 0))[0] || null;
-}
-
-function dimensionStateFromIssue(issue) {
-  if (!issue) return "good";
-  if (issue.severity === "high") return "risk";
-  return "watch";
-}
-
-function renderDimensionCards(result = {}) {
-  if (!dimensionGrid) return;
-  const primaryIssues = Array.isArray(result.primary_issues) ? result.primary_issues : [];
-  const mainIssue = strongestIssue(primaryIssues);
-  const hasPose = !!result.pose_compare?.available;
-  const hasReplay = Array.isArray(result.pose_compare?.actual_sequence) && result.pose_compare.actual_sequence.length > 0;
-  const plan = result.coach_plan || {};
-  const actionLabel = result.action_label || "本次動作";
-  const issueLabel = mainIssue ? `${mainIssue.title}，${issueTimeSummary(mainIssue)}` : "沒有偵測到明顯錯誤";
-  const nextStep = Array.isArray(plan.next_steps) && plan.next_steps.length ? plan.next_steps[0] : "再錄一段正面與側面影片確認穩定度";
-  const videoReady = plan.video_url || mainIssue?.video_url;
-
-  const cards = [
-    {
-      key: "design-quality",
-      number: "01",
-      label: "設計品質",
-      meta: hasPose ? "畫面判讀清楚" : "需要補拍畫面",
-      state: hasPose ? "good" : "watch",
-      body: hasPose
-        ? "3D 骨架、手部與腳步已進入比對區，可以直接看左右姿勢差異。"
-        : "目前沒有足夠的 3D 姿勢資料，請讓全身、雙手與腳步完整入鏡。",
-    },
-    {
-      key: "originality",
-      number: "02",
-      label: "原創性",
-      meta: hasReplay ? "依你的影片重播" : "依你的結果整理",
-      state: primaryIssues.length ? "watch" : "good",
-      body: hasReplay
-        ? "左側會用 3D 小人重跑影片中分析到的實際錯誤，不只顯示常見錯誤。"
-        : `${actionLabel} 的回饋會依照本次偵測結果整理，避免只套固定範例。`,
-    },
-    {
-      key: "technical-execution",
-      number: "03",
-      label: "技術執行",
-      meta: mainIssue ? "優先修正" : "動作穩定",
-      state: dimensionStateFromIssue(mainIssue),
-      body: mainIssue ? issueLabel : "肩、肘、腕、膝與腳步沒有出現高風險提醒。",
-    },
-    {
-      key: "usability",
-      number: "04",
-      label: "可用性",
-      meta: videoReady ? "可直接練習" : "先補資料",
-      state: videoReady ? "good" : "watch",
-      body: videoReady ? `下一步：${nextStep}` : "請重新上傳或錄製更完整的影片，系統才會產生精準建議。",
-    },
-  ];
-
-  dimensionGrid.innerHTML = cards.map((card) => `
-    <article class="dimension-card ${card.state}" data-dimension="${card.key}">
-      <span class="dimension-icon" aria-hidden="true">${card.number}</span>
-      <strong>${escapeHtml(card.label)}</strong>
-      <small>${escapeHtml(card.meta)}</small>
-      <p>${escapeHtml(card.body)}</p>
-    </article>
-  `).join("");
-}
-
 if (typeof window !== "undefined") {
   window.addEventListener("resize", () => {
     actualViewport?.resize();
@@ -1429,12 +1356,6 @@ function renderPoseCompare(poseCompare, action) {
     );
   });
 }
-
-const renderResultCore = renderResult;
-renderResult = function renderResultWithDimensions(result) {
-  renderDimensionCards(result);
-  renderResultCore(result);
-};
 
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", (event) => {

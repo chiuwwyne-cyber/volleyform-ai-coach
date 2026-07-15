@@ -141,8 +141,10 @@ def main():
         raise SystemExit("Recording UI must be styled consistently")
     if 'class="workspace-header"' not in html or ".workspace-badges" not in css:
         raise SystemExit("Frontend must present the analysis workspace before configuration")
-    if 'id="dimensionGrid"' not in html or ".dimension-card" not in css:
-        raise SystemExit("Frontend must classify analysis feedback into four dimension cards")
+    if "4D COACHING" in html or "dimensionGrid" in html or ".dimension-card" in css:
+        raise SystemExit("Design dimensions must guide the UI, not appear as product content")
+    if "Four-dimension design pass" not in css or ".workspace-header::after" not in css or ".action-choice:hover" not in css:
+        raise SystemExit("Frontend must apply the four design dimensions through the site design system")
     if "renderCoachPlan" not in js or "instant_cue" not in js or "practice_drill" not in js:
         raise SystemExit("Frontend must render clear coach guidance fields")
     if ".coach-plan" not in css or ".issue-meta" not in css or ".drill-box" not in css:

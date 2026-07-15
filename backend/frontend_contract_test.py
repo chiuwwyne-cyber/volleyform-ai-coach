@@ -55,7 +55,6 @@ def main():
         "stopRecordBtn",
         "clearRecordBtn",
         "coachPlan",
-        "dimensionGrid",
         "issues",
         "poseViewToggle",
         "poseCompareActual",

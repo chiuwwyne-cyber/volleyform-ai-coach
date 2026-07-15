@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const fallbackBuild = "20260715-4d-pose-v19";
+        const fallbackBuild = "20260715-site-design-v20";
         const params = new URLSearchParams(window.location.search);
         const build = params.get("build") || fallbackBuild;
         const version = encodeURIComponent(build);
@@ -204,39 +204,6 @@
           <span id="frameCount">尚未分析</span>
         </div>
 
-        <section class="dimension-panel" aria-labelledby="dimensionTitle">
-          <div class="dimension-heading">
-            <span class="section-kicker">4D COACHING</span>
-            <h3 id="dimensionTitle">四維度分析</h3>
-          </div>
-          <div class="dimension-grid" id="dimensionGrid" aria-live="polite">
-            <article class="dimension-card pending" data-dimension="design-quality">
-              <span class="dimension-icon" aria-hidden="true">01</span>
-              <strong>設計品質</strong>
-              <small>畫面判讀品質</small>
-              <p>等待影片或照片分析，確認骨架、手部與腳步是否清楚入鏡。</p>
-            </article>
-            <article class="dimension-card pending" data-dimension="originality">
-              <span class="dimension-icon" aria-hidden="true">02</span>
-              <strong>原創性</strong>
-              <small>個人化建議</small>
-              <p>分析完成後會依照你的實際錯誤產生回饋，不套用固定模板。</p>
-            </article>
-            <article class="dimension-card pending" data-dimension="technical-execution">
-              <span class="dimension-icon" aria-hidden="true">03</span>
-              <strong>技術執行</strong>
-              <small>角度與動作</small>
-              <p>會整理肩、肘、腕、膝與腳步的主要技術問題。</p>
-            </article>
-            <article class="dimension-card pending" data-dimension="usability">
-              <span class="dimension-icon" aria-hidden="true">04</span>
-              <strong>可用性</strong>
-              <small>下一步訓練</small>
-              <p>分析後會提供可直接照做的修正動作與影片連結。</p>
-            </article>
-          </div>
-        </section>
-
         <div class="result-grid">
           <article class="summary-panel">
             <div class="coach-copy">
@@ -298,7 +265,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260715-4d-pose-v19";
+        const build = window.VOLLEYFORM_BUILD || "20260715-site-design-v20";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         document.write('<script src="./app.js?v=' + version + '"><\/script>');
