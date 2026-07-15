@@ -21,6 +21,7 @@
         </span>
       </a>
       <div class="header-actions">
+        <button class="icon-text-btn" id="shareQrBtn" type="button">產生 QR Code</button>
         <button class="icon-text-btn" id="installAppBtn" type="button" hidden>安裝到手機</button>
         <div class="connection-state">
           <span class="status-dot" aria-hidden="true"></span>
@@ -196,10 +197,6 @@
 
         <div class="result-grid">
           <article class="summary-panel">
-            <div class="score-ring" aria-label="動作品質分數">
-              <span id="score">--</span>
-              <small>分數</small>
-            </div>
             <div class="coach-copy">
               <h3 id="summaryTitle">等待分析</h3>
               <p id="coachSummary">錄影或上傳影片後，AI 會先找出最值得修正的動作問題。</p>
@@ -219,24 +216,25 @@
             </div>
           </article>
 
-          <article class="modality-results-panel">
+          <article class="pose-compare-panel">
             <div class="panel-head">
-              <h3>偵測數據</h3>
-              <span>骨架與手部關節</span>
+              <h3>姿勢比對</h3>
+              <div class="pose-view-toggle" id="poseViewToggle" role="group" aria-label="切換視角">
+                <button class="view-toggle-btn active" type="button" data-view="front">正面</button>
+                <button class="view-toggle-btn" type="button" data-view="side">側面</button>
+              </div>
             </div>
-            <div id="modalityResults" class="modality-results empty" aria-live="polite">
-              分析後會顯示各模組狀態與關鍵角度。
+            <div class="pose-compare-grid">
+              <div class="pose-compare-cell">
+                <div id="poseCompareActual" class="pose-3d-viewport" role="img" aria-label="你的姿勢"></div>
+                <span>你的姿勢</span>
+              </div>
+              <div class="pose-compare-cell">
+                <div id="poseCompareCorrected" class="pose-3d-viewport" role="img" aria-label="正確的姿勢"></div>
+                <span>正確的姿勢</span>
+              </div>
             </div>
-          </article>
-
-          <article class="timeline-panel">
-            <div class="panel-head">
-              <h3>動作時間軸</h3>
-              <span>快速定位問題影格</span>
-            </div>
-            <div id="timeline" class="timeline empty" aria-live="polite">
-              系統只保留代表影格，降低手機記憶體和處理負擔。
-            </div>
+            <p id="poseCompareNote" class="pose-compare-note">選擇動作後會示範正確姿勢，分析完成後會顯示你的姿勢比對。</p>
           </article>
         </div>
       </section>
@@ -246,6 +244,15 @@
       <strong>VolleyForm AI Coach</strong>
       <span>Open-source volleyball motion analysis</span>
     </footer>
+
+    <div class="qr-modal" id="qrModal" hidden>
+      <div class="qr-modal-card">
+        <button class="qr-modal-close" id="qrModalClose" type="button" aria-label="關閉">✕</button>
+        <h2>掃描開啟這個頁面</h2>
+        <div id="qrCodeContainer" class="qr-code-container" aria-live="polite"></div>
+        <p id="qrCodeUrl" class="qr-code-url"></p>
+      </div>
+    </div>
 
     <script src="./config.js"></script>
     <script src="./app.js"></script>

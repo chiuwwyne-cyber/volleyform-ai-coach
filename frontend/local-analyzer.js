@@ -430,6 +430,205 @@ function coachPlan(primaryIssues, actionLabel, processedFrames) {
   };
 }
 
+const JOINT_SPECS = {
+  spike: { elbow: { min: 150, code: "elbow_bad" }, knee: { min: 150, code: "knee_bad" } },
+  block: {
+    elbow: { min: 165, code: "elbow_not_straight" },
+    shoulder: { min: 150, code: "hands_not_high" },
+    knee: { min: 140, code: "knee_too_bent" },
+  },
+  serve: {
+    elbow: { min: 150, code: "elbow_bad" },
+    shoulder: { min: 140, code: "shoulder_low" },
+    knee: { min: 150, code: "knee_bad" },
+  },
+  receive: { elbow: { min: 160, code: "elbow_bad" }, knee: { min: 140, code: "knee_too_bent" } },
+  set: {
+    elbow: { min: 140, max: 175, code: "elbow_position_bad" },
+    shoulder: { min: 140, code: "shoulder_low" },
+  },
+};
+
+const LEFT_JOINTS = {
+  shoulder: 11, elbow: 13, wrist: 15, pinky: 17, index: 19, thumb: 21,
+  hip: 23, knee: 25, ankle: 27, heel: 29, foot_index: 31,
+};
+const RIGHT_JOINTS = {
+  shoulder: 12, elbow: 14, wrist: 16, pinky: 18, index: 20, thumb: 22,
+  hip: 24, knee: 26, ankle: 28, heel: 30, foot_index: 32,
+};
+
+const JOINT_CHAIN = {
+  elbow: [["shoulder", "elbow", "wrist"], ["wrist", "pinky", "index", "thumb"]],
+  knee: [["hip", "knee", "ankle"], ["ankle", "heel", "foot_index"]],
+  shoulder: [["elbow", "shoulder", "hip"], ["elbow", "wrist", "pinky", "index", "thumb"]],
+};
+
+const ISSUE_SEVERITY = {
+  elbow_bad: "medium",
+  elbow_not_straight: "medium",
+  hands_not_high: "medium",
+  shoulder_low: "medium",
+  knee_bad: "medium",
+  knee_too_bent: "high",
+  elbow_position_bad: "medium",
+  wrist_low: "medium",
+};
+const SEVERITY_TO_STATUS = { high: "red", medium: "yellow", low: "yellow" };
+const STATUS_RANK = { green: 0, yellow: 1, red: 2 };
+const WRIST_MARGIN = 0.05;
+
+function vecSub(a, b) {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+function vecAdd(a, b) {
+  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+}
+function vecCross(a, b) {
+  return [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0],
+  ];
+}
+function vecDot(a, b) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+function vecNorm(a) {
+  const length = Math.hypot(a[0], a[1], a[2]);
+  if (!length) return [0, 0, 0];
+  return [a[0] / length, a[1] / length, a[2] / length];
+}
+function angleBetween(a, b, c) {
+  const ba = vecSub(a, b);
+  const bc = vecSub(c, b);
+  const la = Math.hypot(...ba);
+  const lc = Math.hypot(...bc);
+  if (!la || !lc) return 0;
+  const cosine = Math.max(-1, Math.min(1, vecDot(ba, bc) / (la * lc)));
+  return (Math.acos(cosine) * 180) / Math.PI;
+}
+function rotatePoint(point, pivot, axis, angleDeg) {
+  const angle = (angleDeg * Math.PI) / 180;
+  const p = vecSub(point, pivot);
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  const dot = vecDot(p, axis);
+  const cross = vecCross(axis, p);
+  const rotated = [
+    p[0] * cosA + cross[0] * sinA + axis[0] * dot * (1 - cosA),
+    p[1] * cosA + cross[1] * sinA + axis[1] * dot * (1 - cosA),
+    p[2] * cosA + cross[2] * sinA + axis[2] * dot * (1 - cosA),
+  ];
+  return vecAdd(rotated, pivot);
+}
+function targetAngle(current, spec) {
+  if (spec.min !== undefined && current < spec.min) return spec.min;
+  if (spec.max !== undefined && current > spec.max) return spec.max;
+  return null;
+}
+function correctJoint(points, sideMap, jointName, target) {
+  const [names, distalNames] = JOINT_CHAIN[jointName];
+  const aIdx = sideMap[names[0]];
+  const bIdx = sideMap[names[1]];
+  const cIdx = sideMap[names[2]];
+  const a = points[aIdx];
+  const b = points[bIdx];
+  const c = points[cIdx];
+  const current = angleBetween(a, b, c);
+
+  const ba = vecNorm(vecSub(a, b));
+  const bc = vecNorm(vecSub(c, b));
+  let axis = vecCross(ba, bc);
+  let axisLen = Math.hypot(...axis);
+  if (axisLen < 1e-6) {
+    axis = vecCross(ba, [0, 1, 0]);
+    axisLen = Math.hypot(...axis);
+    if (axisLen < 1e-6) {
+      axis = [1, 0, 0];
+      axisLen = 1;
+    }
+  }
+  axis = axis.map((value) => value / axisLen);
+
+  // The triplet endpoint that actually moves depends on which one is in the
+  // distal set (e.g. shoulder correction moves the elbow side, not the hip).
+  const distalIndices = distalNames.map((name) => sideMap[name]);
+  const movingIsC = distalIndices.includes(cIdx);
+  const probePoint = movingIsC ? c : a;
+
+  let delta = target - current;
+  const resultingAngle = (appliedDelta) => {
+    const testPoint = rotatePoint(probePoint, b, axis, appliedDelta);
+    return movingIsC ? angleBetween(a, b, testPoint) : angleBetween(testPoint, b, c);
+  };
+  if (Math.abs(resultingAngle(-delta) - target) < Math.abs(resultingAngle(delta) - target)) {
+    delta = -delta;
+  }
+
+  for (const idx of distalIndices) {
+    points[idx] = rotatePoint(points[idx], b, axis, delta);
+  }
+}
+function correctWristLow(points) {
+  const headY = points[0][1];
+  const wristY = Math.min(points[LEFT_JOINTS.wrist][1], points[RIGHT_JOINTS.wrist][1]);
+  if (wristY <= headY) return false;
+  const delta = headY - WRIST_MARGIN - wristY;
+  for (const idx of [
+    LEFT_JOINTS.wrist, RIGHT_JOINTS.wrist,
+    LEFT_JOINTS.pinky, RIGHT_JOINTS.pinky,
+    LEFT_JOINTS.index, RIGHT_JOINTS.index,
+    LEFT_JOINTS.thumb, RIGHT_JOINTS.thumb,
+  ]) {
+    points[idx] = [points[idx][0], points[idx][1] + delta, points[idx][2]];
+  }
+  return true;
+}
+
+function buildPoseCompare(action, worldLandmarks) {
+  if (!worldLandmarks || worldLandmarks.length < 33) return { available: false };
+
+  const actual = worldLandmarks.map((point) => [point.x, point.y, point.z || 0]);
+  const corrected = actual.map((point) => [...point]);
+  const spec = JOINT_SPECS[action] || {};
+  const jointStatus = {};
+
+  for (const jointName of ["elbow", "knee", "shoulder"]) {
+    const jointSpec = spec[jointName];
+    let status = "green";
+    if (jointSpec) {
+      const [names] = JOINT_CHAIN[jointName];
+      for (const sideMap of [LEFT_JOINTS, RIGHT_JOINTS]) {
+        const a = corrected[sideMap[names[0]]];
+        const b = corrected[sideMap[names[1]]];
+        const c = corrected[sideMap[names[2]]];
+        const current = angleBetween(a, b, c);
+        const target = targetAngle(current, jointSpec);
+        if (target !== null) {
+          correctJoint(corrected, sideMap, jointName, target);
+          const sideStatus = SEVERITY_TO_STATUS[ISSUE_SEVERITY[jointSpec.code] || "medium"];
+          if (STATUS_RANK[sideStatus] > STATUS_RANK[status]) status = sideStatus;
+        }
+      }
+    }
+    jointStatus[jointName] = status;
+  }
+
+  let wristStatus = "green";
+  if (action === "set" && correctWristLow(corrected)) {
+    wristStatus = SEVERITY_TO_STATUS[ISSUE_SEVERITY.wrist_low];
+  }
+  jointStatus.wrist = wristStatus;
+
+  return {
+    available: true,
+    joint_status: jointStatus,
+    actual_landmarks: actual,
+    corrected_landmarks: corrected,
+  };
+}
+
 function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, handSums) {
   const selected = new Set(selectedModalities);
   const modalities = [
@@ -505,12 +704,11 @@ function analysisResult({
   modalities,
   sampleCount,
   issueCounts,
-  timeline,
+  poseCompare,
   angleSums,
   handSums,
   poseFrames,
   handFrames,
-  goodFrames,
   engine = "mediapipe-web-local",
 }) {
   const primaryIssues = [...issueCounts.entries()]
@@ -521,7 +719,6 @@ function analysisResult({
     )
     .slice(0, 6);
   const actionLabel = ACTION_LABELS[action] || action;
-  const score = poseFrames ? Math.round((goodFrames / poseFrames) * 100) : 0;
   const modality = modalityPayload(
     poseFrames,
     handFrames,
@@ -534,10 +731,8 @@ function analysisResult({
     action,
     action_label: actionLabel,
     processed_frames: poseFrames,
-    good_frames: goodFrames,
-    score,
     primary_issues: primaryIssues,
-    timeline,
+    pose_compare: poseCompare || { available: false },
     coach_summary: poseFrames
       ? primaryIssues.length
         ? `最需要先修正的是「${primaryIssues[0].title}」。${primaryIssues[0].message}`
@@ -581,12 +776,12 @@ export async function analyzeVideoLocally({
     const requestedSamples = sampleCountForMode(powerMode);
     const sampleCount = Math.max(1, Math.min(requestedSamples, Math.ceil(duration * 5)));
     const issueCounts = new Map();
-    const timeline = [];
     const angleSums = { elbow: 0, knee: 0 };
     const handSums = { extension: 0, gap: 0 };
     let poseFrames = 0;
     let handFrames = 0;
-    let goodFrames = 0;
+    let keyFrameLandmarks = null;
+    let keyFrameSeverity = -1;
 
     for (let index = 0; index < sampleCount; index += 1) {
       const time = sampleCount === 1 ? 0 : (duration * index) / (sampleCount - 1);
@@ -614,30 +809,19 @@ export async function analyzeVideoLocally({
         handSums.gap += features.hand_center_gap || 0;
       }
 
-      if (!frameIssues.length) {
-        goodFrames += 1;
-      } else {
-        for (const code of frameIssues) {
-          issueCounts.set(code, (issueCounts.get(code) || 0) + 1);
-        }
+      for (const code of frameIssues) {
+        issueCounts.set(code, (issueCounts.get(code) || 0) + 1);
       }
 
-      if (
-        index === 0 ||
-        index === sampleCount - 1 ||
-        (frameIssues.length && index % 3 === 0)
-      ) {
-        timeline.push({
-          frame: index + 1,
-          ok: frameIssues.length === 0,
-          issues: frameIssues.map((code) => ({
-            code,
-            title: FEEDBACK[code].title,
-            severity: FEEDBACK[code].severity,
-          })),
-        });
+      const worldLandmarks = poseResult.worldLandmarks?.[0];
+      const frameSeverity = frameIssues.reduce(
+        (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
+        0,
+      );
+      if (worldLandmarks && frameSeverity > keyFrameSeverity) {
+        keyFrameSeverity = frameSeverity;
+        keyFrameLandmarks = worldLandmarks;
       }
-      if (timeline.length > 8) timeline.shift();
 
       onProgress(`分析影格 ${index + 1}/${sampleCount}`, (index + 1) / sampleCount);
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -649,12 +833,11 @@ export async function analyzeVideoLocally({
       modalities,
       sampleCount,
       issueCounts,
-      timeline,
+      poseCompare: buildPoseCompare(action, keyFrameLandmarks),
       angleSums,
       handSums,
       poseFrames,
       handFrames,
-      goodFrames,
     });
   } finally {
     video.removeAttribute("src");
@@ -719,12 +902,11 @@ export async function analyzeImageLocally({
     const poseResult = detectPose(pose, canvas, requestedTimestamp);
     const poseLandmarks = poseResult.landmarks?.[0];
     const issueCounts = new Map();
-    const timeline = [];
     const angleSums = { elbow: 0, knee: 0 };
     const handSums = { extension: 0, gap: 0 };
     let poseFrames = 0;
     let handFrames = 0;
-    let goodFrames = 0;
+    let poseCompare = { available: false };
 
     if (poseLandmarks) {
       const { angles, positions } = poseFeatures(poseLandmarks);
@@ -740,17 +922,8 @@ export async function analyzeImageLocally({
         handSums.extension = features.finger_extension || 0;
         handSums.gap = features.hand_center_gap || 0;
       }
-      goodFrames = frameIssues.length ? 0 : 1;
       for (const code of frameIssues) issueCounts.set(code, 1);
-      timeline.push({
-        frame: 1,
-        ok: frameIssues.length === 0,
-        issues: frameIssues.map((code) => ({
-          code,
-          title: FEEDBACK[code].title,
-          severity: FEEDBACK[code].severity,
-        })),
-      });
+      poseCompare = buildPoseCompare(action, poseResult.worldLandmarks?.[0]);
     }
 
     onProgress("照片分析完成", 1);
@@ -760,12 +933,11 @@ export async function analyzeImageLocally({
       modalities,
       sampleCount: 1,
       issueCounts,
-      timeline,
+      poseCompare,
       angleSums,
       handSums,
       poseFrames,
       handFrames,
-      goodFrames,
       engine: "mediapipe-web-local-image",
     });
   } finally {

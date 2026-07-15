@@ -90,6 +90,29 @@ class FakeElement {
     this.events[name] = handler;
   }
 
+  getContext(type) {
+    if (type !== "2d") return null;
+    if (!this._context2d) {
+      this._context2d = {
+        canvas: this,
+        lineCap: "",
+        lineJoin: "",
+        lineWidth: 1,
+        strokeStyle: "",
+        fillStyle: "",
+        clearRect() {},
+        beginPath() {},
+        closePath() {},
+        moveTo() {},
+        lineTo() {},
+        stroke() {},
+        arc() {},
+        fill() {},
+      };
+    }
+    return this._context2d;
+  }
+
   setAttribute(name, value) {
     this.attributes[name] = String(value);
   }
@@ -145,6 +168,15 @@ class FakeDocument {
     this.elements.get("modalityList").tagName = "DIV";
     this.elements.get("actionChoices").tagName = "DIV";
     this.elements.get("installAppBtn").tagName = "BUTTON";
+    this.elements.get("poseViewToggle").tagName = "DIV";
+    this.elements.get("poseCompareActual").tagName = "CANVAS";
+    this.elements.get("poseCompareCorrected").tagName = "CANVAS";
+    this.elements.get("shareQrBtn").tagName = "BUTTON";
+    this.elements.get("qrModal").tagName = "DIV";
+    this.elements.get("qrModalClose").tagName = "BUTTON";
+    this.elements.get("qrCodeContainer").tagName = "DIV";
+    this.elements.get("qrCodeUrl").tagName = "P";
+    this.head = new FakeElement("head");
   }
 
   querySelector(selector) {
@@ -174,16 +206,22 @@ function makeContext() {
     "previewPlaceholder",
     "analysisSummary",
     "installAppBtn",
-    "score",
+    "shareQrBtn",
+    "qrModal",
+    "qrModalClose",
+    "qrCodeContainer",
+    "qrCodeUrl",
     "summaryTitle",
     "coachSummary",
     "coachPlan",
     "frameCount",
     "issues",
-    "timeline",
+    "poseViewToggle",
+    "poseCompareActual",
+    "poseCompareCorrected",
+    "poseCompareNote",
     "dropZone",
     "modalityList",
-    "modalityResults",
     "recordPreview",
     "imagePreview",
     "poseOverlay",
@@ -211,6 +249,13 @@ function makeContext() {
       getItem: (key) => storage.get(key) || "",
       setItem: (key, value) => storage.set(key, String(value)),
     },
+    location: {
+      href: "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/",
+      search: "",
+      hostname: "chiuwwyne-cyber.github.io",
+    },
+    URL,
+    URLSearchParams,
     FormData: class FakeFormData {
       constructor() {
         this.fields = [];
@@ -221,6 +266,15 @@ function makeContext() {
     },
     fetch: async (url) => {
       calls.push(url);
+      if (url === "./runtime-share.json") {
+        return {
+          ok: true,
+          json: async () => ({
+            publicUrl: "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/",
+            preferredUrl: "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/",
+          }),
+        };
+      }
       return {
         ok: true,
         json: async () => ({
@@ -260,8 +314,17 @@ function makeContext() {
 async function main() {
   const appPath = path.join(process.cwd(), "frontend", "app.js");
   const source = `${fs.readFileSync(appPath, "utf8")}
-globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalities };`;
+globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalities, resolveShareUrl };`;
   const context = makeContext();
+  context.__pose3dLoader = async () => ({
+    createPoseViewport: () => ({
+      setStaticPose() {},
+      playDemo() {},
+      setView() {},
+      resize() {},
+      dispose() {},
+    }),
+  });
   vm.createContext(context);
   vm.runInContext(source, context, { filename: "frontend/app.js" });
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -280,6 +343,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.equal(typeof context.document.querySelector("#stopLiveBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#stopRecordBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#clearRecordBtn").events.click, "function");
+  assert.equal(typeof context.document.querySelector("#poseViewToggle").events.click, "function");
   assert.match(source, /maxRecordingMs = 12000/);
   assert.match(source, /recordingVideoBitsPerSecond = 1600000/);
   assert.match(source, /process_width: "480"/);
@@ -293,10 +357,13 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.equal(context.__appTestApi.apiUrl("/api/analyze"), "http://192.168.1.10:8000/api/analyze");
   await context.__appTestApi.checkHealth();
   assert.equal(context.calls.at(-1), "http://192.168.1.10:8000/api/capabilities");
+  const qrShareUrl = await context.__appTestApi.resolveShareUrl();
+  assert.match(qrShareUrl, /^https:\/\/chiuwwyne-cyber\.github\.io\/volleyform-ai-coach\//);
+  assert.match(qrShareUrl, /backend=http%3A%2F%2F192\.168\.1\.10%3A8000/);
+  assert.doesNotMatch(qrShareUrl, /127\.0\.0\.1/);
 
   context.__appTestApi.renderResult({
     action_label: "Receive",
-    score: 42,
     processed_frames: 24,
     coach_summary: "Fix the platform first.",
     coach_plan: {
@@ -321,13 +388,12 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
         video_url: "https://example.com/fix",
       },
     ],
-    timeline: [
-      {
-        frame: 8,
-        ok: false,
-        issues: [{ title: "Platform too soft" }],
-      },
-    ],
+    pose_compare: {
+      available: true,
+      joint_status: { elbow: "yellow", knee: "green", shoulder: "green", wrist: "green" },
+      actual_landmarks: Array.from({ length: 33 }, (_, index) => [index * 0.01, index * 0.02, 0]),
+      corrected_landmarks: Array.from({ length: 33 }, (_, index) => [index * 0.01, index * 0.02, 0]),
+    },
     modalities: [
       {
         id: "pose",
@@ -346,14 +412,12 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
     },
   });
 
-  assert.equal(context.document.querySelector("#score").textContent, "42");
+  assert.match(context.document.querySelector("#poseCompareNote").textContent, /綠色/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Forearm platform/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Lock elbows/);
   const issueCard = context.document.querySelector("#issues").children[0];
   assert.match(issueCard.innerHTML, /Forearms/);
   assert.match(issueCard.innerHTML, /Hold platform shape/);
-  const modalityCard = context.document.querySelector("#modalityResults").children[0];
-  assert.match(modalityCard.innerHTML, /Pose/);
 
   console.log("frontend behavior ok");
   console.log(`fetch calls: ${context.calls.length}`);

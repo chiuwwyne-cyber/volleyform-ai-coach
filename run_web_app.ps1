@@ -2,15 +2,99 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
+$ShareConfig = Join-Path $Root "frontend\runtime-share.json"
+$PublicFrontendUrl = "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/"
 
 if (-not (Test-Path $Python)) {
     Write-Host "Cannot find .venv Python. Please install requirements first." -ForegroundColor Red
     exit 1
 }
 
-Write-Host "Starting Volleyball AI Coach backend..." -ForegroundColor Green
-Write-Host "Local:  http://127.0.0.1:8000" -ForegroundColor Cyan
-Write-Host "Phone:  use this computer's LAN IP, for example http://192.168.x.x:8000" -ForegroundColor Cyan
-Write-Host "Remote: run .\run_remote_tunnel.ps1 if the phone is not on the same network." -ForegroundColor Cyan
+function Get-LanUrl {
+    param([int]$Port)
+    $Sock = [System.Net.Sockets.Socket]::new(
+        [System.Net.Sockets.AddressFamily]::InterNetwork,
+        [System.Net.Sockets.SocketType]::Dgram,
+        [System.Net.Sockets.ProtocolType]::Udp
+    )
+    try {
+        $Sock.Connect("8.8.8.8", 80)
+        $Address = $Sock.LocalEndPoint.Address.ToString()
+        return "http://${Address}:$Port"
+    }
+    catch {
+        return "http://127.0.0.1:$Port"
+    }
+    finally {
+        $Sock.Close()
+    }
+}
 
-& $Python (Join-Path $Root "backend\server.py") --host 0.0.0.0 --port 8000
+function Write-ShareConfig {
+    param(
+        [string]$PublicUrl = "",
+        [int]$Port = 8000
+    )
+    $LocalUrl = "http://127.0.0.1:$Port"
+    $LanUrl = Get-LanUrl -Port $Port
+    $PreferredUrl = if ($PublicUrl) { $PublicUrl } elseif ($LanUrl -notlike "*127.0.0.1*") { $LanUrl } else { $PublicFrontendUrl }
+    $Payload = [ordered]@{
+        localUrl = $LocalUrl
+        lanUrl = $LanUrl
+        openSourceFrontendUrl = $PublicFrontendUrl
+        publicUrl = $PublicUrl
+        preferredUrl = $PreferredUrl
+        generatedAt = (Get-Date).ToString("o")
+        source = "run_web_app"
+    }
+    $Payload | ConvertTo-Json | Set-Content -LiteralPath $ShareConfig -Encoding UTF8
+    return $PreferredUrl
+}
+
+function Open-App {
+    $Url = $PublicFrontendUrl
+    Write-ShareConfig -Port 8000 | Out-Null
+    Start-Process $Url
+}
+
+try {
+    $Health = Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/health" -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop
+    if ($Health.StatusCode -eq 200) {
+        Write-Host "Backend is already running. Opening the app..." -ForegroundColor Green
+        Open-App
+        exit 0
+    }
+}
+catch {}
+
+Write-Host "Starting Volleyball AI Coach backend..." -ForegroundColor Green
+Write-Host "Your browser will open automatically once the server is ready." -ForegroundColor Cyan
+Write-Host "Use the 'Generate QR code' button on the public frontend; it will not use 127.0.0.1." -ForegroundColor Cyan
+Write-Host "For backend-powered analysis on different networks, use VolleyForm.bat so it can create a public backend tunnel." -ForegroundColor Cyan
+
+$ShareUrl = Write-ShareConfig -Port 8000
+Write-Host "Open-source frontend: $PublicFrontendUrl" -ForegroundColor Cyan
+Write-Host "Same-Wi-Fi backend URL: $ShareUrl" -ForegroundColor Cyan
+
+$OpenBrowserJob = Start-Job -ScriptBlock {
+    param($Url)
+    for ($i = 0; $i -lt 40; $i++) {
+        Start-Sleep -Milliseconds 250
+        try {
+            $Response = Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/health" -TimeoutSec 1 -UseBasicParsing
+            if ($Response.StatusCode -eq 200) {
+                Start-Process $Url
+                break
+            }
+        }
+        catch {}
+    }
+} -ArgumentList $PublicFrontendUrl
+
+try {
+    & $Python (Join-Path $Root "backend\server.py") --host 0.0.0.0 --port 8000
+}
+finally {
+    Stop-Job $OpenBrowserJob -ErrorAction SilentlyContinue | Out-Null
+    Remove-Job $OpenBrowserJob -Force -ErrorAction SilentlyContinue | Out-Null
+}

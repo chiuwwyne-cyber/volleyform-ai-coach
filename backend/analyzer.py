@@ -9,6 +9,7 @@ for path in (ROOT_DIR, MAIN_DIR):
         sys.path.append(path)
 
 from angle.angle import get_angles, get_hand_features, get_positions
+from angle.pose_correction import build_pose_compare
 from pose.pose import get_pose_from_video
 
 from backend.action_registry import check_action
@@ -19,7 +20,6 @@ from backend.modality_processors import (
     finalize_modality_results,
 )
 
-TIMELINE_LIMIT = 24
 PRIMARY_ISSUE_LIMIT = 6
 
 
@@ -43,15 +43,6 @@ def _issue_payload(error_code, count=0):
         "instant_cue": feedback["instant_cue"],
         "practice_drill": feedback["practice_drill"],
         "why_it_matters": feedback["why_it_matters"],
-    }
-
-
-def _timeline_issue_payload(error_code):
-    feedback = feedback_for(error_code)
-    return {
-        "code": error_code,
-        "title": feedback["title"],
-        "severity": feedback["severity"],
     }
 
 
@@ -113,10 +104,10 @@ def analyze_video(
 ):
     selected_modalities = normalize_modalities(modalities)
     issue_counts = Counter()
-    timeline = []
     processed_frames = 0
-    good_frames = 0
     modality_processors = build_modality_processors(selected_modalities)
+    key_frame_landmarks = None
+    key_frame_severity = -1
 
     stream = get_pose_from_video(
         video_path,
@@ -157,26 +148,17 @@ def analyze_video(
 
         processed_frames = frame_index
 
-        if results in (["good"], ["ok"]):
-            good_frames += 1
-        else:
+        if results not in (["good"], ["ok"]):
             for result in results:
                 if result not in ("good", "ok"):
                     issue_counts[result] += 1
 
-        if processed_frames == 1 or processed_frames % 8 == 0 or results not in (["good"], ["ok"]):
-            timeline.append({
-                "frame": processed_frames,
-                "issues": [
-                    _timeline_issue_payload(result)
-                    for result in results
-                    if result not in ("good", "ok")
-                ],
-                "ok": results in (["good"], ["ok"]),
-            })
-
-        if len(timeline) > TIMELINE_LIMIT:
-            timeline.pop(0)
+        frame_severity = sum(
+            SEVERITY_ORDER.get(result, 0) for result in results if result not in ("good", "ok")
+        )
+        if world_landmarks is not None and frame_severity > key_frame_severity:
+            key_frame_severity = frame_severity
+            key_frame_landmarks = world_landmarks
 
     primary_issues = [
         _issue_payload(code, count)
@@ -188,7 +170,7 @@ def analyze_video(
     )
 
     action_label = ACTION_LABELS.get(action_type, action_type)
-    score = round((good_frames / processed_frames) * 100) if processed_frames else 0
+    pose_compare = build_pose_compare(action_type, key_frame_landmarks)
 
     modality_results = finalize_modality_results(
         modality_processors,
@@ -199,10 +181,8 @@ def analyze_video(
         "action": action_type,
         "action_label": action_label,
         "processed_frames": processed_frames,
-        "good_frames": good_frames,
-        "score": score,
         "primary_issues": primary_issues[:PRIMARY_ISSUE_LIMIT],
-        "timeline": timeline,
+        "pose_compare": pose_compare,
         "coach_summary": _coach_summary(primary_issues, action_label, processed_frames),
         "coach_plan": _coach_plan(primary_issues, action_label, processed_frames),
         "modalities": modality_status(selected_modalities),

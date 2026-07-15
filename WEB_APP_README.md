@@ -4,18 +4,30 @@
 
 ## 同一台電腦使用
 
+雙擊桌面上的「VolleyForm 啟動器」捷徑（或專案根目錄的 `VolleyForm.bat`），會自動啟動本機後端、嘗試建立公開 HTTPS 後端連線，並開啟開源前端：
+
+```text
+https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
+```
+
+如果公開後端 tunnel 成功，啟動器會把後端網址放進前端的 `?backend=` 參數。這樣 QR Code 會指向公開前端網址，不會指向 `127.0.0.1`。
+
+公開連線每次啟動都會產生新的網址，而且沒有密碼保護，記得只把網址分享給信任的人。
+
+也可以手動執行：
+
 ```powershell
 cd C:\Users\test\Desktop\volleyball
 .\run_web_app.ps1
 ```
 
-瀏覽器開啟：
+瀏覽器會開啟開源前端：
 
 ```text
-http://127.0.0.1:8000
+https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 ```
 
-前端的「後端網址」可以留空，因為網頁和 API 在同一個網址。
+`127.0.0.1:8000` 只作為電腦內部後端 API 與 tunnel origin，不作為 QR Code 網址。
 
 ## 手機和電腦同一個 Wi-Fi
 
@@ -25,11 +37,7 @@ http://127.0.0.1:8000
 .\run_web_app.ps1
 ```
 
-再查電腦的區網 IP，例如 `192.168.1.23`。手機瀏覽器開啟：
-
-```text
-http://192.168.1.23:8000
-```
+網頁右上角有「產生 QR Code」按鈕，按下去會顯示公開前端網址的 QR code。若是由 `VolleyForm.bat` 啟動且 tunnel 成功，QR Code 會包含公開後端參數；若沒有 tunnel，手機仍可用前端本地 MediaPipe 分析。
 
 前端的「後端網址」一樣可以留空。
 
@@ -74,7 +82,7 @@ https://你的公開後端網址
 3. 可以從手機相簿選照片或影片，也可以直接錄影。
 4. 需要邊動邊看提示時，按「開啟即時分析」；停止後會立即釋放相機。
 5. 錄影限制為 12 秒內，錄完可以先回放。
-6. 按「開始分析」，等待 AI 顯示分數、主要問題、修正建議與影片連結。
+6. 按「開始分析」，等待 AI 顯示主要問題、優先修正建議與影片連結。
 
 ## 省資源設計
 
@@ -118,11 +126,10 @@ Content-Type: multipart/form-data
 
 回傳重點：
 
-- `score`: 動作品質分數
 - `coach_summary`: 總結
 - `coach_plan`: 優先修正方向與練習建議
 - `primary_issues`: 主要問題、身體部位、立即提醒、影片建議
-- `timeline`: 代表影格問題分布
+- `pose_compare`: 3D 姿勢比對用的關節資料（你的姿勢 vs. 正確姿勢示範動畫，正面/側面切換、關節顏色）
 - `modalities`: 模組狀態
 - `modality_results`: 各模組數值
 

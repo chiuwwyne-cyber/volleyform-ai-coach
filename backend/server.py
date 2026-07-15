@@ -2,6 +2,7 @@ import argparse
 import cgi
 import json
 import os
+import socket
 import sys
 import tempfile
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -155,6 +156,17 @@ def _parse_modalities(value):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _lan_ip():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.connect(("8.8.8.8", 80))
+        return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        sock.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Volleyball AI Coach backend")
     parser.add_argument("--host", default="0.0.0.0")
@@ -163,7 +175,9 @@ def main():
 
     httpd = ThreadingHTTPServer((args.host, args.port), VolleyballHandler)
     print(f"Backend running at http://{args.host}:{args.port}")
-    print("Open this URL from your phone using this computer's LAN IP.")
+    print(f"Local: http://127.0.0.1:{args.port}")
+    print(f"Phone (same Wi-Fi): http://{_lan_ip()}:{args.port}")
+    print("Use the 'Generate QR code' button on the page to share a link from any device.")
     httpd.serve_forever()
 
 

@@ -13,16 +13,22 @@ const fileName = document.querySelector("#fileName");
 const previewPlaceholder = document.querySelector("#previewPlaceholder");
 const analysisSummary = document.querySelector("#analysisSummary");
 const installAppBtn = document.querySelector("#installAppBtn");
-const score = document.querySelector("#score");
+const shareQrBtn = document.querySelector("#shareQrBtn");
+const qrModal = document.querySelector("#qrModal");
+const qrModalClose = document.querySelector("#qrModalClose");
+const qrCodeContainer = document.querySelector("#qrCodeContainer");
+const qrCodeUrl = document.querySelector("#qrCodeUrl");
 const summaryTitle = document.querySelector("#summaryTitle");
 const coachSummary = document.querySelector("#coachSummary");
 const coachPlan = document.querySelector("#coachPlan");
 const frameCount = document.querySelector("#frameCount");
 const issues = document.querySelector("#issues");
-const timeline = document.querySelector("#timeline");
+const poseViewToggle = document.querySelector("#poseViewToggle");
+const poseCompareActual = document.querySelector("#poseCompareActual");
+const poseCompareCorrected = document.querySelector("#poseCompareCorrected");
+const poseCompareNote = document.querySelector("#poseCompareNote");
 const dropZone = document.querySelector("#dropZone");
 const modalityList = document.querySelector("#modalityList");
-const modalityResults = document.querySelector("#modalityResults");
 const recordPreview = document.querySelector("#recordPreview");
 const imagePreview = document.querySelector("#imagePreview");
 const poseOverlay = document.querySelector("#poseOverlay");
@@ -37,6 +43,117 @@ const startRecordBtn = document.querySelector("#startRecordBtn");
 const stopRecordBtn = document.querySelector("#stopRecordBtn");
 const clearRecordBtn = document.querySelector("#clearRecordBtn");
 
+// QR sharing is wired first, via delegation on document, so it keeps working
+// even if anything later in this file fails to execute.
+let qrLibraryPromise = null;
+
+function loadQrLibrary() {
+  if (typeof window !== "undefined" && window.qrcode) return Promise.resolve();
+  if (!qrLibraryPromise) {
+    qrLibraryPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "./vendor/qrcode/qrcode.js";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("QR code 產生器載入失敗"));
+      document.head.appendChild(script);
+    });
+  }
+  return qrLibraryPromise;
+}
+
+function currentPageUrl() {
+  return globalThis.location?.href || openSourceFrontendUrl;
+}
+
+function normalizeShareUrl(url) {
+  try {
+    const parsed = new URL(url, currentPageUrl());
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return currentPageUrl();
+  }
+}
+
+function shouldAttachBackendQuery(shareUrl) {
+  const backend = backendUrlInput?.value?.trim();
+  if (!backend) return false;
+  try {
+    return new URL(shareUrl).origin !== new URL(backend).origin;
+  } catch {
+    return true;
+  }
+}
+
+function shareUrlWithBackend(shareUrl) {
+  const normalized = normalizeShareUrl(shareUrl);
+  if (!shouldAttachBackendQuery(normalized)) return normalized;
+  try {
+    const parsed = new URL(normalized);
+    parsed.searchParams.set("backend", backendUrlInput.value.trim());
+    return parsed.toString();
+  } catch {
+    return normalized;
+  }
+}
+
+function bestRuntimeShareUrl(payload) {
+  if (!payload || typeof payload !== "object") return "";
+  if (payload.publicUrl) return payload.publicUrl;
+
+  const host = globalThis.location?.hostname || "";
+  const isLoopback = host === "127.0.0.1" || host === "localhost" || host === "::1";
+  if (isLoopback && payload.lanUrl) return payload.lanUrl;
+
+  return payload.preferredUrl || payload.lanUrl || payload.localUrl || "";
+}
+
+async function resolveShareUrl() {
+  try {
+    const response = await fetch("./runtime-share.json", { cache: "no-store" });
+    if (response.ok) {
+      const payload = await response.json();
+      const runtimeUrl = bestRuntimeShareUrl(payload);
+      if (runtimeUrl) return shareUrlWithBackend(runtimeUrl);
+    }
+  } catch {
+    // The file only exists when the local launcher writes it.
+  }
+  return shareUrlWithBackend(currentPageUrl());
+}
+
+async function showShareQr() {
+  const url = await resolveShareUrl();
+  qrCodeUrl.textContent = url;
+  qrCodeContainer.textContent = "產生中…";
+  qrModal.hidden = false;
+  try {
+    await loadQrLibrary();
+    const qr = window.qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    qrCodeContainer.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 4 });
+  } catch (error) {
+    qrCodeContainer.textContent = error.message || "QR code 產生失敗";
+  }
+}
+
+document.addEventListener?.("click", (event) => {
+  const target = event.target;
+  if (!target || typeof target.closest !== "function") return;
+  if (target.closest("#shareQrBtn")) {
+    showShareQr();
+    return;
+  }
+  if (target.closest("#qrModalClose") || target === qrModal) {
+    qrModal.hidden = true;
+  }
+});
+
+document.addEventListener?.("keydown", (event) => {
+  if (event.key === "Escape" && qrModal && !qrModal.hidden) qrModal.hidden = true;
+});
+
 const powerSettings = {
   mobile: { frame_stride: "4", process_width: "480", max_frames: "150" },
   balanced: { frame_stride: "2", process_width: "640", max_frames: "210" },
@@ -49,6 +166,8 @@ const maxRecordingMs = 12000;
 const recordingTimesliceMs = 1000;
 const recordingVideoBitsPerSecond = 1600000;
 const runtimeConfig = globalThis.VOLLEYBALL_COACH_CONFIG || {};
+const openSourceFrontendUrl =
+  runtimeConfig.publicFrontendUrl || "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/";
 const queryBackend = backendFromQuery();
 backendUrlInput.value =
   queryBackend || safeLocalStorageGet(backendUrlStorageKey) || runtimeConfig.apiBase || "";
@@ -204,6 +323,7 @@ function renderActionOptions(actions) {
   }
   renderActionChoices(normalizedActions);
   updateAnalysisSummary();
+  if (actionInput.value) startDemoAnimation(actionInput.value);
 }
 
 function normalizeActionOption(action) {
@@ -244,6 +364,7 @@ function selectAction(actionId) {
   actionInput.value = actionId;
   syncActionChoices();
   updateAnalysisSummary();
+  startDemoAnimation(actionId);
 }
 
 function syncActionChoices() {
@@ -659,8 +780,7 @@ analyzeBtn.addEventListener("click", async () => {
   coachSummary.textContent = "正在擷取 3D 身體骨架與手部關節，請稍等。";
   coachPlan.textContent = "分析完成後會整理成優先修正建議。";
   issues.textContent = "正在尋找主要動作問題";
-  timeline.textContent = "分析完成後會顯示時間軸";
-  modalityResults.textContent = "正在整理模組結果";
+  poseCompareNote.textContent = "分析完成後會顯示姿勢比對";
 
   try {
     if (backendAvailable && !file.type.startsWith("image/")) {
@@ -689,8 +809,7 @@ analyzeBtn.addEventListener("click", async () => {
     coachSummary.textContent = error.message;
     coachPlan.textContent = "請確認影片格式與檔案大小，並改用手機省電模式重新分析。";
     issues.textContent = "目前沒有可顯示的問題。";
-    timeline.textContent = "";
-    modalityResults.textContent = "";
+    poseCompareNote.textContent = "";
   } finally {
     analyzeBtn.disabled = false;
     analyzeBtn.textContent = "開始 AI 分析";
@@ -698,14 +817,12 @@ analyzeBtn.addEventListener("click", async () => {
 });
 
 function renderResult(result) {
-  score.textContent = `${result.score}`;
   summaryTitle.textContent = `${result.action_label} 分析完成`;
   coachSummary.textContent = result.coach_summary;
   frameCount.textContent = `${result.processed_frames} 影格已分析`;
   renderCoachPlan(result.coach_plan);
   renderIssues(result.primary_issues);
-  renderTimeline(result.timeline);
-  renderModalityResults(result);
+  renderPoseCompare(result.pose_compare, result.action);
 }
 
 function renderCoachPlan(plan) {
@@ -764,60 +881,75 @@ function renderIssues(items) {
   }
 }
 
-function renderTimeline(items) {
-  timeline.innerHTML = "";
-  timeline.classList.remove("empty");
+let poseCompareView = "front";
+let lastPoseCompare = null;
+let lastPoseCompareAction = "spike";
+let actualViewport = null;
+let demoViewport = null;
+let pose3dPromise = null;
 
-  if (!items || items.length === 0) {
-    timeline.classList.add("empty");
-    timeline.textContent = "沒有足夠影格可以建立時間軸。";
+function loadPose3d() {
+  if (!pose3dPromise) {
+    pose3dPromise =
+      typeof globalThis.__pose3dLoader === "function" ? globalThis.__pose3dLoader() : import("./pose-3d.js");
+  }
+  return pose3dPromise;
+}
+
+async function ensureViewports() {
+  const mod = await loadPose3d();
+  if (!actualViewport) actualViewport = mod.createPoseViewport(poseCompareActual, { cameraDistance: 2.1 });
+  if (!demoViewport) demoViewport = mod.createPoseViewport(poseCompareCorrected, { cameraDistance: 2.7 });
+  return mod;
+}
+
+function renderPoseCompareView() {
+  actualViewport?.setView(poseCompareView);
+  demoViewport?.setView(poseCompareView);
+  if (lastPoseCompare?.available) {
+    actualViewport?.setStaticPose(lastPoseCompare.actual_landmarks, lastPoseCompare.joint_status);
+  }
+}
+
+async function startDemoAnimation(action) {
+  const mod = await ensureViewports();
+  void mod;
+  demoViewport.setView(poseCompareView);
+  demoViewport.playDemo(action);
+}
+
+function renderPoseCompare(poseCompare, action) {
+  lastPoseCompare = poseCompare;
+  lastPoseCompareAction = action || actionInput?.value || lastPoseCompareAction;
+  startDemoAnimation(lastPoseCompareAction);
+
+  if (!poseCompare || !poseCompare.available) {
+    poseCompareNote.textContent = "沒有偵測到你的姿勢，右側動畫僅供參考正確姿勢。";
+    ensureViewports().then(() => actualViewport.setStaticPose(null, null));
     return;
   }
-
-  for (const item of items) {
-    const box = document.createElement("div");
-    box.className = "time-item";
-    const text = item.ok ? "動作穩定" : item.issues.map((issue) => issue.title).join("、");
-    box.innerHTML = `<strong>第 ${item.frame} 影格</strong><span>${escapeHtml(text)}</span>`;
-    timeline.appendChild(box);
-  }
+  poseCompareNote.textContent = "綠色代表正常，黃色代表中間偏不正常，紅色代表需要修正。右側為正確姿勢示範動畫。";
+  ensureViewports().then(() => {
+    actualViewport.setView(poseCompareView);
+    actualViewport.setStaticPose(poseCompare.actual_landmarks, poseCompare.joint_status);
+  });
 }
 
-function renderModalityResults(result) {
-  const statuses = result.modalities || [];
-  const values = result.modality_results || {};
-  modalityResults.innerHTML = "";
-  modalityResults.classList.remove("empty");
-
-  for (const item of statuses) {
-    const card = document.createElement("div");
-    card.className = `modality-result ${item.state}`;
-    const metric = metricText(item.id, values[item.id], values.reserved);
-    card.innerHTML = `
-      <strong>${escapeHtml(item.label)}</strong>
-      <span>${stateLabel(item.state)}</span>
-      <p>${escapeHtml(metric || item.description)}</p>
-    `;
-    modalityResults.appendChild(card);
+poseViewToggle?.addEventListener("click", (event) => {
+  const button = event.target.closest(".view-toggle-btn");
+  if (!button) return;
+  poseCompareView = button.dataset.view;
+  for (const btn of poseViewToggle.querySelectorAll(".view-toggle-btn")) {
+    btn.classList.toggle("active", btn === button);
   }
-}
+  renderPoseCompareView();
+});
 
-function metricText(id, value, reserved) {
-  if (id === "pose" && value) {
-    return `骨架影格 ${value.frames_with_pose}，平均手肘角 ${value.average_elbow_angle ?? "--"} 度，平均膝蓋角 ${value.average_knee_angle ?? "--"} 度。`;
-  }
-  if (id === "hands" && value) {
-    return `手部影格 ${value.frames_with_hands}，平均手指伸展 ${value.average_finger_extension ?? "--"}，平均雙手距離 ${value.average_hand_gap ?? "--"}。`;
-  }
-  if (reserved && reserved[id]) return reserved[id];
-  return "";
-}
-
-function stateLabel(state) {
-  if (state === "active") return "已啟用";
-  if (state === "reserved") return "已預留";
-  if (state === "future") return "未來模組";
-  return "可用";
+if (typeof window !== "undefined") {
+  window.addEventListener("resize", () => {
+    actualViewport?.resize();
+    demoViewport?.resize();
+  });
 }
 
 function severityLabel(severity) {
@@ -850,6 +982,8 @@ if (typeof window !== "undefined") {
   window.addEventListener("pagehide", () => {
     stopLiveAnalysis(false);
     stopMediaStream();
+    actualViewport?.dispose();
+    demoViewport?.dispose();
   });
 }
 
@@ -868,6 +1002,12 @@ installAppBtn?.addEventListener("click", async () => {
 });
 
 if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
   navigator.serviceWorker.register("./service-worker.js").catch(() => {
     // The app still works online when service worker registration is unavailable.
   });

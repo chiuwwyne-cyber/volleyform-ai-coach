@@ -127,7 +127,7 @@ def main():
         )
         assert payload["ok"] is True
         result = payload["result"]
-        assert "score" in result
+        assert "pose_compare" in result
         assert "modalities" in result
         assert "modality_results" in result
         assert "coach_summary" in result

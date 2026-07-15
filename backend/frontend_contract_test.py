@@ -56,9 +56,16 @@ def main():
         "clearRecordBtn",
         "coachPlan",
         "issues",
-        "timeline",
+        "poseViewToggle",
+        "poseCompareActual",
+        "poseCompareCorrected",
+        "poseCompareNote",
         "modalityList",
-        "modalityResults",
+        "shareQrBtn",
+        "qrModal",
+        "qrModalClose",
+        "qrCodeContainer",
+        "qrCodeUrl",
     }
     absent = sorted(required - ids)
     if absent:

@@ -67,7 +67,7 @@ Evidence:
   - concrete fixes
   - video search link
 - `backend/analyzer.py` returns `coach_plan` so the frontend can show the priority correction first.
-- `frontend/app.js` renders primary issues, fixes, timeline, coach summary, and coach plan.
+- `frontend/app.js` renders primary issues, fixes, the actual-vs-corrected pose comparison, coach summary, and coach plan.
 
 ### 8. Future multimodal expansion
 

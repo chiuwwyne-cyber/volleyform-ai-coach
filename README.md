@@ -22,6 +22,10 @@ https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 
 ## Run locally
 
+Double-click [VolleyForm.bat](VolleyForm.bat) (or the desktop shortcut it creates) to start the backend, try to start a public Cloudflare backend tunnel, and open the public open-source frontend automatically. The launcher opens the GitHub Pages URL, not `127.0.0.1`, so the in-page QR Code can be scanned by a phone.
+
+Or run it manually:
+
 ```powershell
 .\run_web_app.ps1
 ```
@@ -29,8 +33,10 @@ https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 Open:
 
 ```text
-http://127.0.0.1:8000
+https://chiuwwyne-cyber.github.io/volleyform-ai-coach/
 ```
+
+The local `127.0.0.1:8000` address is only used internally for the backend API and tunnel origin; the user-facing frontend and QR Code use the public URL.
 
 ## Publish a fixed website
 

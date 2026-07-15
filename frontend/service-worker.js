@@ -1,15 +1,30 @@
-const CACHE_NAME = "volleyform-shell-v6";
+const CACHE_NAME = "volleyform-shell-v17";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./local-analyzer.js",
+  "./pose-3d.js",
   "./config.js",
   "./manifest.webmanifest",
   "./assets/coach-header.png",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
+];
+
+// App-shell files change often during development, so they must always be
+// re-fetched when online; the cache is only a fallback for offline use.
+// Large, rarely-changing binary assets (vendor libs, models, images) stay
+// cache-first for speed and offline support.
+const NETWORK_FIRST_SUFFIXES = [
+  "/",
+  "/index.html",
+  "/styles.css",
+  "/app.js",
+  "/local-analyzer.js",
+  "/pose-3d.js",
+  "/config.js",
 ];
 
 self.addEventListener("install", (event) => {
@@ -28,6 +43,10 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+function isNetworkFirst(pathname) {
+  return NETWORK_FIRST_SUFFIXES.some((suffix) => pathname === suffix || pathname.endsWith(suffix));
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
@@ -36,15 +55,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.endsWith("/config.js")) {
+  if (isNetworkFirst(url.pathname)) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
           return response;
         })
-        .catch(() => caches.match(event.request)),
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html"))),
     );
     return;
   }
@@ -53,15 +74,13 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then(
       (cached) =>
         cached ||
-        fetch(event.request)
-          .then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-            }
-            return response;
-          })
-          .catch(() => caches.match("./index.html")),
+        fetch(event.request).then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        }),
     ),
   );
 });

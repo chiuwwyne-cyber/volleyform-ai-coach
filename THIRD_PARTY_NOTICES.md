@@ -13,4 +13,26 @@ Included files are stored under:
 - `frontend/vendor/mediapipe`
 - `frontend/models`
 
+## Three.js
+
+This project includes `three.js` version `0.160.0` (minified ES module build), used to render the 3D pose comparison and correct-form demo.
+
+- Project: https://github.com/mrdoob/three.js
+- License: MIT License
+
+Included files are stored under:
+
+- `frontend/vendor/three`
+
+## qrcode-generator
+
+This project includes `qrcode-generator` version `1.4.4`, used to render the in-page "Generate QR code" share link entirely on-device (no external QR API).
+
+- Project: https://github.com/kazuhikoarase/qrcode-generator
+- License: MIT License
+
+Included files are stored under:
+
+- `frontend/vendor/qrcode`
+
 The original VolleyForm UI artwork under `frontend/assets` was generated specifically for this project and contains no third-party watermark or brand mark.

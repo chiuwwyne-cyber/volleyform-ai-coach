@@ -109,8 +109,6 @@ Response:
     "action": "receive",
     "action_label": "接球",
     "processed_frames": 120,
-    "good_frames": 62,
-    "score": 52,
     "coach_summary": "最需要先修正的是...",
     "coach_plan": {
       "status": "needs_fix",
@@ -134,7 +132,12 @@ Response:
         "video_url": "https://www.youtube.com/results?search_query=..."
       }
     ],
-    "timeline": [],
+    "pose_compare": {
+      "available": true,
+      "joint_status": { "elbow": "yellow", "knee": "green", "shoulder": "green", "wrist": "green" },
+      "actual_landmarks": [[0.0, 0.0, 0.0]],
+      "corrected_landmarks": [[0.0, 0.0, 0.0]]
+    },
     "modalities": [],
     "modality_results": {
       "pose": {},

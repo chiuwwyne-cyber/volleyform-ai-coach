@@ -29,8 +29,8 @@ def main():
         raise SystemExit("Backend analyzer must disable frame images during API analysis")
     if "include_image=True" not in pose or "output_image = None" not in pose:
         raise SystemExit("Pose stream must support landmark-only analysis")
-    if "timeline.pop(0)" not in analyzer or "TIMELINE_LIMIT" not in analyzer:
-        raise SystemExit("Timeline must be bounded without copying the full list repeatedly")
+    if "key_frame_landmarks" not in analyzer or "key_frame_severity" not in analyzer:
+        raise SystemExit("Analyzer must keep only a single representative frame, not a growing list")
     if "recordedChunks = []" not in app or "URL.revokeObjectURL" not in app:
         raise SystemExit("Frontend recording must release chunks and object URLs")
     if "maxRecordingMs = 12000" not in app or "recordingVideoBitsPerSecond = 1600000" not in app:
@@ -43,8 +43,8 @@ def main():
         raise SystemExit("Backend must reject oversized uploads before parsing")
     if 'os.environ.get("PORT", "8000")' not in server:
         raise SystemExit("Backend must support cloud PORT environment variable")
-    if "TIMELINE_LIMIT = 24" not in analyzer:
-        raise SystemExit("Timeline limit must stay small for mobile-friendly responses")
+    if "pose_compare" not in analyzer or "build_pose_compare" not in analyzer:
+        raise SystemExit("Analyzer must return a pose comparison for the coach report")
     if "tools\\cloudflared.exe" not in tunnel or "install_cloudflared.ps1" not in tunnel:
         raise SystemExit("Remote tunnel script must support the project-local cloudflared install")
     if "$MaxAttempts = 3" not in tunnel or "--no-autoupdate" not in tunnel:
@@ -69,8 +69,8 @@ def main():
         raise SystemExit("Publishing helper must create the public repo and trigger Pages")
     if "sampleCountForMode" not in local_analyzer or "return 16" not in local_analyzer:
         raise SystemExit("Local mobile analysis must bound sampled frames")
-    if "timeline.length > 8" not in local_analyzer:
-        raise SystemExit("Local mobile timeline must stay compact")
+    if "keyFrameLandmarks" not in local_analyzer or "keyFrameSeverity" not in local_analyzer:
+        raise SystemExit("Local analyzer must keep only a single representative frame, not a growing list")
     if "URL.revokeObjectURL" not in local_analyzer or "video.removeAttribute" not in local_analyzer:
         raise SystemExit("Local analyzer must release video memory after analysis")
     if "REALTIME_INTERVALS" not in local_analyzer or "mobile: 360" not in local_analyzer:
