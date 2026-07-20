@@ -51,9 +51,12 @@ MAX_FRAMES = 300
 REFERENCE_TARGET_CLIPS = 20
 
 JOINT_TOLERANCE = {
-    "elbow": {"min": 8.0, "max": 18.0},
-    "shoulder": {"min": 8.0, "max": 18.0},
-    "knee": {"min": 10.0, "max": 22.0},
+    # Extra player_grace keeps correct amateur movements from being judged only
+    # against elite range-of-motion. The sample term below shrinks as more clips
+    # are added, so the accepted band becomes tighter when the data converges.
+    "elbow": {"min": 8.0, "max": 22.0, "player_grace": 4.0},
+    "shoulder": {"min": 8.0, "max": 22.0, "player_grace": 5.0},
+    "knee": {"min": 10.0, "max": 24.0, "player_grace": 6.0},
 }
 
 
@@ -104,7 +107,9 @@ def _adaptive_tolerance(ordered, joint):
     limits = JOINT_TOLERANCE.get(joint, {"min": 8.0, "max": 18.0})
     spread_allowance = min(6.0, iqr * 0.18)
     sample_allowance = min(5.0, 9.0 / math.sqrt(max(count, 1)))
-    tolerance = limits["min"] + spread_allowance + sample_allowance
+    convergence_taper = 1.0 - min(0.45, count / 60.0)
+    player_allowance = limits.get("player_grace", 4.0) * convergence_taper
+    tolerance = limits["min"] + spread_allowance + sample_allowance + player_allowance
     return round(_clamp(tolerance, limits["min"], limits["max"]), 1)
 
 
@@ -120,22 +125,43 @@ def _convergence_score(ordered, raw_count, outliers):
     return round(count_score * 0.45 + spread_score * 0.45 + outlier_score * 0.10, 2)
 
 
+def _convergence_state(score, raw_count):
+    if raw_count >= 14 and score >= 0.65:
+        return "stable"
+    if raw_count >= 5 and score >= 0.45:
+        return "usable"
+    return "needs_more_data"
+
+
+def _accepted_range(p10, p90, tolerance):
+    return [
+        round(_clamp(p10 - tolerance, 0.0, 180.0), 1),
+        round(_clamp(p90 + tolerance, 0.0, 180.0), 1),
+    ]
+
+
 def _band(values, joint):
     ordered, outliers = _trim_outliers(values)
     raw_count = len(values)
+    p10 = round(_percentile(ordered, 0.10), 1)
+    p90 = round(_percentile(ordered, 0.90), 1)
+    tolerance = _adaptive_tolerance(ordered, joint)
+    convergence = _convergence_score(ordered, raw_count, outliers)
     return {
         "count": len(ordered),
         "raw_count": raw_count,
         "outliers": outliers,
         "min": round(ordered[0], 1),
-        "p10": round(_percentile(ordered, 0.10), 1),
+        "p10": p10,
         "p25": round(_percentile(ordered, 0.25), 1),
         "p50": round(_percentile(ordered, 0.50), 1),
         "p75": round(_percentile(ordered, 0.75), 1),
-        "p90": round(_percentile(ordered, 0.90), 1),
+        "p90": p90,
         "max": round(ordered[-1], 1),
-        "tolerance": _adaptive_tolerance(ordered, joint),
-        "convergence": _convergence_score(ordered, raw_count, outliers),
+        "tolerance": tolerance,
+        "accepted_range": _accepted_range(p10, p90, tolerance),
+        "convergence": convergence,
+        "convergence_state": _convergence_state(convergence, raw_count),
     }
 
 

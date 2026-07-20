@@ -18,6 +18,9 @@ REFERENCE_PATH = os.path.join(os.path.dirname(__file__), "reference_standards.js
 DEFAULT_BAND_TOLERANCE = 5.0
 MAX_BAND_TOLERANCE = 24.0
 MIN_CLIPS = 5
+RECEIVE_LOBSTER_ELBOW_RISK = 125.0
+RECEIVE_LOBSTER_SHOULDER_RISK = 55.0
+RECEIVE_LOBSTER_REFERENCE_MARGIN = 4.0
 
 HEURISTIC_STANDARDS = {
     "spike": {
@@ -118,7 +121,7 @@ def reference_for(action_type):
 
 
 def _band_range(band, tolerance):
-    return band["p10"] - tolerance, band["p90"] + tolerance
+    return max(0.0, band["p10"] - tolerance), min(180.0, band["p90"] + tolerance)
 
 
 def _reference_tolerance(band):
@@ -138,6 +141,18 @@ def _band_for(action_type, entry, phase, joint):
     if band:
         return band, 0.0, "heuristic"
     return None, 0.0, None
+
+
+def _receive_lobster_elbow_threshold():
+    entry = reference_for("receive")
+    band, tolerance, _source = _band_for("receive", entry, "contact", "elbow")
+    if not band:
+        return RECEIVE_LOBSTER_ELBOW_RISK
+    accepted_low, _accepted_high = _band_range(band, tolerance)
+    return min(
+        RECEIVE_LOBSTER_ELBOW_RISK,
+        max(0.0, accepted_low - RECEIVE_LOBSTER_REFERENCE_MARGIN),
+    )
 
 
 def _round_seconds(value):
@@ -229,7 +244,10 @@ def _evaluate_hand_shape(action_type, frames, contact, issues, issue_frames):
                 _add_issue(issues, issue_frames, "receive_hands_apart", contact)
 
         angles = frame.get("angles", {})
-        if angles.get("elbow", 180) < 170 and angles.get("shoulder", 180) < 95:
+        if (
+            angles.get("elbow", 180) < _receive_lobster_elbow_threshold()
+            and angles.get("shoulder", 180) < RECEIVE_LOBSTER_SHOULDER_RISK
+        ):
             _add_issue(issues, issue_frames, "lobster_receive_risk", contact)
         return
 

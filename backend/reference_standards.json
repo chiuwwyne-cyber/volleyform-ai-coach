@@ -4,203 +4,263 @@
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
-      "clips": 16,
+      "clips": 17,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 16,
-            "raw_count": 16,
+            "count": 17,
+            "raw_count": 17,
             "outliers": 1,
             "min": 91.4,
-            "p10": 118.2,
-            "p25": 141.2,
-            "p50": 154.8,
-            "p75": 165.9,
-            "p90": 167.3,
+            "p10": 119.0,
+            "p25": 141.9,
+            "p50": 155.8,
+            "p75": 165.8,
+            "p90": 167.1,
             "max": 172.5,
-            "tolerance": 14.7,
-            "convergence": 0.74
+            "tolerance": 17.4,
+            "accepted_range": [
+              101.6,
+              180.0
+            ],
+            "convergence": 0.77,
+            "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 16,
-            "raw_count": 16,
+            "count": 17,
+            "raw_count": 17,
             "outliers": 1,
             "min": 26.4,
-            "p10": 86.5,
-            "p25": 120.1,
-            "p50": 148.1,
-            "p75": 159.7,
-            "p90": 166.1,
+            "p10": 87.6,
+            "p25": 121.5,
+            "p50": 148.3,
+            "p75": 159.9,
+            "p90": 165.1,
             "max": 173.7,
-            "tolerance": 16.2,
-            "convergence": 0.69
+            "tolerance": 19.8,
+            "accepted_range": [
+              67.8,
+              180.0
+            ],
+            "convergence": 0.72,
+            "convergence_state": "stable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 11,
-            "raw_count": 11,
+            "count": 12,
+            "raw_count": 12,
             "outliers": 2,
             "min": 68.0,
-            "p10": 77.0,
-            "p25": 120.7,
-            "p50": 138.4,
-            "p75": 143.8,
-            "p90": 145.9,
+            "p10": 80.4,
+            "p25": 125.3,
+            "p50": 139.1,
+            "p75": 144.6,
+            "p90": 148.3,
             "max": 149.2,
-            "tolerance": 16.9,
-            "convergence": 0.63
+            "tolerance": 20.9,
+            "accepted_range": [
+              59.5,
+              169.2
+            ],
+            "convergence": 0.67,
+            "convergence_state": "usable"
           }
         }
       }
     },
     "serve": {
-      "clips": 13,
+      "clips": 14,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 13,
-            "raw_count": 13,
+            "count": 14,
+            "raw_count": 14,
             "outliers": 0,
             "min": 106.9,
-            "p10": 115.0,
-            "p25": 132.1,
-            "p50": 147.9,
-            "p75": 162.9,
-            "p90": 165.8,
+            "p10": 115.2,
+            "p25": 132.9,
+            "p50": 147.3,
+            "p75": 162.1,
+            "p90": 165.6,
             "max": 177.4,
-            "tolerance": 16.0,
-            "convergence": 0.66
+            "tolerance": 18.7,
+            "accepted_range": [
+              96.5,
+              180.0
+            ],
+            "convergence": 0.69,
+            "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 13,
-            "raw_count": 13,
-            "outliers": 1,
+            "count": 14,
+            "raw_count": 14,
+            "outliers": 0,
             "min": 64.4,
-            "p10": 85.5,
-            "p25": 112.1,
-            "p50": 130.4,
-            "p75": 140.2,
-            "p90": 156.6,
+            "p10": 79.6,
+            "p25": 108.7,
+            "p50": 127.5,
+            "p75": 139.2,
+            "p90": 156.3,
             "max": 157.0,
-            "tolerance": 15.6,
-            "convergence": 0.66
+            "tolerance": 19.7,
+            "accepted_range": [
+              59.9,
+              176.0
+            ],
+            "convergence": 0.68,
+            "convergence_state": "stable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 13,
-            "raw_count": 13,
+            "count": 14,
+            "raw_count": 14,
             "outliers": 0,
             "min": 97.7,
-            "p10": 100.7,
-            "p25": 116.0,
-            "p50": 148.7,
-            "p75": 151.3,
-            "p90": 161.2,
+            "p10": 101.3,
+            "p25": 121.4,
+            "p50": 148.9,
+            "p75": 152.6,
+            "p90": 162.7,
             "max": 167.4,
-            "tolerance": 18.5,
-            "convergence": 0.64
+            "tolerance": 22.6,
+            "accepted_range": [
+              78.7,
+              180.0
+            ],
+            "convergence": 0.68,
+            "convergence_state": "stable"
           }
         }
       }
     },
     "block": {
-      "clips": 5,
+      "clips": 6,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 5,
-            "raw_count": 5,
+            "count": 6,
+            "raw_count": 6,
             "outliers": 0,
             "min": 152.5,
-            "p10": 153.5,
-            "p25": 155.1,
-            "p50": 164.1,
+            "p10": 153.8,
+            "p25": 155.3,
+            "p50": 160.0,
             "p75": 164.1,
-            "p90": 166.5,
+            "p90": 166.1,
             "max": 168.1,
-            "tolerance": 13.6,
-            "convergence": 0.59
+            "tolerance": 16.9,
+            "accepted_range": [
+              136.9,
+              180.0
+            ],
+            "convergence": 0.61,
+            "convergence_state": "usable"
           },
           "shoulder": {
-            "count": 5,
-            "raw_count": 5,
+            "count": 6,
+            "raw_count": 6,
             "outliers": 0,
             "min": 126.1,
-            "p10": 128.7,
-            "p25": 132.4,
-            "p50": 148.4,
-            "p75": 151.4,
-            "p90": 163.1,
+            "p10": 129.3,
+            "p25": 136.4,
+            "p50": 149.9,
+            "p75": 163.2,
+            "p90": 169.0,
             "max": 171.0,
-            "tolerance": 15.4,
-            "convergence": 0.53
+            "tolerance": 21.0,
+            "accepted_range": [
+              108.3,
+              180.0
+            ],
+            "convergence": 0.52,
+            "convergence_state": "usable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 5,
-            "raw_count": 5,
+            "count": 6,
+            "raw_count": 6,
             "outliers": 0,
             "min": 23.6,
-            "p10": 62.2,
-            "p25": 120.1,
-            "p50": 125.6,
-            "p75": 151.9,
-            "p90": 153.0,
+            "p10": 56.0,
+            "p25": 96.4,
+            "p50": 122.9,
+            "p75": 145.4,
+            "p90": 152.8,
             "max": 153.7,
-            "tolerance": 19.8,
-            "convergence": 0.48
+            "tolerance": 24.0,
+            "accepted_range": [
+              32.0,
+              176.8
+            ],
+            "convergence": 0.45,
+            "convergence_state": "usable"
           }
         }
       }
     },
     "receive": {
-      "clips": 11,
+      "clips": 12,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 11,
-            "raw_count": 11,
+            "count": 12,
+            "raw_count": 12,
             "outliers": 1,
             "min": 96.5,
-            "p10": 137.3,
-            "p25": 145.5,
-            "p50": 150.0,
-            "p75": 162.1,
-            "p90": 170.1,
-            "max": 173.6,
-            "tolerance": 13.7,
-            "convergence": 0.67
+            "p10": 138.1,
+            "p25": 145.6,
+            "p50": 154.7,
+            "p75": 166.1,
+            "p90": 173.2,
+            "max": 174.2,
+            "tolerance": 17.5,
+            "accepted_range": [
+              120.6,
+              180.0
+            ],
+            "convergence": 0.67,
+            "convergence_state": "usable"
           },
           "knee": {
-            "count": 11,
-            "raw_count": 11,
+            "count": 12,
+            "raw_count": 12,
             "outliers": 0,
             "min": 84.0,
-            "p10": 95.3,
-            "p25": 107.2,
-            "p50": 130.0,
-            "p75": 145.7,
-            "p90": 150.1,
+            "p10": 96.0,
+            "p25": 109.5,
+            "p50": 131.7,
+            "p75": 145.5,
+            "p90": 149.7,
             "max": 160.1,
-            "tolerance": 18.7,
-            "convergence": 0.59
+            "tolerance": 23.4,
+            "accepted_range": [
+              72.6,
+              173.1
+            ],
+            "convergence": 0.62,
+            "convergence_state": "usable"
           },
           "shoulder": {
-            "count": 11,
-            "raw_count": 11,
+            "count": 12,
+            "raw_count": 12,
             "outliers": 0,
             "min": 16.8,
-            "p10": 23.8,
-            "p25": 28.0,
-            "p50": 40.7,
-            "p75": 62.6,
+            "p10": 24.1,
+            "p25": 28.5,
+            "p50": 43.0,
+            "p75": 57.4,
             "p90": 76.6,
             "max": 81.3,
-            "tolerance": 16.7,
-            "convergence": 0.6
+            "tolerance": 19.8,
+            "accepted_range": [
+              4.3,
+              96.4
+            ],
+            "convergence": 0.64,
+            "convergence_state": "usable"
           }
         }
       }
@@ -220,8 +280,13 @@
             "p75": 168.2,
             "p90": 175.3,
             "max": 177.8,
-            "tolerance": 17.7,
-            "convergence": 0.46
+            "tolerance": 21.3,
+            "accepted_range": [
+              83.5,
+              180.0
+            ],
+            "convergence": 0.46,
+            "convergence_state": "usable"
           },
           "shoulder": {
             "count": 6,
@@ -234,8 +299,13 @@
             "p75": 141.9,
             "p90": 155.6,
             "max": 166.4,
-            "tolerance": 17.5,
-            "convergence": 0.5
+            "tolerance": 22.0,
+            "accepted_range": [
+              71.4,
+              177.6
+            ],
+            "convergence": 0.5,
+            "convergence_state": "usable"
           }
         }
       }

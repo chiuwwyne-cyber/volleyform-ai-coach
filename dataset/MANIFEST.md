@@ -6,7 +6,7 @@ Videos are NOT committed to the repository; only the derived angle statistics
 (`backend/reference_standards.json`) are. To rebuild or extend, drop additional
 clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 
-## spike (16 clips)
+## spike (17 clips)
 
 | File | Source |
 |---|---|
@@ -26,8 +26,9 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_6216850.mp4 | https://www.pexels.com/video/6216850/ |
 | pexels_6179970.mp4 | https://www.pexels.com/video/6179970/ |
 | pexels_6217269.mp4 | https://www.pexels.com/video/6217269/ |
+| pexels_6217338.mp4 | https://www.pexels.com/video/6217338/ |
 
-## serve (13 clips)
+## serve (14 clips)
 
 | File | Source |
 |---|---|
@@ -44,8 +45,9 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_6217188.mp4 | https://www.pexels.com/video/6217188/ |
 | pexels_12169508.mp4 | https://www.pexels.com/video/12169508/ |
 | pexels_10350521.mp4 | https://www.pexels.com/video/10350521/ |
+| pexels_12169479.mp4 | https://www.pexels.com/video/12169479/ |
 
-## receive (11 clips, candidate-calibrated)
+## receive (12 clips, candidate-calibrated)
 
 These clips are selected from the downloaded candidate pool because their pose
 signals show forearm-platform or low defensive movement phases. The newer clips
@@ -65,6 +67,7 @@ studio/professional body control.
 | pexels_12169455.mp4 | https://www.pexels.com/video/12169455/ |
 | pexels_12169640.mp4 | https://www.pexels.com/video/12169640/ |
 | pexels_6216965.mp4 | https://www.pexels.com/video/6216965/ |
+| pexels_6179955.mp4 | https://www.pexels.com/video/6179955/ |
 
 ## set (6 clips, candidate-calibrated)
 
@@ -80,7 +83,7 @@ signals show both hands raised near or above the head during the release phase.
 | pexels_6217341.mp4 | https://www.pexels.com/video/6217341/ |
 | pexels_6217182.mp4 | https://www.pexels.com/video/6217182/ |
 
-## block (5 clips, candidate-calibrated)
+## block (6 clips, candidate-calibrated)
 
 These clips are selected from the downloaded candidate pool because their pose
 signals show maximum-reach or net-front blocking movement. The set now reaches
@@ -94,3 +97,4 @@ convergence and per-joint tolerance so this small class stays conservative.
 | pexels_6179961.mp4 | https://www.pexels.com/video/6179961/ |
 | pexels_6217270.mp4 | https://www.pexels.com/video/6217270/ |
 | pexels_6217349.mp4 | https://www.pexels.com/video/6217349/ |
+| pexels_6179836.mp4 | https://www.pexels.com/video/6179836/ |

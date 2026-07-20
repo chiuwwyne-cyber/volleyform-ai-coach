@@ -47,7 +47,7 @@ def test_receive_uses_platform_phase():
         _frame(0.50, 0.22, 0.62, _base_angles()),
         _frame(0.55, 0.18, 0.64, _base_angles()),
         _frame(0.54, 0.14, 0.66, _base_angles()),
-        _frame(0.54, 0.02, 0.68, _base_angles(elbow=110, knee=172, shoulder=82)),
+        _frame(0.54, 0.02, 0.68, _base_angles(elbow=110, knee=178, shoulder=45)),
         _frame(0.57, 0.20, 0.65, _base_angles()),
     ]
 
