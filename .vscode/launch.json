@@ -2,11 +2,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Volleyball AI Analysis",
+      "name": "VolleyForm Backend",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/main/main.py",
-      "cwd": "${workspaceFolder}/main",
+      "program": "${workspaceFolder}/backend/server.py",
+      "args": ["--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "justMyCode": true,
       "env": {

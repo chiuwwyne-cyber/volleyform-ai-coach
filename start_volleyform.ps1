@@ -159,13 +159,63 @@ function Wait-Backend {
     return $false
 }
 
+function Get-BackendProcessOnPort {
+    param([int]$Port)
+    try {
+        $Conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop | Select-Object -First 1
+        if ($Conn) {
+            return Get-Process -Id $Conn.OwningProcess -ErrorAction SilentlyContinue
+        }
+    }
+    catch {}
+    return $null
+}
+
+function Get-NewestBackendCodeTime {
+    # Any Python change under these paths (or a recalibrated standards file)
+    # means the long-running server holds stale code and must be restarted.
+    $CodeDirs = @("backend", "angle", "pose", "action", "tools")
+    $Newest = [DateTime]::MinValue
+    foreach ($Dir in $CodeDirs) {
+        $Full = Join-Path $Root $Dir
+        if (-not (Test-Path $Full)) { continue }
+        $Files = Get-ChildItem -LiteralPath $Full -Recurse -File -Include "*.py", "*.json" -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch "__pycache__" }
+        foreach ($File in $Files) {
+            if ($File.LastWriteTime -gt $Newest) { $Newest = $File.LastWriteTime }
+        }
+    }
+    return $Newest
+}
+
+function Test-BackendStale {
+    param($Process)
+    if (-not $Process) { return $false }
+    try {
+        $Started = $Process.StartTime
+    }
+    catch {
+        return $false
+    }
+    $NewestCode = Get-NewestBackendCodeTime
+    return ($NewestCode -gt $Started)
+}
+
 function Start-BackendIfNeeded {
     param([int]$Port)
     try {
         $Response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/health" -TimeoutSec 1 -UseBasicParsing
         if ($Response.StatusCode -eq 200) {
-            Write-Host "Backend is already running." -ForegroundColor Green
-            return $null
+            $Existing = Get-BackendProcessOnPort -Port $Port
+            if (Test-BackendStale -Process $Existing) {
+                Write-Host "Backend code changed since the running server started. Restarting to load the latest code..." -ForegroundColor Yellow
+                Stop-Process -Id $Existing.Id -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Milliseconds 800
+            }
+            else {
+                Write-Host "Backend is already running the current code." -ForegroundColor Green
+                return $null
+            }
         }
     }
     catch {}

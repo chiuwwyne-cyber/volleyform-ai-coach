@@ -30,7 +30,19 @@ class VolleyballHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Cache-Control", self._cache_control())
         super().end_headers()
+
+    def _cache_control(self):
+        path = urlparse(self.path).path
+        if path.startswith("/api/"):
+            return "no-store"
+        # Versioned heavy assets are safe to cache; app-shell files must always
+        # revalidate so browsers never run stale JavaScript against a newer
+        # backend contract.
+        if path.startswith(("/vendor/", "/models/", "/assets/")):
+            return "public, max-age=604800"
+        return "no-cache"
 
     def do_OPTIONS(self):
         self.send_response(204)

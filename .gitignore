@@ -5,11 +5,10 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 Thumbs.db
+.claude/
 
 tools/cloudflared.exe
 tools/portable/
-backend_server*.log
-cloudflared_tunnel.log
 runtime/
 frontend/runtime-share.json
 
@@ -18,8 +17,8 @@ frontend/runtime-share.json
 *.webm
 tmp/
 
-# Legacy desktop screenshots/action images may contain third-party watermarks.
-main/*.png
-main/desktop.ini
+# Local working documents (thesis drafts etc.), not part of the app.
+*.docx
+
 ui-*.png
 gh-auth.*

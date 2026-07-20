@@ -121,12 +121,45 @@ function Open-App {
     Start-Process $Url
 }
 
+function Test-RunningBackendStale {
+    param([int]$Port = 8000)
+    try {
+        $Conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop | Select-Object -First 1
+        if (-not $Conn) { return $false }
+        $Process = Get-Process -Id $Conn.OwningProcess -ErrorAction SilentlyContinue
+        if (-not $Process) { return $false }
+        $Started = $Process.StartTime
+        $Newest = [DateTime]::MinValue
+        foreach ($Dir in @("backend", "angle", "pose", "action", "tools")) {
+            $Full = Join-Path $Root $Dir
+            if (-not (Test-Path $Full)) { continue }
+            $Files = Get-ChildItem -LiteralPath $Full -Recurse -File -Include "*.py", "*.json" -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -notmatch "__pycache__" }
+            foreach ($File in $Files) {
+                if ($File.LastWriteTime -gt $Newest) { $Newest = $File.LastWriteTime }
+            }
+        }
+        if ($Newest -gt $Started) {
+            Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 800
+            return $true
+        }
+    }
+    catch {}
+    return $false
+}
+
 try {
     $Health = Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/health" -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop
     if ($Health.StatusCode -eq 200) {
-        Write-Host "Backend is already running. Opening the app..." -ForegroundColor Green
-        Open-App
-        exit 0
+        if (Test-RunningBackendStale -Port 8000) {
+            Write-Host "Backend code changed; restarting the server to load the latest code..." -ForegroundColor Yellow
+        }
+        else {
+            Write-Host "Backend is already running the current code. Opening the app..." -ForegroundColor Green
+            Open-App
+            exit 0
+        }
     }
 }
 catch {}

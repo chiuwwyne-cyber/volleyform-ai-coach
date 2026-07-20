@@ -25,7 +25,7 @@ Evidence:
 Evidence:
 
 - `backend/server.py` does not call `cv2.imshow`, `cv2.namedWindow`, or other UI functions.
-- OpenCV UI remains only in the older desktop path under `main/main.py`.
+- The legacy OpenCV desktop app (`main/`) has been removed; the web frontend is the only UI.
 
 ### 4. Web/mobile frontend
 

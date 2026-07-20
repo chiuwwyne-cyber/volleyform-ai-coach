@@ -5,10 +5,8 @@ from collections import Counter
 import cv2
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-MAIN_DIR = os.path.join(ROOT_DIR, "main")
-for path in (ROOT_DIR, MAIN_DIR):
-    if path not in sys.path:
-        sys.path.append(path)
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
 from angle.angle import get_angles, get_hand_features, get_positions
 from angle.pose_correction import build_pose_compare
