@@ -2,12 +2,23 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
+$FrontendSync = Join-Path $Root "tools\sync_frontend.py"
+$BuildInfo = Join-Path $Root "frontend\build-info.json"
 $ShareConfig = Join-Path $Root "frontend\runtime-share.json"
 $PublicFrontendUrl = "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/"
 $SessionId = Get-Date -Format "yyyyMMddHHmmss"
 $DesktopLatestShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "VolleyForm 本次網址.url"
 
 function Get-AppBuildVersion {
+    try {
+        if (Test-Path $BuildInfo) {
+            $Info = Get-Content -LiteralPath $BuildInfo -Raw | ConvertFrom-Json
+            if ($Info.buildVersion) {
+                return [string]$Info.buildVersion
+            }
+        }
+    }
+    catch {}
     try {
         $Git = Get-Command git -ErrorAction SilentlyContinue
         if ($Git) {
@@ -21,12 +32,16 @@ function Get-AppBuildVersion {
     return Get-Date -Format "yyyyMMddHHmmss"
 }
 
-$BuildVersion = "$(Get-AppBuildVersion)-$SessionId"
-
 if (-not (Test-Path $Python)) {
     Write-Host "Cannot find .venv Python. Please install requirements first." -ForegroundColor Red
     exit 1
 }
+
+if (Test-Path $FrontendSync) {
+    & $Python $FrontendSync --quiet
+}
+
+$BuildVersion = Get-AppBuildVersion
 
 function Get-LanUrl {
     param([int]$Port)

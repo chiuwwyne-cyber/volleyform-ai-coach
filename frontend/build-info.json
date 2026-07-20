@@ -1,0 +1,6 @@
+{
+  "buildVersion": "20260720-frontend-sync-v29",
+  "serviceWorkerCache": "volleyform-shell-v29",
+  "referenceSource": "backend/reference_standards.json",
+  "generatedAt": "2026-07-20"
+}

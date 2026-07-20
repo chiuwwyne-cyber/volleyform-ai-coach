@@ -22,6 +22,7 @@ if ROOT_DIR not in sys.path:
 from angle.angle import get_angles
 from backend.phase_segmentation import segment_action
 from pose.pose import get_pose_from_video
+from tools.sync_frontend import sync_frontend
 
 DATASET_DIR = os.path.join(ROOT_DIR, "dataset")
 OUTPUT_PATH = os.path.join(ROOT_DIR, "backend", "reference_standards.json")
@@ -248,6 +249,8 @@ def main():
     with open(OUTPUT_PATH, "w", encoding="utf-8") as file:
         json.dump(result, file, ensure_ascii=False, indent=2)
     print(f"written: {OUTPUT_PATH}")
+    sync_result = sync_frontend(ROOT_DIR)
+    print(f"synced frontend: {sync_result['buildVersion']}")
 
 
 if __name__ == "__main__":

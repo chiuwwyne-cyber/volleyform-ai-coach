@@ -8,11 +8,17 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Git = Join-Path $Root "tools\portable\git\cmd\git.exe"
 $Gh = Join-Path $Root "tools\portable\gh\bin\gh.exe"
+$Python = Join-Path $Root ".venv\Scripts\python.exe"
+$FrontendSync = Join-Path $Root "tools\sync_frontend.py"
 $SafeDirectory = $Root.Replace("\", "/")
 
 if (-not (Test-Path $Git) -or -not (Test-Path $Gh)) {
     Write-Host "Portable Git tools are missing." -ForegroundColor Red
     exit 1
+}
+
+if ((Test-Path $Python) -and (Test-Path $FrontendSync)) {
+    & $Python $FrontendSync --quiet
 }
 
 & $Gh auth status

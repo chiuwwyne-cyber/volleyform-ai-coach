@@ -5,6 +5,8 @@ on:
     branches: ["main"]
     paths:
       - "frontend/**"
+      - "backend/reference_standards.json"
+      - "tools/sync_frontend.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -26,6 +28,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Sync backend standards into frontend
+        run: python tools/sync_frontend.py --quiet
 
       - name: Configure fixed API URL
         env:

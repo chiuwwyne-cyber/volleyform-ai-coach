@@ -70,6 +70,7 @@ Analysis stays in the mobile browser
 .\.venv\Scripts\python.exe backend\frontend_quality_test.py
 .\.venv\Scripts\python.exe backend\feedback_contract_test.py
 .\.venv\Scripts\python.exe backend\resource_contract_test.py
+.\.venv\Scripts\python.exe backend\frontend_sync_test.py
 ```
 
 ```powershell

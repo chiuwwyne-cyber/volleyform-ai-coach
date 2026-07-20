@@ -23,6 +23,9 @@ def main():
     service_worker = _read(os.path.join("frontend", "service-worker.js"))
     gitignore = _read(".gitignore")
     publish_script = _read("publish_fixed_site.ps1")
+    launcher_script = _read("start_volleyform.ps1")
+    web_script = _read("run_web_app.ps1")
+    sync_frontend = _read(os.path.join("tools", "sync_frontend.py"))
     local_analyzer = _read(os.path.join("frontend", "local-analyzer.js"))
     pose_3d = _read(os.path.join("frontend", "pose-3d.js"))
 
@@ -60,6 +63,8 @@ def main():
         raise SystemExit("Cloud deployment guide must document public hosting")
     if "actions/deploy-pages" not in pages_workflow or "BACKEND_URL" not in pages_workflow:
         raise SystemExit("GitHub Pages deployment must inject the fixed backend URL")
+    if "tools/sync_frontend.py --quiet" not in pages_workflow:
+        raise SystemExit("GitHub Pages deployment must sync backend standards into frontend before upload")
     if "apiBase" not in frontend_config or "serviceWorker.register" not in app:
         raise SystemExit("Frontend must support fixed API config and PWA installation")
     if "APP_SHELL" not in service_worker or "coach-header.png" not in service_worker:
@@ -68,6 +73,10 @@ def main():
         raise SystemExit("Open-source repository must exclude local binaries and environments")
     if "repo create" not in publish_script or "workflow run pages.yml" not in publish_script:
         raise SystemExit("Publishing helper must create the public repo and trigger Pages")
+    if "tools\\sync_frontend.py" not in launcher_script or "tools\\sync_frontend.py" not in web_script:
+        raise SystemExit("Local launchers must sync backend standards before opening the frontend")
+    if "REFERENCE_STANDARDS" not in sync_frontend or "build-info.json" not in sync_frontend:
+        raise SystemExit("Frontend sync helper must update standards and build metadata")
     if "sampleCountForMode" not in local_analyzer or "return 16" not in local_analyzer:
         raise SystemExit("Local mobile analysis must bound sampled frames")
     if "keyFrameLandmarks" not in local_analyzer or "keyFrameSeverity" not in local_analyzer:

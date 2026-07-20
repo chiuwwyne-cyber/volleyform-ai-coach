@@ -3,6 +3,8 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $Server = Join-Path $Root "backend\server.py"
+$FrontendSync = Join-Path $Root "tools\sync_frontend.py"
+$BuildInfo = Join-Path $Root "frontend\build-info.json"
 $BundledCloudflared = Join-Path $Root "tools\cloudflared.exe"
 $RuntimeDir = Join-Path $Root "runtime"
 $ShareConfig = Join-Path $Root "frontend\runtime-share.json"
@@ -20,6 +22,15 @@ $Port = 8000
 
 function Get-AppBuildVersion {
     try {
+        if (Test-Path $BuildInfo) {
+            $Info = Get-Content -LiteralPath $BuildInfo -Raw | ConvertFrom-Json
+            if ($Info.buildVersion) {
+                return [string]$Info.buildVersion
+            }
+        }
+    }
+    catch {}
+    try {
         $Git = Get-Command git -ErrorAction SilentlyContinue
         if ($Git) {
             $Commit = (& $Git.Source -C $Root rev-parse --short HEAD 2>$null).Trim()
@@ -32,12 +43,16 @@ function Get-AppBuildVersion {
     return Get-Date -Format "yyyyMMddHHmmss"
 }
 
-$BuildVersion = "$(Get-AppBuildVersion)-$SessionId"
-
 if (-not (Test-Path $Python)) {
     Write-Host "Cannot find .venv Python. Please install requirements first." -ForegroundColor Red
     exit 1
 }
+
+if (Test-Path $FrontendSync) {
+    & $Python $FrontendSync --quiet
+}
+
+$BuildVersion = Get-AppBuildVersion
 
 New-Item -ItemType Directory -Force -Path $RuntimeDir | Out-Null
 
