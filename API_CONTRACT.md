@@ -164,7 +164,10 @@ clips under `dataset/<action>/`; sources listed in `dataset/MANIFEST.md`).
 Key moments are located by `backend/phase_segmentation.py`: spike / serve use
 load and hit/contact, block uses pre-jump and max reach, receive uses platform
 contact, and set uses set release. Each joint is judged against the calibrated
-p10-p90 band instead of a static per-frame threshold.
+p10-p90 band instead of a static per-frame threshold. Reference joints also
+include a per-joint `tolerance`, the final `accepted_range`, and a
+`convergence` score. This keeps the standard usable for non-professional
+players while still showing whether the reference set is stable enough.
 
 When a supported action does not yet have enough clean reference clips, the
 same phase model uses centralized heuristic bands and reports

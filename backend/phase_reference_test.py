@@ -6,7 +6,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-from backend.reference_evaluation import evaluate_with_reference
+from backend.reference_evaluation import _band_for, evaluate_with_reference
 
 
 def _point(x=0.5, y=0.5, z=0.0):
@@ -47,7 +47,7 @@ def test_receive_uses_platform_phase():
         _frame(0.50, 0.22, 0.62, _base_angles()),
         _frame(0.55, 0.18, 0.64, _base_angles()),
         _frame(0.54, 0.14, 0.66, _base_angles()),
-        _frame(0.54, 0.02, 0.68, _base_angles(elbow=130, knee=172, shoulder=82)),
+        _frame(0.54, 0.02, 0.68, _base_angles(elbow=110, knee=172, shoulder=82)),
         _frame(0.57, 0.20, 0.65, _base_angles()),
     ]
 
@@ -65,7 +65,7 @@ def test_set_uses_release_phase():
     frames = [
         _frame(0.48, 0.20, 0.62, _base_angles()),
         _frame(0.38, 0.16, 0.63, _base_angles()),
-        _frame(0.25, 0.04, 0.64, _base_angles(elbow=72, shoulder=84)),
+        _frame(0.25, 0.04, 0.64, _base_angles(elbow=72, shoulder=58)),
         _frame(0.31, 0.10, 0.63, _base_angles()),
         _frame(0.42, 0.18, 0.62, _base_angles()),
         _frame(0.46, 0.22, 0.61, _base_angles()),
@@ -80,19 +80,36 @@ def test_set_uses_release_phase():
     assert "shoulder_low" in result["issues"]
 
 
+def test_reference_band_uses_dynamic_tolerance():
+    entry = {
+        "clips": 8,
+        "phases": {
+            "contact": {
+                "elbow": {"p10": 100, "p90": 150, "tolerance": 12.5}
+            }
+        },
+    }
+
+    _band, tolerance, source = _band_for("receive", entry, "contact", "elbow")
+
+    assert tolerance == 12.5
+    assert source == "reference"
+
+
 def test_block_uses_max_reach_phase():
     frames = [
         _frame(0.42, 0.20, 0.60, _base_angles()),
         _frame(0.36, 0.18, 0.65, _base_angles(knee=170)),
         _frame(0.30, 0.14, 0.61, _base_angles()),
-        _frame(0.20, 0.10, 0.55, _base_angles(elbow=145, shoulder=120)),
+        _frame(0.20, 0.10, 0.55, _base_angles(elbow=120, shoulder=90)),
         _frame(0.28, 0.14, 0.58, _base_angles()),
         _frame(0.40, 0.18, 0.60, _base_angles()),
     ]
 
     result = evaluate_with_reference("block", frames)
 
-    assert result["report"]["mode"] == "heuristic"
+    assert result["report"]["mode"] == "reference"
+    assert result["report"]["clips"] >= 5
     assert result["contact_index"] == 3
     assert "elbow_not_straight" in result["issues"]
     assert "hands_not_high" in result["issues"]
@@ -101,6 +118,7 @@ def test_block_uses_max_reach_phase():
 def main():
     test_receive_uses_platform_phase()
     test_set_uses_release_phase()
+    test_reference_band_uses_dynamic_tolerance()
     test_block_uses_max_reach_phase()
     print("phase reference ok")
     print("checked actions: receive, set, block")

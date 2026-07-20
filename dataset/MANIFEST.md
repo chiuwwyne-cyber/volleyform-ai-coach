@@ -27,7 +27,7 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_6179970.mp4 | https://www.pexels.com/video/6179970/ |
 | pexels_6217269.mp4 | https://www.pexels.com/video/6217269/ |
 
-## serve (12 clips)
+## serve (13 clips)
 
 | File | Source |
 |---|---|
@@ -43,11 +43,14 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_10350524.mp4 | https://www.pexels.com/video/10350524/ |
 | pexels_6217188.mp4 | https://www.pexels.com/video/6217188/ |
 | pexels_12169508.mp4 | https://www.pexels.com/video/12169508/ |
+| pexels_10350521.mp4 | https://www.pexels.com/video/10350521/ |
 
-## receive (7 clips, candidate-calibrated)
+## receive (11 clips, candidate-calibrated)
 
 These clips are selected from the downloaded candidate pool because their pose
-signals show forearm-platform or low defensive movement phases.
+signals show forearm-platform or low defensive movement phases. The newer clips
+include beach and game-play footage so the reference does not only reflect
+studio/professional body control.
 
 | File | Source |
 |---|---|
@@ -58,8 +61,12 @@ signals show forearm-platform or low defensive movement phases.
 | pexels_6217340.mp4 | https://www.pexels.com/video/6217340/ |
 | pexels_6217342.mp4 | https://www.pexels.com/video/6217342/ |
 | pexels_6217344.mp4 | https://www.pexels.com/video/6217344/ |
+| pexels_12169435.mp4 | https://www.pexels.com/video/12169435/ |
+| pexels_12169455.mp4 | https://www.pexels.com/video/12169455/ |
+| pexels_12169640.mp4 | https://www.pexels.com/video/12169640/ |
+| pexels_6216965.mp4 | https://www.pexels.com/video/6216965/ |
 
-## set (5 clips, candidate-calibrated)
+## set (6 clips, candidate-calibrated)
 
 These clips are selected from the downloaded candidate pool because their pose
 signals show both hands raised near or above the head during the release phase.
@@ -71,13 +78,14 @@ signals show both hands raised near or above the head during the release phase.
 | pexels_6217116.mp4 | https://www.pexels.com/video/6217116/ |
 | pexels_6217125.mp4 | https://www.pexels.com/video/6217125/ |
 | pexels_6217341.mp4 | https://www.pexels.com/video/6217341/ |
+| pexels_6217182.mp4 | https://www.pexels.com/video/6217182/ |
 
-## block (4 clips, below reference threshold)
+## block (5 clips, candidate-calibrated)
 
-These clips are kept as a candidate block set, but the action intentionally
-stays below the five-clip reference threshold. It will continue to use
-phase-aware heuristic evaluation until more clean, freely licensed blocking
-clips are added.
+These clips are selected from the downloaded candidate pool because their pose
+signals show maximum-reach or net-front blocking movement. The set now reaches
+the five-clip reference threshold, but the calibration code still records
+convergence and per-joint tolerance so this small class stays conservative.
 
 | File | Source |
 |---|---|
@@ -85,3 +93,4 @@ clips are added.
 | pexels_10350520.mp4 | https://www.pexels.com/video/10350520/ |
 | pexels_6179961.mp4 | https://www.pexels.com/video/6179961/ |
 | pexels_6217270.mp4 | https://www.pexels.com/video/6217270/ |
+| pexels_6217349.mp4 | https://www.pexels.com/video/6217349/ |

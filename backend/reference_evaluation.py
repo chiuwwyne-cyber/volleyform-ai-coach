@@ -13,8 +13,10 @@ from backend.phase_segmentation import segment_action
 
 REFERENCE_PATH = os.path.join(os.path.dirname(__file__), "reference_standards.json")
 
-# Degrees of grace beyond a calibrated p10-p90 band before an issue is raised.
-BAND_TOLERANCE = 5.0
+# Fallback degrees of grace beyond a calibrated p10-p90 band. New reference
+# files carry per-joint tolerance, which better fits non-professional players.
+DEFAULT_BAND_TOLERANCE = 5.0
+MAX_BAND_TOLERANCE = 24.0
 MIN_CLIPS = 5
 
 HEURISTIC_STANDARDS = {
@@ -119,11 +121,19 @@ def _band_range(band, tolerance):
     return band["p10"] - tolerance, band["p90"] + tolerance
 
 
+def _reference_tolerance(band):
+    try:
+        tolerance = float(band.get("tolerance", DEFAULT_BAND_TOLERANCE))
+    except (TypeError, ValueError):
+        tolerance = DEFAULT_BAND_TOLERANCE
+    return max(0.0, min(MAX_BAND_TOLERANCE, tolerance))
+
+
 def _band_for(action_type, entry, phase, joint):
     if entry:
         band = entry.get("phases", {}).get(phase, {}).get(joint)
         if band:
-            return band, BAND_TOLERANCE, "reference"
+            return band, _reference_tolerance(band), "reference"
     band = HEURISTIC_STANDARDS.get(action_type, {}).get(phase, {}).get(joint)
     if band:
         return band, 0.0, "heuristic"
@@ -186,6 +196,9 @@ def _evaluate_joint(
     return {
         "value": round(value, 1),
         "band": [band["p10"], band["p90"]],
+        "tolerance": round(tolerance, 1),
+        "accepted_range": [round(lo, 1), round(hi, 1)],
+        "convergence": band.get("convergence"),
         "status": status,
         "source": source,
     }

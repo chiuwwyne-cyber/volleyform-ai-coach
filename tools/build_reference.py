@@ -10,6 +10,7 @@ committed; the clips themselves stay out of the repository.
 """
 
 import json
+import math
 import os
 import sys
 from datetime import date
@@ -47,6 +48,13 @@ ACTION_PHASE_JOINTS = {
     },
 }
 MAX_FRAMES = 300
+REFERENCE_TARGET_CLIPS = 20
+
+JOINT_TOLERANCE = {
+    "elbow": {"min": 8.0, "max": 18.0},
+    "shoulder": {"min": 8.0, "max": 18.0},
+    "knee": {"min": 10.0, "max": 22.0},
+}
 
 
 def _percentile(sorted_values, fraction):
@@ -59,10 +67,66 @@ def _percentile(sorted_values, fraction):
     return sorted_values[lower] * (1 - weight) + sorted_values[upper] * weight
 
 
-def _band(values):
+def _clamp(value, lower, upper):
+    return max(lower, min(upper, value))
+
+
+def _iqr_bounds(ordered):
+    if len(ordered) < 8:
+        return None
+    p25 = _percentile(ordered, 0.25)
+    p75 = _percentile(ordered, 0.75)
+    iqr = p75 - p25
+    if iqr <= 0:
+        return None
+    return p25 - 1.5 * iqr, p75 + 1.5 * iqr
+
+
+def _trim_outliers(values):
     ordered = sorted(values)
+    bounds = _iqr_bounds(ordered)
+    if not bounds:
+        return ordered, 0
+    lower, upper = bounds
+    outliers = sum(1 for value in ordered if value < lower or value > upper)
+    # Do not delete valid sport extremes: a deep load or weaker amateur range can
+    # be biomechanically correct even when it is statistically rare. Convergence
+    # is recorded as metadata and tolerance, while the p10-p90 band stays honest
+    # to the observed clips.
+    return ordered, outliers
+
+
+def _adaptive_tolerance(ordered, joint):
+    count = len(ordered)
+    p25 = _percentile(ordered, 0.25)
+    p75 = _percentile(ordered, 0.75)
+    iqr = max(0.0, p75 - p25)
+    limits = JOINT_TOLERANCE.get(joint, {"min": 8.0, "max": 18.0})
+    spread_allowance = min(6.0, iqr * 0.18)
+    sample_allowance = min(5.0, 9.0 / math.sqrt(max(count, 1)))
+    tolerance = limits["min"] + spread_allowance + sample_allowance
+    return round(_clamp(tolerance, limits["min"], limits["max"]), 1)
+
+
+def _convergence_score(ordered, raw_count, outliers):
+    if not ordered:
+        return 0.0
+    p25 = _percentile(ordered, 0.25)
+    p75 = _percentile(ordered, 0.75)
+    iqr = max(0.0, p75 - p25)
+    count_score = min(1.0, raw_count / REFERENCE_TARGET_CLIPS)
+    spread_score = 1.0 / (1.0 + iqr / 45.0)
+    outlier_score = 1.0 - min(0.5, outliers / max(raw_count, 1))
+    return round(count_score * 0.45 + spread_score * 0.45 + outlier_score * 0.10, 2)
+
+
+def _band(values, joint):
+    ordered, outliers = _trim_outliers(values)
+    raw_count = len(values)
     return {
         "count": len(ordered),
+        "raw_count": raw_count,
+        "outliers": outliers,
         "min": round(ordered[0], 1),
         "p10": round(_percentile(ordered, 0.10), 1),
         "p25": round(_percentile(ordered, 0.25), 1),
@@ -70,6 +134,8 @@ def _band(values):
         "p75": round(_percentile(ordered, 0.75), 1),
         "p90": round(_percentile(ordered, 0.90), 1),
         "max": round(ordered[-1], 1),
+        "tolerance": _adaptive_tolerance(ordered, joint),
+        "convergence": _convergence_score(ordered, raw_count, outliers),
     }
 
 
@@ -143,7 +209,7 @@ def main():
         phases = {}
         for phase, joints in phase_joints.items():
             phase_stats = {
-                joint: _band(values)
+                joint: _band(values, joint)
                 for joint, values in samples[phase].items()
                 if values
             }

@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const fallbackBuild = "20260720-expanded-dataset-v24";
+        const fallbackBuild = "20260720-adaptive-tolerance-v25";
         const params = new URLSearchParams(window.location.search);
         const build = params.get("build") || fallbackBuild;
         const version = encodeURIComponent(build);
@@ -265,7 +265,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260720-expanded-dataset-v24";
+        const build = window.VOLLEYFORM_BUILD || "20260720-adaptive-tolerance-v25";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         document.write('<script src="./app.js?v=' + version + '"><\/script>');
