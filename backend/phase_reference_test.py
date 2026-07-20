@@ -53,7 +53,8 @@ def test_receive_uses_platform_phase():
 
     result = evaluate_with_reference("receive", frames)
 
-    assert result["report"]["mode"] == "heuristic"
+    assert result["report"]["mode"] == "reference"
+    assert result["report"]["clips"] >= 5
     assert result["contact_index"] == 4
     assert "elbow_bad" in result["issues"]
     assert "knee_bad" in result["issues"]
@@ -72,7 +73,8 @@ def test_set_uses_release_phase():
 
     result = evaluate_with_reference("set", frames)
 
-    assert result["report"]["mode"] == "heuristic"
+    assert result["report"]["mode"] == "reference"
+    assert result["report"]["clips"] >= 5
     assert result["contact_index"] == 2
     assert "elbow_position_bad" in result["issues"]
     assert "shoulder_low" in result["issues"]
