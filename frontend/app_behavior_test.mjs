@@ -424,6 +424,57 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(issueCard.innerHTML, /第 1\.2 秒/);
   assert.doesNotMatch(issueCard.innerHTML, /影格/);
 
+  context.__appTestApi.renderResult({
+    action: "spike",
+    action_label: "扣球",
+    processed_frames: 193,
+    coach_summary: "Old frame-by-frame result should be ignored.",
+    coach_plan: {
+      status: "needs_fix",
+      headline: "Old warning",
+      focus: "Old count",
+      reason: "Old count",
+      next_steps: ["Old count"],
+      video_url: "https://example.com/old",
+    },
+    primary_issues: [
+      {
+        title: "Elbow warning",
+        severity: "medium",
+        count: 144,
+        body_part: "Elbow",
+        instant_cue: "Old cue",
+        message: "Old count should disappear.",
+        why_it_matters: "Old count",
+        practice_drill: "Old count",
+        fixes: ["Old count"],
+        video_url: "https://example.com/old",
+      },
+    ],
+    phase_analysis: {
+      mode: "reference",
+      phases: {
+        contact: {
+          time_seconds: 5.7,
+          joints: {
+            elbow: { status: "green" },
+            shoulder: { status: "green" },
+          },
+        },
+        crouch: {
+          time_seconds: 2.5,
+          joints: {
+            knee: { status: "green" },
+          },
+        },
+      },
+    },
+    pose_compare: { available: false },
+  });
+  assert.equal(context.document.querySelector("#issues").children.length, 0);
+  assert.doesNotMatch(context.document.querySelector("#issues").textContent, /144/);
+  assert.match(context.document.querySelector("#coachSummary").textContent, /新版資料集/);
+
   console.log("frontend behavior ok");
   console.log(`fetch calls: ${context.calls.length}`);
   console.log(`rendered issue cards: ${context.document.querySelector("#issues").children.length}`);

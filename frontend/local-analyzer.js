@@ -1762,6 +1762,7 @@ function analysisResult({
   handSums,
   poseFrames,
   handFrames,
+  phaseAnalysis = { mode: "legacy" },
   engine = "mediapipe-web-local",
 }) {
   const primaryIssues = [...issueCounts.entries()]
@@ -1785,6 +1786,7 @@ function analysisResult({
     action_label: actionLabel,
     processed_frames: poseFrames,
     primary_issues: primaryIssues,
+    phase_analysis: phaseAnalysis,
     pose_compare: poseCompare || { available: false },
     coach_summary: poseFrames
       ? primaryIssues.length

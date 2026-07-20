@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260720-expanded-reference-v27"),
+  String(globalThis.VOLLEYFORM_BUILD || new URLSearchParams(globalThis.location?.search || "").get("build") || "20260720-phase-result-v28"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1258,10 +1258,65 @@ function issueTimeSummary(item) {
   const labels = times.map(formatSeconds).filter(Boolean);
   if (labels.length) return labels.slice(0, 4).join("、");
   const first = formatSeconds(item.first_time_seconds);
-  return first || `發生 ${item.count || 0} 次`;
+  return first || "關鍵動作";
+}
+
+function phaseProblemDetails(phaseAnalysis) {
+  const details = { hasReference: false, hasProblem: false, times: [] };
+  if (!phaseAnalysis || phaseAnalysis.mode !== "reference") return details;
+  details.hasReference = true;
+  for (const phase of Object.values(phaseAnalysis.phases || {})) {
+    const joints = Object.values(phase.joints || {});
+    const phaseHasProblem = joints.some((joint) => joint.status && joint.status !== "green");
+    if (!phaseHasProblem) continue;
+    details.hasProblem = true;
+    const seconds = Number(phase.time_seconds);
+    if (Number.isFinite(seconds)) details.times.push(seconds);
+  }
+  return details;
+}
+
+function stablePhasePlan(actionLabel) {
+  return {
+    status: "stable",
+    headline: `${actionLabel}關鍵動作通過`,
+    focus: "新版角度區間",
+    reason: "擊球點與蓄力點落在新版資料集的可接受範圍內，不需要用逐格舊標準扣分。",
+    next_steps: ["維持完整動作節奏。", "下一球前確認落地與重心穩定。"],
+    video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
+  };
+}
+
+function normalizePhaseAwareResult(result) {
+  if (!result || !result.phase_analysis) return result;
+  const phase = phaseProblemDetails(result.phase_analysis);
+  if (!phase.hasReference) return result;
+
+  const actionLabel = result.action_label || "動作";
+  if (!phase.hasProblem) {
+    return {
+      ...result,
+      primary_issues: [],
+      coach_summary: `${actionLabel}關鍵動作角度落在新版資料集可接受範圍內。舊版逐格誤報已忽略。`,
+      coach_plan: stablePhasePlan(actionLabel),
+    };
+  }
+
+  return {
+    ...result,
+    primary_issues: (result.primary_issues || []).map((item) => ({
+      ...item,
+      count: Math.min(Number(item.count) || 1, 1),
+      time_seconds: Array.isArray(item.time_seconds) && item.time_seconds.length
+        ? item.time_seconds
+        : phase.times,
+      first_time_seconds: item.first_time_seconds ?? phase.times[0] ?? null,
+    })),
+  };
 }
 
 function renderResult(result) {
+  result = normalizePhaseAwareResult(result);
   summaryTitle.textContent = `${result.action_label} 分析結果`;
   coachSummary.textContent = result.coach_summary;
   frameCount.textContent = `已分析 ${result.processed_frames || 0} 個姿勢取樣`;
