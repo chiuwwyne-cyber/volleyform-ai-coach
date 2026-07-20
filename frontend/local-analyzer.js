@@ -568,6 +568,334 @@ function checkAction(action, angles, positions, hands) {
   return issues;
 }
 
+const REFERENCE_STANDARDS = {
+  actions: {
+    spike: {
+      clips: 16,
+      phases: {
+        contact: {
+          elbow: { p10: 118.2, p90: 167.3 },
+          shoulder: { p10: 86.5, p90: 166.1 },
+        },
+        crouch: {
+          knee: { p10: 77.0, p90: 145.9 },
+        },
+      },
+    },
+    serve: {
+      clips: 12,
+      phases: {
+        contact: {
+          elbow: { p10: 114.8, p90: 166.0 },
+          shoulder: { p10: 82.7, p90: 156.8 },
+        },
+        crouch: {
+          knee: { p10: 101.0, p90: 162.2 },
+        },
+      },
+    },
+  },
+};
+
+const MIN_REFERENCE_CLIPS = 5;
+const BAND_TOLERANCE = 5;
+const MIN_PHASE_FRAMES = 6;
+
+const HEURISTIC_STANDARDS = {
+  spike: {
+    contact: { elbow: { p10: 150, p90: 180 }, shoulder: { p10: 120, p90: 180 } },
+    crouch: { knee: { p10: 80, p90: 165 } },
+  },
+  serve: {
+    contact: { elbow: { p10: 150, p90: 180 }, shoulder: { p10: 120, p90: 180 } },
+    crouch: { knee: { p10: 95, p90: 170 } },
+  },
+  block: {
+    contact: { elbow: { p10: 165, p90: 180 }, shoulder: { p10: 145, p90: 180 } },
+    crouch: { knee: { p10: 95, p90: 165 } },
+  },
+  receive: {
+    contact: {
+      elbow: { p10: 155, p90: 180 },
+      knee: { p10: 95, p90: 165 },
+      shoulder: { p10: 70, p90: 135 },
+    },
+  },
+  set: {
+    contact: { elbow: { p10: 90, p90: 165 }, shoulder: { p10: 95, p90: 175 } },
+  },
+};
+
+const PHASE_RULES = {
+  spike: {
+    contact: { elbow: { low: "elbow_bad" }, shoulder: { low: "shoulder_low" } },
+    crouch: { knee: { low: "knee_too_bent", high: "knee_bad" } },
+  },
+  serve: {
+    contact: { elbow: { low: "elbow_bad" }, shoulder: { low: "shoulder_low" } },
+    crouch: { knee: { low: "knee_too_bent", high: "knee_bad" } },
+  },
+  block: {
+    contact: { elbow: { low: "elbow_not_straight" }, shoulder: { low: "hands_not_high" } },
+    crouch: { knee: { low: "knee_too_bent", high: "knee_bad" } },
+  },
+  receive: {
+    contact: {
+      elbow: { low: "elbow_bad" },
+      knee: { low: "knee_too_bent", high: "knee_bad" },
+      shoulder: {},
+    },
+  },
+  set: {
+    contact: {
+      elbow: { low: "elbow_position_bad", high: "elbow_position_bad" },
+      shoulder: { low: "shoulder_low" },
+    },
+  },
+};
+
+const PHASE_LABELS = {
+  spike: { contact: "hit", crouch: "load" },
+  serve: { contact: "serve_contact", crouch: "load" },
+  block: { contact: "max_reach", crouch: "pre_jump" },
+  receive: { contact: "platform_contact" },
+  set: { contact: "set_release" },
+};
+
+function smoothValues(values, window = 3) {
+  if (values.length < window) return [...values];
+  const half = Math.floor(window / 2);
+  return values.map((_, index) => {
+    const start = Math.max(0, index - half);
+    const stop = Math.min(values.length, index + half + 1);
+    const slice = values.slice(start, stop);
+    return slice.reduce((sum, value) => sum + value, 0) / slice.length;
+  });
+}
+
+function minIndex(values) {
+  return values.reduce((best, value, index) => (value < values[best] ? index : best), 0);
+}
+
+function maxIndex(values, start = 0, stop = values.length) {
+  let best = start;
+  for (let index = start + 1; index < stop; index += 1) {
+    if (values[index] > values[best]) best = index;
+  }
+  return best;
+}
+
+function wristY(points) {
+  return Math.min(points[15].y, points[16].y);
+}
+
+function averageWristY(points) {
+  return (points[15].y + points[16].y) / 2;
+}
+
+function wristGap(points) {
+  return Math.abs(points[15].x - points[16].x);
+}
+
+function wristLevelGap(points) {
+  return Math.abs(points[15].y - points[16].y);
+}
+
+function shoulderY(points) {
+  return (points[11].y + points[12].y) / 2;
+}
+
+function hipY(points) {
+  return (points[23].y + points[24].y) / 2;
+}
+
+function crouchBefore(frames, contact) {
+  if (contact <= 0) return null;
+  const hipYs = smoothValues(frames.map((frame) => hipY(frame.landmarks)));
+  const crouch = maxIndex(hipYs, 0, contact);
+  const leadIn = hipYs.slice(0, contact + 1);
+  if (hipYs[crouch] - Math.min(...leadIn) < 0.02) return null;
+  return crouch;
+}
+
+function crouchNear(frames, contact, radius = 4) {
+  const hipYs = smoothValues(frames.map((frame) => hipY(frame.landmarks)));
+  const start = Math.max(0, contact - radius);
+  const stop = Math.min(frames.length, contact + radius + 1);
+  if (start >= stop) return null;
+  return maxIndex(hipYs, start, stop);
+}
+
+function segmentPhaseAction(action, frames) {
+  if (!PHASE_RULES[action] || frames.length < MIN_PHASE_FRAMES) return null;
+  if (action === "spike" || action === "serve" || action === "block") {
+    const wristYs = smoothValues(frames.map((frame) => wristY(frame.landmarks)));
+    const contact = minIndex(wristYs);
+    return { contact, crouch: crouchBefore(frames, contact) };
+  }
+  if (action === "set") {
+    const scores = frames.map((frame) => {
+      const points = frame.landmarks;
+      const wrist = averageWristY(points);
+      const target = points[0].y + 0.03;
+      const overheadPenalty = wrist < shoulderY(points) ? 0 : 0.35;
+      return Math.abs(wrist - target) + wristGap(points) * 1.2 + wristLevelGap(points) + overheadPenalty;
+    });
+    const contact = minIndex(scores);
+    return { contact, crouch: crouchNear(frames, contact) };
+  }
+  if (action === "receive") {
+    const scores = frames.map((frame) => {
+      const points = frame.landmarks;
+      const wrist = averageWristY(points);
+      const shoulders = shoulderY(points);
+      const target = shoulders + 0.18;
+      const lowPlatformPenalty = wrist > shoulders ? 0 : 0.35;
+      return Math.abs(wrist - target) + wristGap(points) * 1.8 + wristLevelGap(points) * 1.2 + lowPlatformPenalty;
+    });
+    const contact = minIndex(scores);
+    return { contact, crouch: crouchNear(frames, contact) };
+  }
+  return null;
+}
+
+function referenceFor(action) {
+  const entry = REFERENCE_STANDARDS.actions[action];
+  return entry && entry.clips >= MIN_REFERENCE_CLIPS ? entry : null;
+}
+
+function bandFor(action, entry, phase, joint) {
+  const referenceBand = entry?.phases?.[phase]?.[joint];
+  if (referenceBand) return { band: referenceBand, tolerance: BAND_TOLERANCE, source: "reference" };
+  const heuristicBand = HEURISTIC_STANDARDS[action]?.[phase]?.[joint];
+  if (heuristicBand) return { band: heuristicBand, tolerance: 0, source: "heuristic" };
+  return null;
+}
+
+function addPhaseIssue(issues, issueFrames, code, frameIndex) {
+  if (!issues.includes(code)) issues.push(code);
+  if (!issueFrames.has(code)) issueFrames.set(code, frameIndex);
+}
+
+function phasePayload(action, phase, frameIndex, frames) {
+  const payload = {
+    frame: frameIndex === null || frameIndex === undefined ? null : frameIndex + 1,
+    label: PHASE_LABELS[action]?.[phase] || phase,
+    joints: {},
+  };
+  const seconds = frameIndex === null || frameIndex === undefined
+    ? null
+    : normalizeSeconds(frames[frameIndex]?.timeSeconds);
+  if (seconds !== null) payload.time_seconds = seconds;
+  return payload;
+}
+
+function evaluatePhaseJoint(action, entry, frames, phase, frameIndex, joint, rule, issues, issueFrames) {
+  if (frameIndex === null || frameIndex === undefined) return null;
+  const bandInfo = bandFor(action, entry, phase, joint);
+  if (!bandInfo) return null;
+  const value = frames[frameIndex].angles[joint];
+  if (!Number.isFinite(value)) return null;
+  const { band, tolerance, source } = bandInfo;
+  const lo = band.p10 - tolerance;
+  const hi = band.p90 + tolerance;
+  let status = "green";
+  if (value < lo && rule.low) {
+    status = "red";
+    addPhaseIssue(issues, issueFrames, rule.low, frameIndex);
+  } else if (value > hi && rule.high) {
+    status = "red";
+    addPhaseIssue(issues, issueFrames, rule.high, frameIndex);
+  }
+  return {
+    value: Number(value.toFixed(1)),
+    band: [band.p10, band.p90],
+    status,
+    source,
+  };
+}
+
+function evaluatePhaseHands(action, frames, contact, issues, issueFrames) {
+  const frame = frames[contact];
+  const hands = frame.handFeatures || {};
+  if (action === "receive") {
+    if (hands.hands_detected >= 2) {
+      if ((hands.hands_level_gap || 0) > 0.08) {
+        addPhaseIssue(issues, issueFrames, "receive_platform_unbalanced", contact);
+      }
+      if ((hands.hand_center_gap || 0) > 0.24) {
+        addPhaseIssue(issues, issueFrames, "receive_hands_apart", contact);
+      }
+    }
+    if ((frame.angles.elbow || 180) < 170 && (frame.angles.shoulder || 180) < 95) {
+      addPhaseIssue(issues, issueFrames, "lobster_receive_risk", contact);
+    }
+  }
+  if (action === "set") {
+    if ((frame.positions?.wrist_y ?? 0) > (frame.positions?.head_y ?? 1)) {
+      addPhaseIssue(issues, issueFrames, "wrist_low", contact);
+    }
+    if ((hands.hands_detected || 0) < 2) {
+      addPhaseIssue(issues, issueFrames, "setting_hands_not_detected", contact);
+      return;
+    }
+    if ((hands.finger_extension || 0) < 1.08) {
+      addPhaseIssue(issues, issueFrames, "setting_fingers_closed", contact);
+    }
+    if (hands.hand_center_gap !== null && hands.hand_center_gap !== undefined) {
+      if (hands.hand_center_gap < 0.06 || hands.hand_center_gap > 0.32) {
+        addPhaseIssue(issues, issueFrames, "setting_hand_spacing_bad", contact);
+      }
+    }
+    if ((hands.hands_level_gap || 0) > 0.08) {
+      addPhaseIssue(issues, issueFrames, "setting_hands_unbalanced", contact);
+    }
+  }
+}
+
+function evaluatePhaseAware(action, frames) {
+  const segments = segmentPhaseAction(action, frames);
+  if (!segments) return null;
+
+  const entry = referenceFor(action);
+  const issues = [];
+  const issueFrames = new Map();
+  const report = {
+    mode: entry ? "reference" : "heuristic",
+    clips: entry?.clips || 0,
+    phases: {},
+  };
+
+  for (const [phase, jointRules] of Object.entries(PHASE_RULES[action])) {
+    const frameIndex = segments[phase];
+    const payload = phasePayload(action, phase, frameIndex, frames);
+    for (const [joint, rule] of Object.entries(jointRules)) {
+      const jointPayload = evaluatePhaseJoint(
+        action,
+        entry,
+        frames,
+        phase,
+        frameIndex,
+        joint,
+        rule,
+        issues,
+        issueFrames,
+      );
+      if (jointPayload) payload.joints[joint] = jointPayload;
+    }
+    report.phases[phase] = payload;
+  }
+
+  evaluatePhaseHands(action, frames, segments.contact, issues, issueFrames);
+  return {
+    issues,
+    issueFrames,
+    contactIndex: segments.contact,
+    crouchIndex: segments.crouch,
+    report,
+  };
+}
+
 function normalizeSeconds(value) {
   if (!Number.isFinite(value)) return null;
   return Number(Math.max(0, value).toFixed(1));
@@ -993,6 +1321,7 @@ function analysisResult({
   handSums,
   poseFrames,
   handFrames,
+  phaseAnalysis = { mode: "legacy" },
   engine = "mediapipe-web-local",
 }) {
   const primaryIssues = [...issueCounts.entries()]
@@ -1016,6 +1345,7 @@ function analysisResult({
     action_label: actionLabel,
     processed_frames: poseFrames,
     primary_issues: primaryIssues,
+    phase_analysis: phaseAnalysis,
     pose_compare: poseCompare || { available: false },
     coach_summary: poseFrames
       ? primaryIssues.length
@@ -1185,8 +1515,8 @@ export async function analyzeVideoLocally({
 
     const requestedSamples = sampleCountForMode(powerMode);
     const sampleCount = Math.max(1, Math.min(requestedSamples, Math.ceil(duration * 5)));
-    const issueCounts = new Map();
-    const issueTimes = new Map();
+    let issueCounts = new Map();
+    let issueTimes = new Map();
     const angleSums = { elbow: 0, knee: 0 };
     const handSums = { extension: 0, gap: 0 };
     let poseFrames = 0;
@@ -1194,6 +1524,8 @@ export async function analyzeVideoLocally({
     let keyFrameLandmarks = null;
     let keyFrameIssueCodes = [];
     let keyFrameSeverity = -1;
+    let phaseAnalysis = { mode: "legacy" };
+    const evalFrames = [];
     const actualSequence = [];
     const sequenceHold = sampleCount > 1
       ? Math.max(180, Math.min(1200, (duration / (sampleCount - 1)) * 1000))
@@ -1215,6 +1547,15 @@ export async function analyzeVideoLocally({
       const { angles, positions } = poseFeatures(poseLandmarks);
       const handResult = detectHands(hands, video, timestampMs);
       const features = handFeatures(handResult?.landmarks || []);
+      const worldLandmarks = poseResult.worldLandmarks?.[0];
+      evalFrames.push({
+        landmarks: poseLandmarks,
+        world: worldLandmarks,
+        angles,
+        positions,
+        handFeatures: features,
+        timeSeconds: sampleTime,
+      });
       const frameIssues = checkAction(action, angles, positions, features);
 
       poseFrames += 1;
@@ -1231,7 +1572,6 @@ export async function analyzeVideoLocally({
         pushIssueTime(issueTimes, code, sampleTime);
       }
 
-      const worldLandmarks = poseResult.worldLandmarks?.[0];
       const frameSeverity = frameIssues.reduce(
         (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
         0,
@@ -1247,6 +1587,45 @@ export async function analyzeVideoLocally({
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
+    const phaseEval = evaluatePhaseAware(action, evalFrames);
+    if (phaseEval) {
+      phaseAnalysis = phaseEval.report;
+      issueCounts = new Map();
+      issueTimes = new Map();
+      for (const code of phaseEval.issues) {
+        issueCounts.set(code, 1);
+      }
+      for (const [code, frameIndex] of phaseEval.issueFrames.entries()) {
+        pushIssueTime(issueTimes, code, evalFrames[frameIndex]?.timeSeconds);
+      }
+
+      actualSequence.length = 0;
+      for (let index = 0; index < evalFrames.length; index += 1) {
+        const frameIssues = [];
+        for (const [code, frameIndex] of phaseEval.issueFrames.entries()) {
+          if (frameIndex === index) frameIssues.push(code);
+        }
+        const frameSeverity = frameIssues.reduce(
+          (sum, code) => sum + (SEVERITY_ORDER[FEEDBACK[code]?.severity] || 0),
+          0,
+        );
+        rememberActualFrame(
+          actualSequence,
+          evalFrames[index].world,
+          frameIssues,
+          frameSeverity,
+          evalFrames[index].timeSeconds,
+          sequenceHold,
+        );
+      }
+
+      const contactFrame = evalFrames[phaseEval.contactIndex];
+      if (contactFrame?.world) {
+        keyFrameLandmarks = contactFrame.world;
+        keyFrameIssueCodes = phaseEval.issues;
+      }
+    }
+
     return analysisResult({
       action,
       powerMode,
@@ -1259,6 +1638,7 @@ export async function analyzeVideoLocally({
       handSums,
       poseFrames,
       handFrames,
+      phaseAnalysis,
     });
   } finally {
     video.removeAttribute("src");

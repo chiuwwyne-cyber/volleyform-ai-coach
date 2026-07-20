@@ -132,6 +132,14 @@ Response:
         "video_url": "https://www.youtube.com/results?search_query=..."
       }
     ],
+    "phase_analysis": {
+      "mode": "reference",
+      "clips": 16,
+      "phases": {
+        "contact": { "frame": 86, "time_seconds": 2.9, "label": "hit", "joints": { "elbow": { "value": 172.5, "band": [118.2, 167.3], "status": "green", "source": "reference" } } },
+        "crouch": { "frame": 37, "time_seconds": 1.2, "label": "load", "joints": { "knee": { "value": 145.9, "band": [77.0, 145.9], "status": "green", "source": "reference" } } }
+      }
+    },
     "pose_compare": {
       "available": true,
       "joint_status": { "elbow": "yellow", "knee": "green", "shoulder": "green", "wrist": "green" },
@@ -147,6 +155,24 @@ Response:
   }
 }
 ```
+
+## Phase-Aware Evaluation
+
+`phase_analysis.mode` is `"reference"` when the action has calibrated bands in
+`backend/reference_standards.json` (built by `tools/build_reference.py` from
+clips under `dataset/<action>/`; sources listed in `dataset/MANIFEST.md`).
+Key moments are located by `backend/phase_segmentation.py`: spike / serve use
+load and hit/contact, block uses pre-jump and max reach, receive uses platform
+contact, and set uses set release. Each joint is judged against the calibrated
+p10-p90 band instead of a static per-frame threshold.
+
+When a supported action does not yet have enough clean reference clips, the
+same phase model uses centralized heuristic bands and reports
+`"mode": "heuristic"`. Unsupported or unsegmentable clips fall back to the
+legacy rules and report `"mode": "legacy"`.
+
+To recalibrate or extend: drop additional licensed clips into
+`dataset/<action>/` and rerun `tools/build_reference.py`.
 
 ## Extending With New Modalities
 

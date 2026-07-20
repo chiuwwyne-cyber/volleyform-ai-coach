@@ -17,6 +17,7 @@ from pose.pose import get_pose_from_video
 from backend.action_registry import check_action
 from backend.feedback import ACTION_LABELS, SEVERITY_ORDER, feedback_for
 from backend.modalities import modality_status, normalize_modalities
+from backend.reference_evaluation import evaluate_with_reference
 from backend.modality_processors import (
     build_modality_processors,
     finalize_modality_results,
@@ -206,6 +207,8 @@ def analyze_video(
     key_frame_severity = -1
     key_frame_issue_codes = []
     actual_sequence = []
+    eval_frames = []
+    frame_times = []
     fps = _video_fps(video_path)
     sequence_hold = max(180, min(1200, (frame_stride / fps) * 1000 if fps else 720))
 
@@ -245,6 +248,18 @@ def analyze_video(
         for processor in modality_processors:
             processor.observe(frame_context)
 
+        eval_frames.append(
+            {
+                "landmarks": landmarks,
+                "world": world_landmarks,
+                "angles": angles,
+                "positions": positions,
+                "hand_features": hand_features,
+                "time_seconds": time_seconds,
+            }
+        )
+        frame_times.append(time_seconds)
+
         results = _normalize_results(
             check_action(action_type, angles, positions, hand_features)
         )
@@ -273,6 +288,39 @@ def analyze_video(
             key_frame_landmarks = world_landmarks
             key_frame_issue_codes = [result for result in results if result not in ("good", "ok")]
 
+    # Phase-aware evaluation: judge key moments against calibrated player bands
+    # instead of holding every frame of a dynamic action to one static rule.
+    phase_eval = evaluate_with_reference(action_type, eval_frames) if eval_frames else None
+    phase_analysis = {"mode": "legacy"}
+    if phase_eval:
+        phase_analysis = phase_eval["report"]
+        issue_counts = Counter(phase_eval["issues"])
+        contact_index = phase_eval["contact_index"]
+        issue_times = {}
+        for code, phase_index in phase_eval.get("issue_frames", {}).items():
+            if phase_index is not None:
+                _push_issue_time(issue_times, code, frame_times[phase_index])
+        phase_issues_by_index = {}
+        for code, phase_index in phase_eval.get("issue_frames", {}).items():
+            if phase_index is not None:
+                phase_issues_by_index.setdefault(phase_index, []).append(code)
+        actual_sequence = []
+        for index, frame in enumerate(eval_frames):
+            frame_issue_codes = phase_issues_by_index.get(index, [])
+            frame_severity = sum(SEVERITY_ORDER.get(code, 0) for code in frame_issue_codes)
+            _remember_actual_frame(
+                actual_sequence,
+                frame["world"],
+                frame_issue_codes,
+                frame_severity,
+                frame_times[index],
+                sequence_hold,
+            )
+        contact_world = eval_frames[contact_index]["world"]
+        if contact_world is not None:
+            key_frame_landmarks = contact_world
+            key_frame_issue_codes = phase_eval["issues"]
+
     primary_issues = [
         _issue_payload(code, count, issue_times.get(code))
         for code, count in issue_counts.most_common()
@@ -300,6 +348,7 @@ def analyze_video(
         "action_label": action_label,
         "processed_frames": processed_frames,
         "primary_issues": primary_issues[:PRIMARY_ISSUE_LIMIT],
+        "phase_analysis": phase_analysis,
         "pose_compare": pose_compare,
         "coach_summary": _coach_summary(primary_issues, action_label, processed_frames),
         "coach_plan": _coach_plan(primary_issues, action_label, processed_frames),
