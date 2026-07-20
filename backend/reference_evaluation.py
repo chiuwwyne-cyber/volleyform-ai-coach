@@ -201,11 +201,17 @@ def _evaluate_joint(
 
     lo, hi = _band_range(band, tolerance)
     status = "green"
+    issue_code = None
+    direction = "ok"
     if value < lo and rule.get("low"):
         status = "red"
+        issue_code = rule["low"]
+        direction = "low"
         _add_issue(issues, issue_frames, rule["low"], phase_index)
     elif value > hi and rule.get("high"):
         status = "red"
+        issue_code = rule["high"]
+        direction = "high"
         _add_issue(issues, issue_frames, rule["high"], phase_index)
 
     return {
@@ -215,6 +221,8 @@ def _evaluate_joint(
         "accepted_range": [round(lo, 1), round(hi, 1)],
         "convergence": band.get("convergence"),
         "status": status,
+        "issue_code": issue_code,
+        "direction": direction,
         "source": source,
     }
 
@@ -309,6 +317,8 @@ def evaluate_with_reference(action_type, frames):
 
     contact = segments["contact"]
     _evaluate_hand_shape(action_type, frames, contact, issues, issue_frames)
+    report["issues"] = issues
+    report["issue_frames"] = issue_frames
 
     return {
         "issues": issues,

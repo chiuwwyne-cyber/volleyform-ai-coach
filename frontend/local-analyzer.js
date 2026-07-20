@@ -1107,11 +1107,17 @@ function evaluatePhaseJoint(action, entry, frames, phase, frameIndex, joint, rul
   const lo = Math.max(0, band.p10 - tolerance);
   const hi = Math.min(180, band.p90 + tolerance);
   let status = "green";
+  let issueCode = null;
+  let direction = "ok";
   if (value < lo && rule.low) {
     status = "red";
+    issueCode = rule.low;
+    direction = "low";
     addPhaseIssue(issues, issueFrames, rule.low, frameIndex);
   } else if (value > hi && rule.high) {
     status = "red";
+    issueCode = rule.high;
+    direction = "high";
     addPhaseIssue(issues, issueFrames, rule.high, frameIndex);
   }
   return {
@@ -1121,6 +1127,8 @@ function evaluatePhaseJoint(action, entry, frames, phase, frameIndex, joint, rul
     accepted_range: [Number(lo.toFixed(1)), Number(hi.toFixed(1))],
     convergence: band.convergence ?? null,
     status,
+    issue_code: issueCode,
+    direction,
     source,
   };
 }
@@ -1200,6 +1208,8 @@ function evaluatePhaseAware(action, frames) {
   }
 
   evaluatePhaseHands(action, frames, segments.contact, issues, issueFrames);
+  report.issues = [...issues];
+  report.issue_frames = Object.fromEntries(issueFrames);
   return {
     issues,
     issueFrames,

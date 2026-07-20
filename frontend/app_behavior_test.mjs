@@ -428,6 +428,93 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
     action: "spike",
     action_label: "扣球",
     processed_frames: 193,
+    coach_summary: "Old frame-by-frame result should be rewritten.",
+    coach_plan: {
+      status: "needs_fix",
+      headline: "Old warning",
+      focus: "Old count",
+      reason: "Old count",
+      next_steps: ["Old count"],
+      video_url: "https://example.com/old",
+    },
+    primary_issues: [
+      {
+        code: "elbow_bad",
+        title: "Old elbow warning",
+        severity: "medium",
+        count: 144,
+        body_part: "Elbow",
+        instant_cue: "Old cue",
+        message: "Old count should disappear.",
+        why_it_matters: "Old count",
+        practice_drill: "Old count",
+        fixes: ["Old count"],
+        video_url: "https://example.com/old",
+      },
+      {
+        code: "knee_bad",
+        title: "Old knee warning",
+        severity: "medium",
+        count: 124,
+        body_part: "Knee",
+        instant_cue: "Old cue",
+        message: "Old count should disappear.",
+        why_it_matters: "Old count",
+        practice_drill: "Old count",
+        fixes: ["Old count"],
+        video_url: "https://example.com/old",
+      },
+    ],
+    phase_analysis: {
+      mode: "reference",
+      issues: ["elbow_bad", "knee_bad"],
+      phases: {
+        contact: {
+          label: "hit",
+          time_seconds: 5.7,
+          joints: {
+            elbow: {
+              status: "red",
+              value: 118,
+              accepted_range: [140, 180],
+              tolerance: 22,
+              issue_code: "elbow_bad",
+              direction: "low",
+              source: "reference",
+            },
+          },
+        },
+        crouch: {
+          label: "load",
+          time_seconds: 2.5,
+          joints: {
+            knee: {
+              status: "red",
+              value: 176,
+              accepted_range: [77, 168],
+              tolerance: 20,
+              issue_code: "knee_bad",
+              direction: "high",
+              source: "reference",
+            },
+          },
+        },
+      },
+    },
+    pose_compare: { available: false },
+  });
+  const phaseIssueCard = context.document.querySelector("#issues").children[0];
+  assert.match(context.document.querySelector("#coachSummary").textContent, /分階段模型/);
+  assert.match(phaseIssueCard.innerHTML, /擊球瞬間/);
+  assert.match(phaseIssueCard.innerHTML, /第 5\.7 秒/);
+  assert.match(phaseIssueCard.innerHTML, /118/);
+  assert.match(phaseIssueCard.innerHTML, /140°-180°/);
+  assert.doesNotMatch(phaseIssueCard.innerHTML, /144|Old count|Old cue/);
+
+  context.__appTestApi.renderResult({
+    action: "spike",
+    action_label: "扣球",
+    processed_frames: 193,
     coach_summary: "Old frame-by-frame result should be ignored.",
     coach_plan: {
       status: "needs_fix",
@@ -473,7 +560,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   });
   assert.equal(context.document.querySelector("#issues").children.length, 0);
   assert.doesNotMatch(context.document.querySelector("#issues").textContent, /144/);
-  assert.match(context.document.querySelector("#coachSummary").textContent, /新版資料集/);
+  assert.match(context.document.querySelector("#coachSummary").textContent, /關鍵階段穩定/);
 
   console.log("frontend behavior ok");
   console.log(`fetch calls: ${context.calls.length}`);

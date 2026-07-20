@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260720-frontend-sync-v29"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260720-frontend-sync-v30"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1410,6 +1410,322 @@ function renderPoseCompare(poseCompare, action) {
       { caption: "影片中的實際動作" },
     );
   });
+}
+
+const phaseActionLabels = {
+  spike: "扣球",
+  serve: "發球",
+  block: "攔網",
+  receive: "接球",
+  set: "舉球",
+};
+
+const phaseLabels = {
+  contact: "關鍵觸球",
+  crouch: "蓄力準備",
+  hit: "擊球瞬間",
+  load: "下蹲蓄力",
+  serve_contact: "發球擊球瞬間",
+  max_reach: "攔網最高點",
+  pre_jump: "起跳前蓄力",
+  platform_contact: "接球平台觸球",
+  set_release: "舉球出手瞬間",
+};
+
+const phaseJointLabels = {
+  elbow: "手肘",
+  knee: "膝蓋",
+  shoulder: "肩膀",
+  wrist: "手腕",
+};
+
+const phaseIssueTips = {
+  elbow_bad: "先讓上臂帶動前臂，觸球前再完全打開手肘。",
+  elbow_not_straight: "最高點時把手臂往上延伸，不要提早彎手肘。",
+  elbow_position_bad: "舉球時雙手維持在額頭上方，手肘不要夾太緊也不要完全鎖死。",
+  knee_bad: "膝蓋對齊腳尖，落地或接球時讓膝蓋和髖一起吸收力量。",
+  knee_too_bent: "蓄力不要坐太深，讓重心能快速往上或往前轉換。",
+  shoulder_low: "觸球前先把肩膀和手臂抬到球的路線上。",
+  hands_not_high: "攔網時手掌先過網上方，肩膀跟著往上延伸。",
+  wrist_low: "舉球出手點要在額頭上方，不要讓球掉到臉前才推出去。",
+  receive_platform_unbalanced: "接球平台兩手高度要一致，先移動腳步再固定前臂。",
+  receive_hands_apart: "雙手要先扣好再接球，避免球碰到單邊手臂。",
+  lobster_receive_risk: "接球時不要用彎手肘去撈球，容易變成羅波球或讓手肘代償。",
+  setting_hands_not_detected: "請讓雙手完整入鏡，舉球判斷才會穩。",
+  setting_fingers_closed: "手指打開成碗狀，讓球從指腹離手。",
+  setting_hand_spacing_bad: "雙手距離維持在額頭前方一顆球左右。",
+  setting_hands_unbalanced: "雙手高度一致，避免球被推出側旋。",
+};
+
+function severityLabel(severity) {
+  if (severity === "high") return "高風險";
+  if (severity === "medium") return "中風險";
+  return "低風險";
+}
+
+function formatSeconds(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds)) return null;
+  return `第 ${Math.max(0, seconds).toFixed(1)} 秒`;
+}
+
+function issueTimeSummary(item) {
+  const times = Array.isArray(item.time_seconds) ? item.time_seconds : [];
+  const labels = times.map(formatSeconds).filter(Boolean);
+  if (labels.length) return labels.slice(0, 4).join("、");
+  const first = formatSeconds(item.first_time_seconds);
+  return first || "關鍵動作";
+}
+
+function formatDegree(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "--";
+  return `${number.toFixed(1).replace(/\.0$/, "")}°`;
+}
+
+function formatAcceptedRange(range) {
+  if (!Array.isArray(range) || range.length < 2) return "資料集允許範圍";
+  return `${formatDegree(range[0])}-${formatDegree(range[1])}`;
+}
+
+function phaseLabelFor(action, phaseKey, phasePayload) {
+  const raw = phasePayload?.label || phaseKey;
+  if (phaseLabels[raw]) return phaseLabels[raw];
+  if (action === "spike" && phaseKey === "contact") return "擊球瞬間";
+  if (action === "serve" && phaseKey === "contact") return "發球擊球瞬間";
+  return phaseLabels[phaseKey] || raw || "關鍵動作";
+}
+
+function inferPhaseIssueCode(action, phaseKey, jointKey, jointPayload) {
+  if (jointPayload?.issue_code) return jointPayload.issue_code;
+  const range = jointPayload?.accepted_range || [];
+  const value = Number(jointPayload?.value);
+  const high = Number.isFinite(value) && Number.isFinite(range[1]) && value > range[1];
+  if (jointKey === "elbow") {
+    if (action === "block") return "elbow_not_straight";
+    if (action === "set") return "elbow_position_bad";
+    return "elbow_bad";
+  }
+  if (jointKey === "knee") return high ? "knee_bad" : "knee_too_bent";
+  if (jointKey === "shoulder") return action === "block" ? "hands_not_high" : "shoulder_low";
+  if (jointKey === "wrist") return "wrist_low";
+  return `${phaseKey}_${jointKey}`;
+}
+
+function issueDirectionLabel(problem) {
+  if (problem.direction === "high") return "角度偏大";
+  if (problem.direction === "low") return "角度偏小";
+  return "角度不在區間";
+}
+
+function phaseProblemDetails(phaseAnalysis, result = {}) {
+  const details = { hasReference: false, hasProblem: false, times: [], problems: [] };
+  if (!phaseAnalysis || phaseAnalysis.mode !== "reference") return details;
+  details.hasReference = true;
+
+  const action = result.action || actionInput?.value || "spike";
+  const handledCodes = new Set();
+  for (const [phaseKey, phasePayload] of Object.entries(phaseAnalysis.phases || {})) {
+    const phaseLabel = phaseLabelFor(action, phaseKey, phasePayload);
+    const seconds = Number(phasePayload?.time_seconds);
+    for (const [jointKey, jointPayload] of Object.entries(phasePayload?.joints || {})) {
+      if (!jointPayload?.status || jointPayload.status === "green") continue;
+      const code = inferPhaseIssueCode(action, phaseKey, jointKey, jointPayload);
+      handledCodes.add(code);
+      if (Number.isFinite(seconds)) details.times.push(seconds);
+      const problem = {
+        code,
+        action,
+        phaseKey,
+        phaseLabel,
+        jointKey,
+        jointLabel: phaseJointLabels[jointKey] || jointKey,
+        value: jointPayload.value,
+        acceptedRange: jointPayload.accepted_range,
+        tolerance: jointPayload.tolerance,
+        direction: jointPayload.direction || "outside",
+        time_seconds: Number.isFinite(seconds) ? seconds : null,
+        source: jointPayload.source || "reference",
+        convergence: jointPayload.convergence,
+      };
+      details.problems.push(problem);
+    }
+  }
+
+  const primaryByCode = new Map((result.primary_issues || []).map((item) => [item.code, item]));
+  for (const code of phaseAnalysis.issues || []) {
+    if (handledCodes.has(code)) continue;
+    const original = primaryByCode.get(code);
+    const originalTimes = Array.isArray(original?.time_seconds) ? original.time_seconds : [];
+    const firstTime = originalTimes[0] ?? original?.first_time_seconds ?? details.times[0] ?? null;
+    if (Number.isFinite(Number(firstTime))) details.times.push(Number(firstTime));
+    details.problems.push({
+      code,
+      phaseLabel: "關鍵動作",
+      jointLabel: original?.body_part || "手部與平台",
+      time_seconds: Number.isFinite(Number(firstTime)) ? Number(firstTime) : null,
+      title: original?.title,
+      message: original?.message,
+      original,
+    });
+  }
+
+  details.hasProblem = details.problems.length > 0;
+  return details;
+}
+
+function stablePhasePlan(actionLabel) {
+  return {
+    status: "stable",
+    headline: `${actionLabel}關鍵階段穩定`,
+    focus: "維持動作品質",
+    reason: "分階段模型沒有在觸球、蓄力或出手瞬間找到超出資料集容許區間的關節角度。",
+    next_steps: ["保留全身與雙手入鏡。", "用同一個角度再錄一段，確認穩定度。", "下一輪可以換側面角度檢查落地與重心。"],
+    video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
+  };
+}
+
+function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
+  const timeText = formatSeconds(problem.time_seconds) || "關鍵動作";
+  const rangeText = formatAcceptedRange(problem.acceptedRange);
+  const valueText = formatDegree(problem.value);
+  const hasAngle = Number.isFinite(Number(problem.value));
+  const title = problem.title || `${problem.phaseLabel}${problem.jointLabel}${issueDirectionLabel(problem)}`;
+  const instantCue = hasAngle
+    ? `${timeText}：${problem.jointLabel} ${valueText}，目標 ${rangeText}`
+    : `${timeText}：${original.instant_cue || problem.message || "先修正這個動作點"}`;
+  const message = hasAngle
+    ? `這次使用分階段模型判讀，只檢查 ${problem.phaseLabel}，不是把整段影片逐格扣分。此刻 ${problem.jointLabel} 為 ${valueText}，超出目前資料集容許的 ${rangeText}。`
+    : (problem.message || original.message || "這個問題來自關鍵動作瞬間的手部或平台判斷。");
+  const drill = hasAngle
+    ? `慢動作做 8 次 ${actionLabel} 定格，到 ${problem.phaseLabel} 時停 1 秒，讓 ${problem.jointLabel} 回到 ${rangeText}。`
+    : (original.practice_drill || `慢動作做 8 次 ${actionLabel} 定格，確認關鍵動作穩定後再加速。`);
+  const fixes = [
+    `看 ${timeText} 的 3D 小人，先修 ${problem.phaseLabel} 的 ${problem.jointLabel}。`,
+  ];
+  if (hasAngle) fixes.push(`本次 ${problem.jointLabel}：${valueText}；建議區間：${rangeText}。`);
+  fixes.push(phaseIssueTips[problem.code] || original.fixes?.[0] || "先放慢動作，確認全身、手部與腳步都完整入鏡。");
+  return {
+    ...original,
+    code: problem.code || original.code,
+    title,
+    severity: original.severity || (problem.code === "lobster_receive_risk" ? "high" : "medium"),
+    count: 1,
+    time_seconds: Number.isFinite(Number(problem.time_seconds)) ? [Number(problem.time_seconds)] : [],
+    first_time_seconds: Number.isFinite(Number(problem.time_seconds)) ? Number(problem.time_seconds) : null,
+    body_part: `${problem.phaseLabel} / ${problem.jointLabel}`,
+    instant_cue: instantCue,
+    message,
+    why_it_matters: hasAngle
+      ? `資料集容許區間已包含一般使用者的誤差；這一刻仍超出範圍，代表力量傳遞或落地吸收可能不穩。`
+      : "這個問題來自關鍵動作瞬間，會影響球路穩定與身體負擔。",
+    practice_drill: drill,
+    fixes,
+    video_url:
+      original.video_url ||
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(`volleyball ${actionLabel} form ${problem.jointLabel}`)}`,
+  };
+}
+
+function phaseAwareCoachSummary(details, actionLabel) {
+  const first = details.problems[0];
+  const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
+  const rangeText = formatAcceptedRange(first.acceptedRange);
+  const valueText = formatDegree(first.value);
+  if (Number.isFinite(Number(first.value))) {
+    return `分階段模型已重新判讀：先修 ${first.phaseLabel} 的 ${first.jointLabel}。${timeText} 實測 ${valueText}，建議區間 ${rangeText}。這不是舊版逐格累積扣分，而是只看 ${actionLabel} 的關鍵瞬間。`;
+  }
+  return `分階段模型已重新判讀：先修 ${first.phaseLabel} 的 ${first.jointLabel}。這次問題來自關鍵動作瞬間，不再使用舊版逐格累積次數。`;
+}
+
+function phaseAwareCoachPlan(details, actionLabel) {
+  const first = details.problems[0];
+  const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
+  const rangeText = formatAcceptedRange(first.acceptedRange);
+  const valueText = formatDegree(first.value);
+  return {
+    status: "needs_fix",
+    headline: `先修：${first.phaseLabel}${first.jointLabel}`,
+    focus: "分階段修正",
+    reason: Number.isFinite(Number(first.value))
+      ? `${timeText} 的 ${first.jointLabel} 是 ${valueText}，目前資料集容許區間是 ${rangeText}。`
+      : `${timeText} 的手部或平台狀態不穩，建議先用慢動作確認。`,
+    next_steps: [
+      `把影片停在 ${timeText}，對照左邊 3D 小人。`,
+      phaseIssueTips[first.code] || "先放慢動作，確認關鍵姿勢後再加速。",
+      `再錄一段 5 到 10 秒 ${actionLabel}，讓全身與雙手完整入鏡。`,
+    ],
+    video_url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`volleyball ${actionLabel} technique slow motion`)}`,
+  };
+}
+
+function normalizePhaseAwareResult(result) {
+  if (!result || !result.phase_analysis) return result;
+  const details = phaseProblemDetails(result.phase_analysis, result);
+  if (!details.hasReference) return result;
+
+  const actionLabel = result.action_label || phaseActionLabels[result.action] || "排球動作";
+  if (!details.hasProblem) {
+    return {
+      ...result,
+      primary_issues: [],
+      coach_summary: `${actionLabel}關鍵階段穩定。系統已用資料集容許區間重新判讀，沒有在觸球、蓄力或出手瞬間找到明顯問題。`,
+      coach_plan: stablePhasePlan(actionLabel),
+    };
+  }
+
+  const originalByCode = new Map((result.primary_issues || []).map((item) => [item.code, item]));
+  const primary_issues = details.problems.map((problem) =>
+    phaseAwareIssue(problem, originalByCode.get(problem.code) || problem.original || {}, actionLabel),
+  );
+  return {
+    ...result,
+    primary_issues,
+    coach_summary: phaseAwareCoachSummary(details, actionLabel),
+    coach_plan: phaseAwareCoachPlan(details, actionLabel),
+  };
+}
+
+function renderResult(result) {
+  result = normalizePhaseAwareResult(result);
+  summaryTitle.textContent = `${result.action_label} 分析結果`;
+  coachSummary.textContent = result.coach_summary;
+  frameCount.textContent = `已分析 ${result.processed_frames || 0} 個姿勢取樣`;
+  renderCoachPlan(result.coach_plan);
+  renderIssues(result.primary_issues);
+  renderPoseCompare(result.pose_compare, result.action);
+}
+
+function renderIssues(items) {
+  issues.innerHTML = "";
+  issues.classList.remove("empty");
+
+  if (!items || items.length === 0) {
+    issues.classList.add("empty");
+    issues.textContent = "目前沒有偵測到明顯錯誤；請保持全身、手部與腳步完整入鏡。";
+    return;
+  }
+
+  for (const item of items) {
+    const card = document.createElement("article");
+    card.className = `issue-card ${item.severity}`;
+    card.innerHTML = `
+      <div class="issue-title">
+        <span>${escapeHtml(item.title)}</span>
+        <small>${severityLabel(item.severity)}・${escapeHtml(issueTimeSummary(item))}</small>
+      </div>
+      <div class="issue-meta">
+        <span>${escapeHtml(item.body_part || "關鍵動作")}</span>
+        <strong>${escapeHtml(item.instant_cue || "先修正最明顯的一點")}</strong>
+      </div>
+      <p>${escapeHtml(item.message)}</p>
+      <p class="issue-why">${escapeHtml(item.why_it_matters || "")}</p>
+      <div class="drill-box">${escapeHtml(item.practice_drill || "")}</div>
+      <ul class="fix-list">${(item.fixes || []).map((fix) => `<li>${escapeHtml(fix)}</li>`).join("")}</ul>
+      <a class="video-link" href="${item.video_url}" target="_blank" rel="noreferrer">觀看修正影片</a>
+    `;
+    issues.appendChild(card);
+  }
 }
 
 if (typeof window !== "undefined") {
