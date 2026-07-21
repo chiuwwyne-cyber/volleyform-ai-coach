@@ -1249,40 +1249,6 @@ function issuePayload(code, count, timeSeconds = []) {
   };
 }
 
-function coachPlan(primaryIssues, actionLabel, processedFrames) {
-  if (!processedFrames) {
-    return {
-      status: "needs_video",
-      headline: "目前沒有足夠骨架可分析",
-      focus: "拍攝設定",
-      reason: "請確認全身入鏡、光線充足，而且影片中有人物動作。",
-      next_steps: ["讓全身完整入鏡。", "固定手機並提高光線。", "重新錄製 5 到 10 秒。"],
-      video_url: "https://www.youtube.com/results?search_query=volleyball+camera+setup+analysis",
-    };
-  }
-  if (!primaryIssues.length) {
-    return {
-      status: "stable",
-      headline: `${actionLabel}整體穩定`,
-      focus: "維持動作品質",
-      reason: "取樣影格沒有出現明顯高風險姿勢。",
-      next_steps: ["維持完整熱身。", "保留全身入鏡。", "用相同角度持續比較。"],
-      video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
-    };
-  }
-  const first = primaryIssues[0];
-  return {
-    status: "needs_fix",
-    headline: `先修正：${first.title}`,
-    focus: first.body_part,
-    reason: first.why_it_matters,
-    next_steps: [first.instant_cue, first.practice_drill, ...first.fixes].slice(0, 4),
-    video_url: first.video_url,
-    severity: first.severity,
-    issue_code: first.code,
-  };
-}
-
 const JOINT_SPECS = {
   spike: { elbow: { min: 150, code: "elbow_bad" }, knee: { min: 150, code: "knee_bad" } },
   block: {
@@ -1563,43 +1529,6 @@ function buildPoseCompare(action, worldLandmarks, issueCodes = [], actualSequenc
   };
 }
 
-function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, handSums) {
-  const selected = new Set(selectedModalities);
-  const modalities = [
-    { id: "pose", label: "3D 身體骨架", description: "全身關節與角度", state: "active" },
-    { id: "hands", label: "手部關節", description: "手指、手腕與雙手距離", state: "active" },
-    { id: "ball", label: "球路追蹤", description: "保留擴充", state: "reserved" },
-    { id: "audio", label: "聲音節奏", description: "保留擴充", state: "reserved" },
-    { id: "wearable", label: "穿戴感測", description: "保留擴充", state: "reserved" },
-    { id: "coach_text", label: "教練備註", description: "保留擴充", state: "reserved" },
-  ].map((item) => ({ ...item, requested: selected.has(item.id) }));
-  return {
-    modalities,
-    modality_results: {
-      pose: {
-        frames_with_pose: poseFrames,
-        average_elbow_angle: poseFrames ? Math.round(angleSums.elbow / poseFrames) : null,
-        average_knee_angle: poseFrames ? Math.round(angleSums.knee / poseFrames) : null,
-      },
-      hands: {
-        frames_with_hands: handFrames,
-        average_finger_extension: handFrames
-          ? Number((handSums.extension / handFrames).toFixed(2))
-          : null,
-        average_hand_gap: handFrames
-          ? Number((handSums.gap / handFrames).toFixed(2))
-          : null,
-      },
-      reserved: {
-        ball: "球路模型預留",
-        audio: "聲音節奏模型預留",
-        wearable: "穿戴裝置模型預留",
-        coach_text: "教練文字模型預留",
-      },
-    },
-  };
-}
-
 function waitForEvent(target, eventName) {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
@@ -1630,60 +1559,6 @@ function sampleCountForMode(mode) {
   if (mode === "mobile") return 16;
   if (mode === "quality") return 40;
   return 26;
-}
-
-function analysisResult({
-  action,
-  powerMode,
-  modalities,
-  sampleCount,
-  issueCounts,
-  issueTimes = new Map(),
-  poseCompare,
-  angleSums,
-  handSums,
-  poseFrames,
-  handFrames,
-  phaseAnalysis = { mode: "legacy" },
-  engine = "mediapipe-web-local",
-}) {
-  const primaryIssues = [...issueCounts.entries()]
-    .map(([code, count]) => issuePayload(code, count, issueTimes.get(code)))
-    .sort(
-      (a, b) =>
-        SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity] || b.count - a.count,
-    )
-    .slice(0, 6);
-  const actionLabel = ACTION_LABELS[action] || action;
-  const modality = modalityPayload(
-    poseFrames,
-    handFrames,
-    modalities,
-    angleSums,
-    handSums,
-  );
-
-  return {
-    action,
-    action_label: actionLabel,
-    processed_frames: poseFrames,
-    primary_issues: primaryIssues,
-    phase_analysis: phaseAnalysis,
-    pose_compare: poseCompare || { available: false },
-    coach_summary: poseFrames
-      ? primaryIssues.length
-        ? `最需要先修正的是「${primaryIssues[0].title}」。${primaryIssues[0].message}`
-        : `${actionLabel}整體看起來穩定，請繼續保持完整熱身與落地控制。`
-      : "沒有成功讀到可分析的姿勢。請確認人物全身入鏡、光線足夠。",
-    coach_plan: coachPlan(primaryIssues, actionLabel, poseFrames),
-    ...modality,
-    settings: {
-      engine,
-      power_mode: powerMode,
-      sample_count: sampleCount,
-      modalities,
-    },
-  };
 }
 
 function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, handSums) {
