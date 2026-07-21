@@ -11,6 +11,7 @@ const APP_SHELL = [
   "./assets/coach-header.png",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
+  "./assets/krunk-parts.json",
 ];
 
 // App-shell files change often during development, so they must always be

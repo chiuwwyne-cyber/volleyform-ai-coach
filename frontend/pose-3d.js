@@ -478,6 +478,61 @@ const JOINT_MARKERS = [
   { index: 28, joint: null, radius: 0.034 },
 ];
 
+// Krunk figurine meshes (sliced from Brave Krunk.stl by tools/segment_krunk.py).
+// Each bone part is normalized: proximal joint at the origin, distal at Y=1,
+// all axes divided by the model bone length, so a single uniform scale places
+// it between two pose landmarks with its proportions intact. head/torso/hips
+// share the torso frame (centered at hip-mid, +Y toward shoulder-mid).
+const KRUNK_ASSET_URL = new URL("./assets/krunk-parts.json", import.meta.url).href;
+const KRUNK_BONES = {
+  upper_arm_L: { a: 11, b: 13, joint: "shoulder" },
+  forearm_L: { a: 13, b: 15, joint: "elbow" },
+  upper_arm_R: { a: 12, b: 14, joint: "shoulder" },
+  forearm_R: { a: 14, b: 16, joint: "elbow" },
+  thigh_L: { a: 23, b: 25, joint: "knee" },
+  shin_L: { a: 25, b: 27, joint: "knee" },
+  thigh_R: { a: 24, b: 26, joint: "knee" },
+  shin_R: { a: 26, b: 28, joint: "knee" },
+};
+const KRUNK_TORSO_PARTS = ["torso", "hips", "head"];
+
+let krunkPartsPromise = null;
+function loadKrunkParts() {
+  if (!krunkPartsPromise) {
+    krunkPartsPromise = fetch(KRUNK_ASSET_URL)
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("krunk asset"))))
+      .then((data) => {
+        const geometries = {};
+        for (const [name, part] of Object.entries(data.parts || {})) {
+          const geometry = new THREE.BufferGeometry();
+          const positions = new Float32Array(part.positions.length * 3);
+          part.positions.forEach((p, i) => {
+            positions[i * 3] = p[0];
+            positions[i * 3 + 1] = p[1];
+            positions[i * 3 + 2] = p[2];
+          });
+          const indices = [];
+          for (const face of part.faces) indices.push(face[0], face[1], face[2]);
+          geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+          geometry.setIndex(indices);
+          geometry.computeVertexNormals();
+          geometries[name] = geometry;
+        }
+        return { figure: data.figure || {}, geometries };
+      })
+      .catch(() => null);
+  }
+  return krunkPartsPromise;
+}
+
+function orientKrunkPart(mesh, proximal, distal) {
+  const dir = distal.clone().sub(proximal);
+  const length = Math.max(dir.length(), 0.001);
+  mesh.position.copy(proximal);
+  mesh.scale.setScalar(length);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+}
+
 function statusColor(joint, jointStatus) {
   if (!joint) return BODY_COLOR;
   return STATUS_COLOR[jointStatus?.[joint] || "green"];
@@ -739,30 +794,80 @@ function createFigure(scene) {
 
   scene.add(group);
 
+  // Optional Krunk figurine layer. When its asset loads, the sliced mesh parts
+  // replace the plain capsules; the capsule figure stays as the fallback.
+  const krunk = { active: false, bones: [], torsoParts: [], group: new THREE.Group() };
+  group.add(krunk.group);
+
+  function attachKrunk(data) {
+    if (!data || !data.geometries) return false;
+    const material = () =>
+      new THREE.MeshStandardMaterial({ color: BODY_COLOR, roughness: 0.62, metalness: 0.04 });
+    for (const [name, bone] of Object.entries(KRUNK_BONES)) {
+      const geometry = data.geometries[name];
+      if (!geometry) continue;
+      const mesh = new THREE.Mesh(geometry, material());
+      krunk.group.add(mesh);
+      krunk.bones.push({ mesh, ...bone });
+    }
+    for (const name of KRUNK_TORSO_PARTS) {
+      const geometry = data.geometries[name];
+      if (!geometry) continue;
+      const mesh = new THREE.Mesh(geometry, material());
+      krunk.group.add(mesh);
+      krunk.torsoParts.push({ mesh, name });
+    }
+    if (!krunk.bones.length) return false;
+    krunk.active = true;
+    // Hide the capsule body; keep joint markers (they cap the seams) and shadow.
+    for (const limb of limbs) limb.mesh.visible = false;
+    torsoMesh.visible = false;
+    chestMesh.visible = false;
+    pelvisMesh.visible = false;
+    neckMesh.visible = false;
+    headMesh.visible = false;
+    return true;
+  }
+
   return {
     group,
+    attachKrunk,
     setVisible(visible) {
       group.visible = visible;
     },
     update(points, jointStatus) {
       group.visible = true;
-      for (const limb of limbs) {
-        orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
-        limb.mesh.material.color.setHex(statusColor(limb.part.joint, jointStatus));
-      }
       const shoulderMid = midVec3(points[11], points[12]);
       const hipMid = midVec3(points[23], points[24]);
+
+      if (krunk.active) {
+        for (const bone of krunk.bones) {
+          orientKrunkPart(bone.mesh, toVec3(points[bone.a]), toVec3(points[bone.b]));
+          bone.mesh.material.color.setHex(statusColor(bone.joint, jointStatus));
+        }
+        for (const part of krunk.torsoParts) {
+          orientKrunkPart(part.mesh, hipMid, shoulderMid);
+        }
+      } else {
+        for (const limb of limbs) {
+          orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
+          limb.mesh.material.color.setHex(statusColor(limb.part.joint, jointStatus));
+        }
+      }
+
       const headPos = safeHeadPosition(points, shoulderMid);
       const torsoTop = shoulderMid.clone().lerp(hipMid, 0.12);
       const torsoBottom = shoulderMid.clone().lerp(hipMid, 0.9);
       const chestPos = shoulderMid.clone().lerp(hipMid, 0.2);
-      orientCapsuleVec(torsoMesh, torsoTop, torsoBottom);
-      chestMesh.position.copy(chestPos);
-      pelvisMesh.position.copy(hipMid);
-      const neckTop = headPos.clone();
-      neckTop.y -= HEAD_RADIUS * 0.62;
-      orientCapsuleVec(neckMesh, shoulderMid.clone().lerp(headPos, 0.18), neckTop);
-      headMesh.position.copy(headPos);
+      if (!krunk.active) {
+        orientCapsuleVec(torsoMesh, torsoTop, torsoBottom);
+        chestMesh.position.copy(chestPos);
+        pelvisMesh.position.copy(hipMid);
+        const neckTop = headPos.clone();
+        neckTop.y -= HEAD_RADIUS * 0.62;
+        orientCapsuleVec(neckMesh, shoulderMid.clone().lerp(headPos, 0.18), neckTop);
+        headMesh.position.copy(headPos);
+      }
 
       for (const marker of jointMarkers) {
         const position = toVec3(points[marker.index]);
@@ -852,6 +957,9 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
 
   const figure = createFigure(scene);
   figure.setVisible(false);
+  loadKrunkParts().then((data) => {
+    if (data) figure.attachKrunk(data);
+  });
   const ball = createBall(scene);
   ball.setPosition(null);
 

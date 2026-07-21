@@ -1,5 +1,14 @@
 # Third-Party Notices
 
+## Krunk mannequin geometry
+
+The 3D pose-comparison figure (`frontend/assets/krunk-parts.json`) is derived
+from a user-supplied humanoid STL model ("Brave Krunk"). Only a decimated,
+re-rigged low-poly geometry is committed; the original STL is not distributed
+with this project. `tools/segment_krunk.py` regenerates the asset from the
+source STL. If you redistribute this project, confirm you have the right to use
+the original model's likeness.
+
 ## MediaPipe Tasks Vision
 
 This project includes `@mediapipe/tasks-vision` version `0.10.35` and the official Pose Landmarker Lite and Hand Landmarker model assets.
