@@ -403,6 +403,7 @@ const BODY_PARTS = [
 ];
 const BODY_COLOR = 0xf4efe4;
 const BODY_SHADOW_COLOR = 0xd7d0c3;
+const KRUNK_BODY_COLOR = 0xffffff;
 const NECK_RADIUS = 0.038;
 const TORSO_RADIUS = 0.17;
 const CHEST_RADIUS = 0.14;
@@ -801,8 +802,15 @@ function createFigure(scene) {
 
   function attachKrunk(data) {
     if (!data || !data.geometries) return false;
+    // DoubleSide: the decimated STL parts have inconsistent triangle winding,
+    // so single-sided rendering culls the limb faces and only the head shows.
     const material = () =>
-      new THREE.MeshStandardMaterial({ color: BODY_COLOR, roughness: 0.62, metalness: 0.04 });
+      new THREE.MeshStandardMaterial({
+        color: KRUNK_BODY_COLOR,
+        roughness: 0.62,
+        metalness: 0.04,
+        side: THREE.DoubleSide,
+      });
     for (const [name, bone] of Object.entries(KRUNK_BONES)) {
       const geometry = data.geometries[name];
       if (!geometry) continue;
@@ -843,7 +851,9 @@ function createFigure(scene) {
       if (krunk.active) {
         for (const bone of krunk.bones) {
           orientKrunkPart(bone.mesh, toVec3(points[bone.a]), toVec3(points[bone.b]));
-          bone.mesh.material.color.setHex(statusColor(bone.joint, jointStatus));
+          const status = bone.joint ? jointStatus?.[bone.joint] || "green" : "green";
+          const color = status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status];
+          bone.mesh.material.color.setHex(color);
         }
         for (const part of krunk.torsoParts) {
           orientKrunkPart(part.mesh, hipMid, shoulderMid);
