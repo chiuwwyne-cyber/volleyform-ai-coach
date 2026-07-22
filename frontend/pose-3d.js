@@ -401,7 +401,7 @@ const BODY_PARTS = [
   { a: 27, b: 31, radius: 0.035, joint: null },
   { a: 28, b: 32, radius: 0.035, joint: null },
 ];
-const BODY_COLOR = 0xf4efe4;
+const BODY_COLOR = 0xffffff;
 const BODY_SHADOW_COLOR = 0xd7d0c3;
 const KRUNK_BODY_COLOR = 0xffffff;
 const NECK_RADIUS = 0.038;
@@ -996,9 +996,11 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
 
   const figure = createFigure(scene);
   figure.setVisible(false);
-  loadKrunkParts().then((data) => {
-    if (data) figure.attachKrunk(data);
-  });
+  // The Krunk STL body can't be decimated into a clean articulated mesh — its
+  // irregular topology collapses into per-part slivers/holes no matter the
+  // method (grid, clustering, loft, quadric via fast-simplification). Use the
+  // clean built-in capsule mannequin (big head, fingers, white) instead.
+  // attachKrunk + loadKrunkParts stay available if a fixed asset is supplied.
   const ball = createBall(scene);
   ball.setPosition(null);
 
