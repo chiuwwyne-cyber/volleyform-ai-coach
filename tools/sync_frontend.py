@@ -6,6 +6,7 @@ can run it before opening or deploying the app.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -13,6 +14,7 @@ from datetime import date
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+FRONTEND_DIR = ROOT_DIR / "frontend"
 REFERENCE_PATH = ROOT_DIR / "backend" / "reference_standards.json"
 LOCAL_ANALYZER_PATH = ROOT_DIR / "frontend" / "local-analyzer.js"
 INDEX_PATH = ROOT_DIR / "frontend" / "index.html"
@@ -60,6 +62,57 @@ def _replace_service_worker_cache(text, version):
     return SERVICE_WORKER_RE.sub(f"volleyform-shell-v{version}", text)
 
 
+def _app_shell_files():
+    """The frontend files the service worker caches, resolved to real paths.
+
+    Parsed from the APP_SHELL array so it stays in step with what actually gets
+    cached; that array is the exact set whose changes require a cache bump.
+    """
+    text = _read(SERVICE_WORKER_PATH)
+    match = re.search(r"const APP_SHELL = \[(.*?)\]", text, re.S)
+    paths = []
+    if match:
+        for entry in re.findall(r'"([^"]+)"', match.group(1)):
+            rel = entry.lstrip("./")
+            if rel:  # skip the "./" root entry
+                paths.append(FRONTEND_DIR / rel)
+    return paths
+
+
+def _frontend_fingerprint():
+    """Content hash of the cached frontend files, version markers normalized.
+
+    Bumping the cache version rewrites the build/cache strings inside the
+    shell files, so those markers are stripped before hashing; otherwise every
+    bump would change the fingerprint and trigger another bump forever.
+    """
+    digest = hashlib.sha256()
+    paths = list(_app_shell_files()) + [SERVICE_WORKER_PATH]
+    for path in sorted(set(paths), key=lambda p: str(p)):
+        if not path.exists():
+            continue
+        data = path.read_bytes()
+        try:
+            text = data.decode("utf-8")
+            text = BUILD_RE.sub("BUILD", text)
+            text = SERVICE_WORKER_RE.sub("shell", text)
+            data = text.encode("utf-8")
+        except UnicodeDecodeError:
+            pass  # binary asset (icons/images): hash the raw bytes
+        digest.update(str(path).encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(data)
+    return digest.hexdigest()
+
+
+def _stored_fingerprint():
+    try:
+        info = json.loads(_read(BUILD_INFO_PATH))
+        return info.get("shellFingerprint")
+    except (OSError, ValueError):
+        return None
+
+
 def _sync_reference():
     reference = json.loads(_read(REFERENCE_PATH))
     replacement = (
@@ -77,8 +130,16 @@ def _sync_reference():
 def sync_frontend(root_dir=ROOT_DIR, build_label=None, bump_if_changed=True):
     os.chdir(root_dir)
     reference_changed = _sync_reference()
+    # Any change to a cached frontend file (JS/CSS, the Krunk model asset,
+    # icons, ...) — not just recalibrated standards — must bump the cache so
+    # clients stop serving the stale service-worker copy. Compare a normalized
+    # content fingerprint against the one recorded in the last build-info.json.
+    fingerprint = _frontend_fingerprint()
+    stored_fingerprint = _stored_fingerprint()
+    assets_changed = stored_fingerprint is not None and stored_fingerprint != fingerprint
     current_version = _current_cache_version()
-    next_version = current_version + 1 if reference_changed and bump_if_changed else current_version
+    should_bump = (reference_changed or assets_changed) and bump_if_changed
+    next_version = current_version + 1 if should_bump else current_version
     if next_version <= 0:
         next_version = 1
     build_label = build_label or _build_label(next_version)
@@ -95,6 +156,7 @@ def sync_frontend(root_dir=ROOT_DIR, build_label=None, bump_if_changed=True):
         "buildVersion": build_label,
         "serviceWorkerCache": f"volleyform-shell-v{next_version}",
         "referenceSource": "backend/reference_standards.json",
+        "shellFingerprint": fingerprint,
         "generatedAt": date.today().isoformat(),
     }
     changed |= _write_if_changed(
