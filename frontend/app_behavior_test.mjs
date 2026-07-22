@@ -504,11 +504,11 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
     pose_compare: { available: false },
   });
   const phaseIssueCard = context.document.querySelector("#issues").children[0];
-  assert.match(context.document.querySelector("#coachSummary").textContent, /分階段模型/);
+  assert.match(context.document.querySelector("#coachSummary").textContent, /最需要先調整/);
   assert.match(phaseIssueCard.innerHTML, /擊球瞬間/);
   assert.match(phaseIssueCard.innerHTML, /第 5\.7 秒/);
   assert.match(phaseIssueCard.innerHTML, /118/);
-  assert.match(phaseIssueCard.innerHTML, /140°-180°/);
+  assert.match(phaseIssueCard.innerHTML, /一般標準/);
   assert.doesNotMatch(phaseIssueCard.innerHTML, /144|Old count|Old cue/);
 
   context.__appTestApi.renderResult({
@@ -560,7 +560,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   });
   assert.equal(context.document.querySelector("#issues").children.length, 0);
   assert.doesNotMatch(context.document.querySelector("#issues").textContent, /144/);
-  assert.match(context.document.querySelector("#coachSummary").textContent, /關鍵階段穩定/);
+  assert.match(context.document.querySelector("#coachSummary").textContent, /都沒有明顯問題/);
 
   console.log("frontend behavior ok");
   console.log(`fetch calls: ${context.calls.length}`);

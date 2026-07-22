@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260722-frontend-sync-v35"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260723-frontend-sync-v36"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1281,7 +1281,7 @@ function stablePhasePlan(actionLabel) {
     status: "stable",
     headline: `${actionLabel}關鍵動作通過`,
     focus: "新版角度區間",
-    reason: "擊球點與蓄力點落在新版資料集的可接受範圍內，不需要用逐格舊標準扣分。",
+    reason: "擊球和蓄力這些關鍵瞬間都在正常範圍內，沒有需要特別修正的地方。",
     next_steps: ["維持完整動作節奏。", "下一球前確認落地與重心穩定。"],
     video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
   };
@@ -1297,7 +1297,7 @@ function normalizePhaseAwareResult(result) {
     return {
       ...result,
       primary_issues: [],
-      coach_summary: `${actionLabel}關鍵動作角度落在新版資料集可接受範圍內。舊版逐格誤報已忽略。`,
+      coach_summary: `${actionLabel}的關鍵動作都在正常範圍內，沒有明顯要修的地方。`,
       coach_plan: stablePhasePlan(actionLabel),
     };
   }
@@ -1518,6 +1518,29 @@ function issueDirectionLabel(problem) {
   return "角度不在區間";
 }
 
+// Plain-language versions of the same idea, for the coaching text users read.
+function plainDirectionLabel(problem) {
+  if (problem.direction === "high") return "幅度偏大";
+  if (problem.direction === "low") return "幅度偏小";
+  return "需要調整";
+}
+
+// Turn a raw accepted angle range into something a player understands: which
+// way to move and roughly how far, instead of "肩膀 25°，建議區間 67.8°-180°".
+function plainAngleHint(problem) {
+  const value = Number(problem.value);
+  const range = problem.acceptedRange;
+  if (!Number.isFinite(value) || !Array.isArray(range) || range.length < 2) return "";
+  // Round to whole degrees — "68°" reads friendlier than "67.8°" for a player.
+  const deg = (n) => `${Math.round(Number(n))}°`;
+  const lo = Number(range[0]);
+  const hi = Number(range[1]);
+  if (problem.direction === "high" || (Number.isFinite(hi) && value > hi)) {
+    return `動作幅度比一般標準大了一些（約 ${deg(value)}，一般大約在 ${deg(hi)} 以內）`;
+  }
+  return `動作幅度比一般標準小了一些（約 ${deg(value)}，一般大約要 ${deg(lo)} 以上）`;
+}
+
 function phaseProblemDetails(phaseAnalysis, result = {}) {
   const details = { hasReference: false, hasProblem: false, times: [], problems: [] };
   if (!phaseAnalysis || phaseAnalysis.mode !== "reference") return details;
@@ -1579,7 +1602,7 @@ function stablePhasePlan(actionLabel) {
     status: "stable",
     headline: `${actionLabel}關鍵階段穩定`,
     focus: "維持動作品質",
-    reason: "分階段模型沒有在觸球、蓄力或出手瞬間找到超出資料集容許區間的關節角度。",
+    reason: "在觸球、蓄力和出手這幾個關鍵瞬間，都沒有找到明顯要修正的地方。",
     next_steps: ["保留全身與雙手入鏡。", "用同一個角度再錄一段，確認穩定度。", "下一輪可以換側面角度檢查落地與重心。"],
     video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
   };
@@ -1587,24 +1610,23 @@ function stablePhasePlan(actionLabel) {
 
 function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
   const timeText = formatSeconds(problem.time_seconds) || "關鍵動作";
-  const rangeText = formatAcceptedRange(problem.acceptedRange);
-  const valueText = formatDegree(problem.value);
   const hasAngle = Number.isFinite(Number(problem.value));
-  const title = problem.title || `${problem.phaseLabel}${problem.jointLabel}${issueDirectionLabel(problem)}`;
+  const tip = phaseIssueTips[problem.code] || original.fixes?.[0] || "先放慢動作，確認全身、手部與腳步都完整入鏡。";
+  const angleHint = plainAngleHint(problem);
+  const title = problem.title || `${problem.phaseLabel}的${problem.jointLabel}${plainDirectionLabel(problem)}`;
   const instantCue = hasAngle
-    ? `${timeText}：${problem.jointLabel} ${valueText}，目標 ${rangeText}`
+    ? `${timeText}：${tip}`
     : `${timeText}：${original.instant_cue || problem.message || "先修正這個動作點"}`;
   const message = hasAngle
-    ? `這次使用分階段模型判讀，只檢查 ${problem.phaseLabel}，不是把整段影片逐格扣分。此刻 ${problem.jointLabel} 為 ${valueText}，超出目前資料集容許的 ${rangeText}。`
-    : (problem.message || original.message || "這個問題來自關鍵動作瞬間的手部或平台判斷。");
+    ? `在 ${actionLabel}${problem.phaseLabel}那一刻，你的${problem.jointLabel}和一般標準有落差。系統只看這個關鍵瞬間，不會整段影片一直挑毛病。${angleHint ? `${angleHint}。` : ""}`
+    : (problem.message || original.message || "這個問題出現在關鍵動作的那一刻，主要是手部或平台的狀態。");
   const drill = hasAngle
-    ? `慢動作做 8 次 ${actionLabel} 定格，到 ${problem.phaseLabel} 時停 1 秒，讓 ${problem.jointLabel} 回到 ${rangeText}。`
-    : (original.practice_drill || `慢動作做 8 次 ${actionLabel} 定格，確認關鍵動作穩定後再加速。`);
+    ? `慢動作做 8 次 ${actionLabel}，做到${problem.phaseLabel}時停一秒，照上面的提示調整${problem.jointLabel}。`
+    : (original.practice_drill || `慢動作做 8 次 ${actionLabel}，確認關鍵動作穩定後再加速。`);
   const fixes = [
-    `看 ${timeText} 的 3D 小人，先修 ${problem.phaseLabel} 的 ${problem.jointLabel}。`,
+    `把影片停在 ${timeText}，對照左邊 3D 小人的${problem.jointLabel}。`,
+    tip,
   ];
-  if (hasAngle) fixes.push(`本次 ${problem.jointLabel}：${valueText}；建議區間：${rangeText}。`);
-  fixes.push(phaseIssueTips[problem.code] || original.fixes?.[0] || "先放慢動作，確認全身、手部與腳步都完整入鏡。");
   return {
     ...original,
     code: problem.code || original.code,
@@ -1613,12 +1635,12 @@ function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
     count: 1,
     time_seconds: Number.isFinite(Number(problem.time_seconds)) ? [Number(problem.time_seconds)] : [],
     first_time_seconds: Number.isFinite(Number(problem.time_seconds)) ? Number(problem.time_seconds) : null,
-    body_part: `${problem.phaseLabel} / ${problem.jointLabel}`,
+    body_part: `${problem.phaseLabel}的${problem.jointLabel}`,
     instant_cue: instantCue,
     message,
     why_it_matters: hasAngle
-      ? `資料集容許區間已包含一般使用者的誤差；這一刻仍超出範圍，代表力量傳遞或落地吸收可能不穩。`
-      : "這個問題來自關鍵動作瞬間，會影響球路穩定與身體負擔。",
+      ? "這個瞬間的動作和一般標準差比較多，長期下來會影響出力和球的穩定，也會讓身體多花力氣。"
+      : "這個問題會影響球的穩定度，也會讓身體多花力氣。",
     practice_drill: drill,
     fixes,
     video_url:
@@ -1630,26 +1652,25 @@ function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
 function phaseAwareCoachSummary(details, actionLabel) {
   const first = details.problems[0];
   const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
-  const rangeText = formatAcceptedRange(first.acceptedRange);
-  const valueText = formatDegree(first.value);
-  if (Number.isFinite(Number(first.value))) {
-    return `分階段模型已重新判讀：先修 ${first.phaseLabel} 的 ${first.jointLabel}。${timeText} 實測 ${valueText}，建議區間 ${rangeText}。這不是舊版逐格累積扣分，而是只看 ${actionLabel} 的關鍵瞬間。`;
-  }
-  return `分階段模型已重新判讀：先修 ${first.phaseLabel} 的 ${first.jointLabel}。這次問題來自關鍵動作瞬間，不再使用舊版逐格累積次數。`;
+  const angleHint = plainAngleHint(first);
+  const tip = phaseIssueTips[first.code];
+  const base = `這支影片最需要先調整的是：${actionLabel}${first.phaseLabel}（約 ${timeText}）的${first.jointLabel}。`;
+  const detail = angleHint ? `${angleHint}。` : "";
+  const how = tip ? tip : "跟著左邊 3D 小人對照調整就可以。";
+  return `${base}${detail}${how}只要抓住這個關鍵瞬間，不用整段影片慢慢挑。`;
 }
 
 function phaseAwareCoachPlan(details, actionLabel) {
   const first = details.problems[0];
   const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
-  const rangeText = formatAcceptedRange(first.acceptedRange);
-  const valueText = formatDegree(first.value);
+  const angleHint = plainAngleHint(first);
   return {
     status: "needs_fix",
-    headline: `先修：${first.phaseLabel}${first.jointLabel}`,
-    focus: "分階段修正",
-    reason: Number.isFinite(Number(first.value))
-      ? `${timeText} 的 ${first.jointLabel} 是 ${valueText}，目前資料集容許區間是 ${rangeText}。`
-      : `${timeText} 的手部或平台狀態不穩，建議先用慢動作確認。`,
+    headline: `先修：${first.phaseLabel}的${first.jointLabel}`,
+    focus: "重點修正",
+    reason: angleHint
+      ? `${timeText}的${first.jointLabel}${angleHint}。`
+      : `${timeText}的手部或平台狀態不穩，建議先用慢動作確認。`,
     next_steps: [
       `把影片停在 ${timeText}，對照左邊 3D 小人。`,
       phaseIssueTips[first.code] || "先放慢動作，確認關鍵姿勢後再加速。",
@@ -1669,7 +1690,7 @@ function normalizePhaseAwareResult(result) {
     return {
       ...result,
       primary_issues: [],
-      coach_summary: `${actionLabel}關鍵階段穩定。系統已用資料集容許區間重新判讀，沒有在觸球、蓄力或出手瞬間找到明顯問題。`,
+      coach_summary: `${actionLabel}的關鍵動作很穩定，在觸球、蓄力、出手這幾個瞬間都沒有明顯問題。`,
       coach_plan: stablePhasePlan(actionLabel),
     };
   }
