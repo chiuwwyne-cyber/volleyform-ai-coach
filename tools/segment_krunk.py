@@ -14,6 +14,7 @@ import os
 import struct
 import sys
 
+import fast_simplification
 import numpy as np
 
 # Each articulable part maps to a proximal->distal pair of MediaPipe pose
@@ -248,39 +249,37 @@ def _rotation_y_to(dir_vec):
     return np.eye(3) + s * K + (1 - c) * (K @ K)
 
 
-def _decimate_model_tris(part_tris, grid):
-    """Vertex-cluster the part onto a uniform model-space grid.
-
-    Snap every vertex to the centroid of the vertices in its grid cell, then
-    keep each triangle whose three vertices fall in three distinct cells. This
-    rebuilds a closed, lower-resolution surface at grid resolution.
-
-    The previous method snapped to grid *corners* and dropped every triangle
-    that collapsed onto a shared corner. On a finely tessellated part almost all
-    triangles are smaller than a cell, so nearly all of them were dropped
-    without re-stitching the surface, punching the mesh full of holes (the
-    hollow torso/legs). Clustering keeps one representative per cell and the
-    faces that connect three different cells, so the surface stays watertight.
-    """
-    if grid <= 0:
-        return part_tris
+def _weld(part_tris):
+    """Triangle soup (N,3,3) -> indexed (vertices, faces), dropping degenerates."""
     verts = part_tris.reshape(-1, 3)
-    cells = np.floor(verts / grid).astype(np.int64)
-    _, inv = np.unique(cells, axis=0, return_inverse=True)
-    inv = inv.reshape(-1)
-    reps = np.zeros((inv.max() + 1, 3))
-    counts = np.zeros(inv.max() + 1)
-    np.add.at(reps, inv, verts)
-    np.add.at(counts, inv, 1)
-    reps /= counts[:, None]
-    tri_cells = inv.reshape(-1, 3)
-    keep = (
-        (tri_cells[:, 0] != tri_cells[:, 1])
-        & (tri_cells[:, 1] != tri_cells[:, 2])
-        & (tri_cells[:, 0] != tri_cells[:, 2])
+    uniq, inv = np.unique(np.round(verts, 4), axis=0, return_inverse=True)
+    faces = inv.reshape(-1, 3)
+    good = (
+        (faces[:, 0] != faces[:, 1])
+        & (faces[:, 1] != faces[:, 2])
+        & (faces[:, 0] != faces[:, 2])
     )
-    kept = reps[tri_cells[keep]]
-    return kept.astype(np.float32) if len(kept) else part_tris
+    return uniq.astype(np.float64), faces[good].astype(np.int32)
+
+
+def _decimate_model_tris(part_tris, reduction):
+    """Quadric edge-collapse decimation via fast_simplification.
+
+    Hand-rolled grid methods (corner-snap, vertex clustering, lofting) all left
+    surface artifacts on this dense, irregular STL — hollows, shoulder hairs, a
+    torn hip seam. A real quadric decimator collapses edges by geometric error,
+    so it keeps a clean watertight surface at a fraction of the triangles.
+    `reduction` is the fraction of faces to remove (0.85 -> keep ~15%).
+    """
+    verts, faces = _weld(part_tris)
+    if len(faces) < 60:
+        return part_tris
+    out_v, out_f = fast_simplification.simplify(
+        verts, faces, target_reduction=reduction
+    )
+    if len(out_f) == 0:
+        return part_tris
+    return out_v[out_f].astype(np.float32)  # back to triangle soup
 
 
 def _index_geometry(part_tris):
@@ -322,7 +321,7 @@ def _drop_radial_spikes(local_tris):
     return local_tris[keep] if keep.any() else local_tris
 
 
-def export_parts(tris, labels, anchors, out_path, decimate_grid=0.7):
+def export_parts(tris, labels, anchors, out_path, reduction=0.85):
     parts = {}
     # Overall figure scale so the frontend can size the mannequin to the pose.
     hip_mid = (anchors["hip_L"] + anchors["hip_R"]) / 2
@@ -330,37 +329,44 @@ def export_parts(tris, labels, anchors, out_path, decimate_grid=0.7):
     figure = {"model_height": 100.0, "shoulder_hip": float(np.linalg.norm(shoulder_mid - hip_mid))}
 
     for part, (a_name, b_name) in PART_BONES.items():
+        # The frontend draws the hand/fingers as capsules and skips the STL
+        # forearm (a featureless ball), so exporting it just bloats the asset.
+        if part in ("forearm_L", "forearm_R"):
+            continue
         mask = labels == part
         if mask.sum() == 0:
             continue
         p = anchors[a_name]
         d = anchors[b_name]
         length = float(np.linalg.norm(d - p))
-        model = _decimate_model_tris(tris[mask], decimate_grid)
+        model = _decimate_model_tris(tris[mask], reduction)
         R = _rotation_y_to(d - p).T  # world->local: align bone dir to +Y
         local = (model - p) @ R.T / length  # proximal at 0, distal at Y=1
         local = _drop_radial_spikes(local)
         positions, faces = _index_geometry(local.astype(np.float32))
         parts[part] = {"positions": positions, "faces": faces}
 
-    # Head + torso + hips: rebase around the torso axis (shoulder_mid->hip_mid),
-    # centered on hip_mid, scaled by shoulder_hip length, so the frontend can
-    # place them relative to the shoulder/hip landmarks.
+    # Trunk + head: rebased around the torso axis (shoulder_mid->hip_mid). The
+    # torso and hips are decimated together as one mesh so there is no seam or
+    # gap at the waist; the head is a ball offset off that axis.
     torso_len = max(figure["shoulder_hip"], 1e-6)
     R = _rotation_y_to(shoulder_mid - hip_mid).T
-    for part in ("head", "torso", "hips"):
-        mask = labels == part
-        if mask.sum() == 0:
-            continue
-        model = _decimate_model_tris(tris[mask], decimate_grid)
+    trunk_mask = (labels == "torso") | (labels == "hips")
+    if trunk_mask.any():
+        # Keep the trunk at full STL resolution: it is already low-poly (~1k
+        # faces) and its open rims (waist/armpits) fold into a visible crease if
+        # decimated at all, so leave it untouched.
+        model = tris[trunk_mask]
         local = (model - hip_mid) @ R.T / torso_len
-        # torso and hips are vertical columns on the shoulder->hip axis, so the
-        # radial spike filter applies; the head is an offset ball (large radial
-        # by design) and has no spikes, so leave it untouched.
-        if part != "head":
-            local = _drop_radial_spikes(local)
+        local = _drop_radial_spikes(local)
         positions, faces = _index_geometry(local.astype(np.float32))
-        parts[part] = {"positions": positions, "faces": faces}
+        parts["torso"] = {"positions": positions, "faces": faces}
+    head_mask = labels == "head"
+    if head_mask.any():
+        model = _decimate_model_tris(tris[head_mask], reduction)
+        local = (model - hip_mid) @ R.T / torso_len
+        positions, faces = _index_geometry(local.astype(np.float32))
+        parts["head"] = {"positions": positions, "faces": faces}
 
     payload = {"format": "krunk-parts-1", "figure": figure, "parts": parts}
     with open(out_path, "w", encoding="utf-8") as file:
@@ -383,10 +389,13 @@ def main():
     print("triangle counts per part:")
     for k in sorted(counts):
         print(f"  {k:12s} {counts[k]}")
-    render_labeled(tris, labels, f"{out_dir}/krunk_seg_front.png", "front")
-    render_labeled(tris, labels, f"{out_dir}/krunk_seg_side.png", "side")
-    render_bent(tris, labels, anchors, f"{out_dir}/krunk_bent.png")
-    print("rendered", out_dir)
+    try:
+        render_labeled(tris, labels, f"{out_dir}/krunk_seg_front.png", "front")
+        render_labeled(tris, labels, f"{out_dir}/krunk_seg_side.png", "side")
+        render_bent(tris, labels, anchors, f"{out_dir}/krunk_bent.png")
+        print("rendered", out_dir)
+    except ImportError:
+        print("(skipping debug renders: cv2 not installed)")
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     export_parts(tris, labels, anchors, os.path.join(root, "frontend", "assets", "krunk-parts.json"))
 
