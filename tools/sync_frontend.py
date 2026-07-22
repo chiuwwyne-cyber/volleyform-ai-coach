@@ -94,6 +94,9 @@ def _frontend_fingerprint():
         data = path.read_bytes()
         try:
             text = data.decode("utf-8")
+            # Normalize line endings so a git autocrlf checkout (LF->CRLF) does
+            # not change the hash and cause a spurious cache bump.
+            text = text.replace("\r\n", "\n").replace("\r", "\n")
             text = BUILD_RE.sub("BUILD", text)
             text = SERVICE_WORKER_RE.sub("shell", text)
             data = text.encode("utf-8")
