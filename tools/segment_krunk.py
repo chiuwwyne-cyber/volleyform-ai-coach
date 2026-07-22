@@ -249,33 +249,38 @@ def _rotation_y_to(dir_vec):
 
 
 def _decimate_model_tris(part_tris, grid):
-    """Merge vertices on a uniform model-space grid; drop degenerate tris.
+    """Vertex-cluster the part onto a uniform model-space grid.
 
-    Applied in the shared model space (before rebasing) so every part is
-    simplified at the same physical resolution and thin limbs are not collapsed.
+    Snap every vertex to the centroid of the vertices in its grid cell, then
+    keep each triangle whose three vertices fall in three distinct cells. This
+    rebuilds a closed, lower-resolution surface at grid resolution.
+
+    The previous method snapped to grid *corners* and dropped every triangle
+    that collapsed onto a shared corner. On a finely tessellated part almost all
+    triangles are smaller than a cell, so nearly all of them were dropped
+    without re-stitching the surface, punching the mesh full of holes (the
+    hollow torso/legs). Clustering keeps one representative per cell and the
+    faces that connect three different cells, so the surface stays watertight.
     """
     if grid <= 0:
         return part_tris
-    q = np.round(part_tris / grid) * grid
-    # Quantizing can weld two originally-separate rims onto shared grid points,
-    # leaving spike triangles that stretch across the part. Drop any triangle
-    # whose longest edge is far bigger than the grid (a spike), and degenerate
-    # triangles whose vertices collapsed together.
-    max_edge = grid * 4.0
-    keep = []
-    for f in range(len(q)):
-        a, b, c = q[f]
-        if np.allclose(a, b) or np.allclose(b, c) or np.allclose(a, c):
-            continue
-        longest = max(
-            np.linalg.norm(a - b),
-            np.linalg.norm(b - c),
-            np.linalg.norm(a - c),
-        )
-        if longest > max_edge:
-            continue
-        keep.append(q[f])
-    return np.array(keep, np.float32) if keep else part_tris
+    verts = part_tris.reshape(-1, 3)
+    cells = np.floor(verts / grid).astype(np.int64)
+    _, inv = np.unique(cells, axis=0, return_inverse=True)
+    inv = inv.reshape(-1)
+    reps = np.zeros((inv.max() + 1, 3))
+    counts = np.zeros(inv.max() + 1)
+    np.add.at(reps, inv, verts)
+    np.add.at(counts, inv, 1)
+    reps /= counts[:, None]
+    tri_cells = inv.reshape(-1, 3)
+    keep = (
+        (tri_cells[:, 0] != tri_cells[:, 1])
+        & (tri_cells[:, 1] != tri_cells[:, 2])
+        & (tri_cells[:, 0] != tri_cells[:, 2])
+    )
+    kept = reps[tri_cells[keep]]
+    return kept.astype(np.float32) if len(kept) else part_tris
 
 
 def _index_geometry(part_tris):
@@ -299,6 +304,24 @@ def _index_geometry(part_tris):
     return positions, faces
 
 
+def _drop_radial_spikes(local_tris):
+    """Drop triangles that spike radially off a limb/torso's Y axis.
+
+    After rebasing, a clean part is a slim tube around +Y (radius well under
+    ~0.6 bone-lengths). Vertex clustering can occasionally stitch a face across
+    two distant cells, throwing a vertex far out sideways as a thin feather.
+    Reject any triangle whose radial (XZ) distance is a clear outlier.
+    """
+    if len(local_tris) == 0:
+        return local_tris
+    radial = np.hypot(local_tris[:, :, 0], local_tris[:, :, 2])
+    # Even a bulky calf stays under ~0.7; spikes shoot past 1.0. A high per-part
+    # median must not lift the cutoff above the spikes, so cap it.
+    threshold = min(0.8, max(0.6, 2.0 * float(np.median(radial))))
+    keep = radial.max(axis=1) <= threshold
+    return local_tris[keep] if keep.any() else local_tris
+
+
 def export_parts(tris, labels, anchors, out_path, decimate_grid=0.7):
     parts = {}
     # Overall figure scale so the frontend can size the mannequin to the pose.
@@ -316,6 +339,7 @@ def export_parts(tris, labels, anchors, out_path, decimate_grid=0.7):
         model = _decimate_model_tris(tris[mask], decimate_grid)
         R = _rotation_y_to(d - p).T  # world->local: align bone dir to +Y
         local = (model - p) @ R.T / length  # proximal at 0, distal at Y=1
+        local = _drop_radial_spikes(local)
         positions, faces = _index_geometry(local.astype(np.float32))
         parts[part] = {"positions": positions, "faces": faces}
 
@@ -330,6 +354,11 @@ def export_parts(tris, labels, anchors, out_path, decimate_grid=0.7):
             continue
         model = _decimate_model_tris(tris[mask], decimate_grid)
         local = (model - hip_mid) @ R.T / torso_len
+        # torso and hips are vertical columns on the shoulder->hip axis, so the
+        # radial spike filter applies; the head is an offset ball (large radial
+        # by design) and has no spikes, so leave it untouched.
+        if part != "head":
+            local = _drop_radial_spikes(local)
         positions, faces = _index_geometry(local.astype(np.float32))
         parts[part] = {"positions": positions, "faces": faces}
 

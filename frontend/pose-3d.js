@@ -797,7 +797,7 @@ function createFigure(scene) {
 
   // Optional Krunk figurine layer. When its asset loads, the sliced mesh parts
   // replace the plain capsules; the capsule figure stays as the fallback.
-  const krunk = { active: false, bones: [], torsoParts: [], group: new THREE.Group() };
+  const krunk = { active: false, bones: [], torsoParts: [], handLimbs: [], group: new THREE.Group() };
   group.add(krunk.group);
 
   function attachKrunk(data) {
@@ -812,6 +812,10 @@ function createFigure(scene) {
         side: THREE.DoubleSide,
       });
     for (const [name, bone] of Object.entries(KRUNK_BONES)) {
+      // Forearms are drawn as clean capsules plus real finger capsules instead
+      // of the STL part: the model's hand is a featureless ball that decimates
+      // into spikes and shows no fingers, so the set (托球) hand shape is lost.
+      if (name === "forearm_L" || name === "forearm_R") continue;
       const geometry = data.geometries[name];
       if (!geometry) continue;
       const mesh = new THREE.Mesh(geometry, material());
@@ -827,8 +831,20 @@ function createFigure(scene) {
     }
     if (!krunk.bones.length) return false;
     krunk.active = true;
-    // Hide the capsule body; keep joint markers (they cap the seams) and shadow.
-    for (const limb of limbs) limb.mesh.visible = false;
+    // Hide the capsule body parts the STL replaces, but keep the forearm and
+    // finger capsules — they render the hand and fingers (the STL hand is a
+    // featureless ball). Recolor the kept capsules to the Krunk white.
+    for (const limb of limbs) {
+      const isForearm =
+        (limb.part.a === 13 && limb.part.b === 15) ||
+        (limb.part.a === 14 && limb.part.b === 16);
+      const keep = limb.part.joint === "wrist" || isForearm;
+      limb.mesh.visible = keep;
+      if (keep) {
+        limb.mesh.material.color.setHex(KRUNK_BODY_COLOR);
+        krunk.handLimbs.push(limb);
+      }
+    }
     torsoMesh.visible = false;
     chestMesh.visible = false;
     pelvisMesh.visible = false;
@@ -858,6 +874,11 @@ function createFigure(scene) {
         for (const part of krunk.torsoParts) {
           orientKrunkPart(part.mesh, hipMid, shoulderMid);
         }
+        for (const limb of krunk.handLimbs) {
+          orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
+          const status = limb.part.joint ? jointStatus?.[limb.part.joint] || "green" : "green";
+          limb.mesh.material.color.setHex(status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status]);
+        }
       } else {
         for (const limb of limbs) {
           orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
@@ -883,8 +904,16 @@ function createFigure(scene) {
         const position = toVec3(points[marker.index]);
         const status = marker.joint ? jointStatus?.[marker.joint] || "green" : "green";
         marker.mesh.position.copy(position);
-        marker.mesh.material.color.setHex(statusColor(marker.joint, jointStatus));
-        marker.mesh.visible = status !== "green";
+        if (krunk.active) {
+          // In Krunk mode the markers are permanent white ball-joints that cap
+          // the seams between the STL parts (and the capsule forearms/fingers),
+          // hiding the decimated part edges; they still turn yellow/red to flag.
+          marker.mesh.material.color.setHex(status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status]);
+          marker.mesh.visible = true;
+        } else {
+          marker.mesh.material.color.setHex(statusColor(marker.joint, jointStatus));
+          marker.mesh.visible = status !== "green";
+        }
         marker.halo.position.copy(position);
         marker.halo.visible = status === "yellow" || status === "red";
         if (marker.halo.visible) {
