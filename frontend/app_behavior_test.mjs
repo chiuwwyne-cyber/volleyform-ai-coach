@@ -507,9 +507,10 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(context.document.querySelector("#coachSummary").textContent, /最需要先調整/);
   assert.match(phaseIssueCard.innerHTML, /擊球瞬間/);
   assert.match(phaseIssueCard.innerHTML, /第 5\.7 秒/);
-  assert.match(phaseIssueCard.innerHTML, /118/);
-  assert.match(phaseIssueCard.innerHTML, /一般標準/);
-  assert.doesNotMatch(phaseIssueCard.innerHTML, /144|Old count|Old cue/);
+  assert.match(phaseIssueCard.innerHTML, /膝蓋/);
+  assert.match(phaseIssueCard.innerHTML, /膝蓋對齊腳尖/);
+  // No angle numbers should leak into the user-facing copy anymore.
+  assert.doesNotMatch(phaseIssueCard.innerHTML, /144|118|°|Old count|Old cue/);
 
   context.__appTestApi.renderResult({
     action: "spike",

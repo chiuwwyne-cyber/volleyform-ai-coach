@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260723-frontend-sync-v36"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260723-frontend-sync-v37"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1518,27 +1518,27 @@ function issueDirectionLabel(problem) {
   return "角度不在區間";
 }
 
-// Plain-language versions of the same idea, for the coaching text users read.
-function plainDirectionLabel(problem) {
-  if (problem.direction === "high") return "幅度偏大";
-  if (problem.direction === "low") return "幅度偏小";
-  return "需要調整";
-}
+// Describe what is off in plain words, with no angle numbers at all — a player
+// wants "手臂抬得不夠高", not "肩膀 25°，建議區間 67.8°-180°". Keyed by the
+// issue code, with a direction-based fallback.
+const phaseProblemPhrases = {
+  shoulder_low: "手臂（肩膀）抬得不夠高",
+  hands_not_high: "手舉得不夠高",
+  elbow_bad: "手肘太彎、沒有打開",
+  elbow_not_straight: "手臂沒有完全伸直",
+  elbow_position_bad: "手肘位置沒抓好",
+  knee_bad: "膝蓋沒有跟著一起彎、吸震不夠",
+  knee_too_bent: "膝蓋彎得太多",
+  wrist_low: "手腕位置太低",
+};
 
-// Turn a raw accepted angle range into something a player understands: which
-// way to move and roughly how far, instead of "肩膀 25°，建議區間 67.8°-180°".
-function plainAngleHint(problem) {
-  const value = Number(problem.value);
-  const range = problem.acceptedRange;
-  if (!Number.isFinite(value) || !Array.isArray(range) || range.length < 2) return "";
-  // Round to whole degrees — "68°" reads friendlier than "67.8°" for a player.
-  const deg = (n) => `${Math.round(Number(n))}°`;
-  const lo = Number(range[0]);
-  const hi = Number(range[1]);
-  if (problem.direction === "high" || (Number.isFinite(hi) && value > hi)) {
-    return `動作幅度比一般標準大了一些（約 ${deg(value)}，一般大約在 ${deg(hi)} 以內）`;
-  }
-  return `動作幅度比一般標準小了一些（約 ${deg(value)}，一般大約要 ${deg(lo)} 以上）`;
+function plainProblemPhrase(problem) {
+  const desc = phaseProblemPhrases[problem.code];
+  if (desc) return desc;
+  const joint = problem.jointLabel || "這個部位";
+  if (problem.direction === "high") return `${joint}的幅度偏大`;
+  if (problem.direction === "low") return `${joint}的幅度偏小`;
+  return `${joint}需要再調整`;
 }
 
 function phaseProblemDetails(phaseAnalysis, result = {}) {
@@ -1612,13 +1612,13 @@ function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
   const timeText = formatSeconds(problem.time_seconds) || "關鍵動作";
   const hasAngle = Number.isFinite(Number(problem.value));
   const tip = phaseIssueTips[problem.code] || original.fixes?.[0] || "先放慢動作，確認全身、手部與腳步都完整入鏡。";
-  const angleHint = plainAngleHint(problem);
-  const title = problem.title || `${problem.phaseLabel}的${problem.jointLabel}${plainDirectionLabel(problem)}`;
+  const phrase = plainProblemPhrase(problem);
+  const title = problem.title || `${problem.phaseLabel}：${phrase}`;
   const instantCue = hasAngle
     ? `${timeText}：${tip}`
     : `${timeText}：${original.instant_cue || problem.message || "先修正這個動作點"}`;
   const message = hasAngle
-    ? `在 ${actionLabel}${problem.phaseLabel}那一刻，你的${problem.jointLabel}和一般標準有落差。系統只看這個關鍵瞬間，不會整段影片一直挑毛病。${angleHint ? `${angleHint}。` : ""}`
+    ? `在 ${actionLabel}${problem.phaseLabel}那一刻，${phrase}。系統只看這個關鍵瞬間，不會整段影片一直挑毛病。`
     : (problem.message || original.message || "這個問題出現在關鍵動作的那一刻，主要是手部或平台的狀態。");
   const drill = hasAngle
     ? `慢動作做 8 次 ${actionLabel}，做到${problem.phaseLabel}時停一秒，照上面的提示調整${problem.jointLabel}。`
@@ -1652,24 +1652,23 @@ function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
 function phaseAwareCoachSummary(details, actionLabel) {
   const first = details.problems[0];
   const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
-  const angleHint = plainAngleHint(first);
+  const phrase = plainProblemPhrase(first);
   const tip = phaseIssueTips[first.code];
-  const base = `這支影片最需要先調整的是：${actionLabel}${first.phaseLabel}（約 ${timeText}）的${first.jointLabel}。`;
-  const detail = angleHint ? `${angleHint}。` : "";
+  const base = `這支影片最需要先調整的是：${actionLabel}${first.phaseLabel}（約 ${timeText}）的時候，${phrase}。`;
   const how = tip ? tip : "跟著左邊 3D 小人對照調整就可以。";
-  return `${base}${detail}${how}只要抓住這個關鍵瞬間，不用整段影片慢慢挑。`;
+  return `${base}${how}只要抓住這個關鍵瞬間，不用整段影片慢慢挑。`;
 }
 
 function phaseAwareCoachPlan(details, actionLabel) {
   const first = details.problems[0];
   const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
-  const angleHint = plainAngleHint(first);
+  const phrase = plainProblemPhrase(first);
   return {
     status: "needs_fix",
     headline: `先修：${first.phaseLabel}的${first.jointLabel}`,
     focus: "重點修正",
-    reason: angleHint
-      ? `${timeText}的${first.jointLabel}${angleHint}。`
+    reason: first.code
+      ? `${timeText}的時候，${phrase}。`
       : `${timeText}的手部或平台狀態不穩，建議先用慢動作確認。`,
     next_steps: [
       `把影片停在 ${timeText}，對照左邊 3D 小人。`,
