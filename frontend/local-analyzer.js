@@ -359,7 +359,7 @@ Object.assign(FEEDBACK, {
 });
 
 let visionFilesetPromise;
-let poseLandmarkerPromise;
+const poseLandmarkerPromises = {};
 let handLandmarkerPromise;
 let lastPoseTimestamp = -1;
 let lastHandTimestamp = -1;
@@ -398,12 +398,17 @@ async function visionFileset() {
   return visionFilesetPromise;
 }
 
-async function poseLandmarker() {
-  if (!poseLandmarkerPromise) {
-    poseLandmarkerPromise = visionFileset().then((vision) =>
+async function poseLandmarker(variant = "lite") {
+  // "full" is the larger, more accurate MediaPipe model — worth its extra size
+  // and slower inference on low-quality footage (blur / low light / low res).
+  // Cached per variant so switching power modes doesn't rebuild the other one.
+  const model =
+    variant === "full" ? "pose_landmarker_full.task" : "pose_landmarker_lite.task";
+  if (!poseLandmarkerPromises[variant]) {
+    poseLandmarkerPromises[variant] = visionFileset().then((vision) =>
       PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: assetUrl("./models/pose_landmarker_lite.task"),
+          modelAssetPath: assetUrl(`./models/${model}`),
           delegate: "CPU",
         },
         runningMode: "VIDEO",
@@ -415,7 +420,7 @@ async function poseLandmarker() {
       }),
     );
   }
-  return poseLandmarkerPromise;
+  return poseLandmarkerPromises[variant];
 }
 
 async function handLandmarker() {
@@ -1018,11 +1023,32 @@ function crouchNear(frames, contact, radius = 4) {
   return maxIndex(hipYs, start, stop);
 }
 
+// Low-quality guard: skip frames where the key upper-body joints aren't clearly
+// seen (blur, occlusion, low light) so a garbage frame is never chosen as the
+// key moment on a poor clip. MediaPipe gives each landmark a visibility score.
+const PHASE_VIS_MIN = 0.5;
+const PHASE_KEY_LANDMARKS = [11, 12, 15, 16];
+function frameReliability(points) {
+  let sum = 0;
+  for (const i of PHASE_KEY_LANDMARKS) {
+    const v = points[i]?.visibility;
+    sum += typeof v === "number" ? v : 1;
+  }
+  return sum / PHASE_KEY_LANDMARKS.length;
+}
+function pickContact(metric, reliable) {
+  const masked = metric.map((value, i) => (reliable[i] ? value : Infinity));
+  const idx = minIndex(masked);
+  // If nothing was reliable, fall back to the raw metric rather than frame 0.
+  return Number.isFinite(masked[idx]) ? idx : minIndex(metric);
+}
+
 function segmentPhaseAction(action, frames) {
   if (!PHASE_RULES[action] || frames.length < MIN_PHASE_FRAMES) return null;
+  const reliable = frames.map((frame) => frameReliability(frame.landmarks) >= PHASE_VIS_MIN);
   if (action === "spike" || action === "serve" || action === "block") {
     const wristYs = smoothValues(frames.map((frame) => wristY(frame.landmarks)));
-    const contact = minIndex(wristYs);
+    const contact = pickContact(wristYs, reliable);
     return { contact, crouch: crouchBefore(frames, contact) };
   }
   if (action === "set") {
@@ -1033,7 +1059,7 @@ function segmentPhaseAction(action, frames) {
       const overheadPenalty = wrist < shoulderY(points) ? 0 : 0.35;
       return Math.abs(wrist - target) + wristGap(points) * 1.2 + wristLevelGap(points) + overheadPenalty;
     });
-    const contact = minIndex(scores);
+    const contact = pickContact(scores, reliable);
     return { contact, crouch: crouchNear(frames, contact) };
   }
   if (action === "receive") {
@@ -1045,7 +1071,7 @@ function segmentPhaseAction(action, frames) {
       const lowPlatformPenalty = wrist > shoulders ? 0 : 0.35;
       return Math.abs(wrist - target) + wristGap(points) * 1.8 + wristLevelGap(points) * 1.2 + lowPlatformPenalty;
     });
-    const contact = minIndex(scores);
+    const contact = pickContact(scores, reliable);
     return { contact, crouch: crouchNear(frames, contact) };
   }
   return null;
@@ -1712,8 +1738,9 @@ export async function analyzeVideoLocally({
     // the phone.
     const duration = Math.min(rawDuration, 180);
 
-    onProgress("載入手機端姿勢模型", 0);
-    const pose = await poseLandmarker();
+    const poseVariant = powerMode === "quality" ? "full" : "lite";
+    onProgress(poseVariant === "full" ? "載入高精度姿勢模型" : "載入手機端姿勢模型", 0);
+    const pose = await poseLandmarker(poseVariant);
     const needsHands = modalities.includes("hands");
     const hands = needsHands ? await handLandmarker() : null;
 
@@ -1906,8 +1933,9 @@ export async function analyzeImageLocally({
     canvas.height = Math.max(1, Math.round(sourceHeight * scale));
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-    onProgress("載入手機端姿勢模型", 0);
-    const pose = await poseLandmarker();
+    const poseVariant = powerMode === "quality" ? "full" : "lite";
+    onProgress(poseVariant === "full" ? "載入高精度姿勢模型" : "載入手機端姿勢模型", 0);
+    const pose = await poseLandmarker(poseVariant);
     const needsHands = modalities.includes("hands");
     const hands = needsHands ? await handLandmarker() : null;
     const requestedTimestamp = performance.now();

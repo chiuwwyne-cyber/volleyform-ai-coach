@@ -11,7 +11,7 @@ the original model's likeness.
 
 ## MediaPipe Tasks Vision
 
-This project includes `@mediapipe/tasks-vision` version `0.10.35` and the official Pose Landmarker Lite and Hand Landmarker model assets.
+This project includes `@mediapipe/tasks-vision` version `0.10.35` and the official Pose Landmarker Lite, Pose Landmarker Full (used by the high-accuracy mode for low-quality footage), and Hand Landmarker model assets.
 
 - Project: https://github.com/google-ai-edge/mediapipe
 - Web documentation: https://ai.google.dev/edge/mediapipe/solutions/guide
