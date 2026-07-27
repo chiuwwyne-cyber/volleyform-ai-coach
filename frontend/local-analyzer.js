@@ -1708,9 +1708,9 @@ export async function analyzeVideoLocally({
     const rawDuration = Number.isFinite(video.duration) ? video.duration : 0;
     if (!rawDuration) throw new Error("影片沒有可分析的時間長度。");
     // Analyse the whole clip (not just the first 12s) so the key moment is
-    // caught wherever it happens; cap at 60s so a very long video can't stall
+    // caught wherever it happens; cap at 180s so a very long video can't stall
     // the phone.
-    const duration = Math.min(rawDuration, 60);
+    const duration = Math.min(rawDuration, 180);
 
     onProgress("載入手機端姿勢模型", 0);
     const pose = await poseLandmarker();
@@ -1719,11 +1719,12 @@ export async function analyzeVideoLocally({
 
     const requestedSamples = sampleCountForMode(powerMode);
     // Spread samples across the whole clip. A longer clip gets more samples so
-    // the contact frame stays reasonably precise, up to a cap that bounds
-    // on-device analysis time.
+    // the contact frame stays reasonably precise, up to a per-mode cap that
+    // bounds on-device analysis time (higher precision modes allow more).
+    const maxSamples = powerMode === "mobile" ? 32 : powerMode === "quality" ? 80 : 54;
     const sampleCount = Math.max(
       1,
-      Math.min(48, Math.max(requestedSamples, Math.ceil(duration * 2.5))),
+      Math.min(maxSamples, Math.max(requestedSamples, Math.ceil(duration * 2.5))),
     );
     let issueCounts = new Map();
     let issueTimes = new Map();
