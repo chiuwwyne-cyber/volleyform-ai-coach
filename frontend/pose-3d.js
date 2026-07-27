@@ -465,6 +465,19 @@ const HAND_INDICES = [15, 16, 17, 18, 19, 20, 21, 22];
 const LOWER_BODY_INDICES = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
 const SEQUENCE_ROOT_FOLLOW = 0.28;
 const SEQUENCE_POINT_FOLLOW = 0.68;
+const ACTUAL_RETARGET_LIMITS = {
+  elbow: [70, 178],
+  shoulder: [10, 178],
+  knee: [78, 178],
+};
+const ACTUAL_RETARGET_DEFAULTS = {
+  spike: { elbow: 150, shoulder: 75, knee: 142 },
+  block: { elbow: 168, shoulder: 128, knee: 145 },
+  serve: { elbow: 155, shoulder: 105, knee: 160 },
+  receive: { elbow: 174, shoulder: 68, knee: 132 },
+  set: { elbow: 154, shoulder: 150, knee: 152 },
+  default: { elbow: 155, shoulder: 95, knee: 150 },
+};
 
 const JOINT_MARKERS = [
   { index: 11, joint: "shoulder", radius: 0.044 },
@@ -662,6 +675,58 @@ function rawPoseTriples(landmarks) {
   return raw;
 }
 
+function finitePoseAngle(points, aIdx, bIdx, cIdx, fallback, limits) {
+  const a = landmarkTriple(points?.[aIdx]);
+  const b = landmarkTriple(points?.[bIdx]);
+  const c = landmarkTriple(points?.[cIdx]);
+  if (!a || !b || !c) return fallback;
+  const ab = vecSub(a, b);
+  const cb = vecSub(c, b);
+  if (Math.hypot(...ab) < 1e-5 || Math.hypot(...cb) < 1e-5) return fallback;
+  const angle = angleBetween(a, b, c);
+  if (!Number.isFinite(angle)) return fallback;
+  return clamp(angle, limits[0], limits[1]);
+}
+
+function retargetDefaults(action) {
+  return ACTUAL_RETARGET_DEFAULTS[action] || ACTUAL_RETARGET_DEFAULTS.default;
+}
+
+function actualFrameTargets(raw, action) {
+  const defaults = retargetDefaults(action);
+  const elbowLimits = ACTUAL_RETARGET_LIMITS.elbow;
+  const shoulderLimits = ACTUAL_RETARGET_LIMITS.shoulder;
+  const kneeLimits = ACTUAL_RETARGET_LIMITS.knee;
+
+  return {
+    elbowL: finitePoseAngle(raw, 11, 13, 15, defaults.elbow, elbowLimits),
+    elbowR: finitePoseAngle(raw, 12, 14, 16, defaults.elbow, elbowLimits),
+    shoulderL: finitePoseAngle(raw, 13, 11, 23, defaults.shoulder, shoulderLimits),
+    shoulderR: finitePoseAngle(raw, 14, 12, 24, defaults.shoulder, shoulderLimits),
+    kneeL: finitePoseAngle(raw, 23, 25, 27, defaults.knee, kneeLimits),
+    kneeR: finitePoseAngle(raw, 24, 26, 28, defaults.knee, kneeLimits),
+  };
+}
+
+function statusHasIssue(jointStatus, joints) {
+  return joints.some((joint) => {
+    const status = jointStatus?.[joint];
+    return status === "yellow" || status === "red";
+  });
+}
+
+function actualShapeVariant(action, jointStatus) {
+  if (action === "set" && statusHasIssue(jointStatus, ["wrist", "elbow", "shoulder"])) return "mistake";
+  if (action === "receive" && statusHasIssue(jointStatus, ["wrist", "elbow", "shoulder"])) return "mistake";
+  return "correct";
+}
+
+function retargetActualPose(raw, action, jointStatus) {
+  const points = buildPose(actualFrameTargets(raw, action));
+  applyActionShape(points, action, actualShapeVariant(action, jointStatus), {});
+  return points;
+}
+
 function normalizePosePoints(raw, center, scale) {
   return raw.map((point) => [
     (point[0] - center[0]) * scale,
@@ -773,7 +838,7 @@ function preparePoseForDisplay(landmarks) {
   return prepared;
 }
 
-function preparePoseSequenceForDisplay(sequence, { caption = "" } = {}) {
+function preparePoseSequenceForDisplay(sequence, { caption = "", action = "spike" } = {}) {
   const rawFrames = (sequence || [])
     .filter((frame) => frame.landmarks?.length >= 33)
     .map((frame) => ({
@@ -788,30 +853,20 @@ function preparePoseSequenceForDisplay(sequence, { caption = "" } = {}) {
   if (!rawFrames.length) return [];
   if (rawFrames.length === 1) {
     return rawFrames.map((frame) => ({
-      points: preparePoseForDisplay(frame.landmarks),
+      points: retargetActualPose(frame.raw, action, frame.jointStatus),
       jointStatus: frame.jointStatus,
       hold: frame.hold,
       caption: frame.caption,
     }));
   }
 
-  const centers = rawFrames.map((frame) => poseDisplayCenter(frame.raw));
-  const center = medianTriple(centers);
-  const heights = rawFrames.map((frame) => poseDisplayHeight(frame.raw, poseBounds(frame.raw)));
-  const height = Math.max(medianNumber(heights, DISPLAY_TARGET_HEIGHT), 0.35);
-  const scale = clamp(DISPLAY_TARGET_HEIGHT / height, 0.4, 5);
-
   let frames = rawFrames.map((frame) => ({
-    points: normalizePosePoints(frame.raw, center, scale),
+    points: retargetActualPose(frame.raw, action, frame.jointStatus),
     jointStatus: frame.jointStatus,
     hold: frame.hold,
     caption: frame.caption,
   }));
 
-  frames = compressDepthAcrossFrames(frames, DISPLAY_TARGET_HEIGHT * 0.75);
-  frames = addFallbackDepthAcrossFrames(frames);
-  for (const frame of frames) applyMinimumDisplayWidths(frame.points);
-  frames = stabilizeSequenceRoots(frames);
   frames = smoothSequencePoints(frames);
   return frames;
 }
@@ -1257,14 +1312,14 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     animation.frameId = requestAnimationFrame(tick);
   }
 
-  function playPoseSequence(sequence, { caption = "影片分析到的錯誤姿勢" } = {}) {
+  function playPoseSequence(sequence, { caption = "影片分析到的錯誤姿勢", action = "spike" } = {}) {
     stopAnimation();
     if (!sequence?.length || typeof requestAnimationFrame !== "function") {
       setStaticPose(null, null);
       return;
     }
 
-    let frames = preparePoseSequenceForDisplay(sequence, { caption });
+    let frames = preparePoseSequenceForDisplay(sequence, { caption, action });
     if (!frames.length) {
       setStaticPose(null, null);
       return;
@@ -1310,14 +1365,17 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     animation.frameId = requestAnimationFrame(tick);
   }
 
-  function playPoseSequenceForVideo(sequence, { caption = "影片中的實際動作", loop = false, speedFactor = 1 } = {}) {
+  function playPoseSequenceForVideo(
+    sequence,
+    { caption = "影片中的實際動作", loop = false, speedFactor = 1, action = "spike" } = {},
+  ) {
     stopAnimation();
     if (!sequence?.length || typeof requestAnimationFrame !== "function") {
       setStaticPose(null, null);
       return;
     }
 
-    let frames = preparePoseSequenceForDisplay(sequence, { caption });
+    let frames = preparePoseSequenceForDisplay(sequence, { caption, action });
     if (!frames.length) {
       setStaticPose(null, null);
       return;
