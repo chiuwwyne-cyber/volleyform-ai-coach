@@ -1705,8 +1705,12 @@ export async function analyzeVideoLocally({
 
   try {
     if (video.readyState < 1) await waitForEvent(video, "loadedmetadata");
-    const duration = Math.min(Number.isFinite(video.duration) ? video.duration : 0, 12);
-    if (!duration) throw new Error("影片沒有可分析的時間長度。");
+    const rawDuration = Number.isFinite(video.duration) ? video.duration : 0;
+    if (!rawDuration) throw new Error("影片沒有可分析的時間長度。");
+    // Analyse the whole clip (not just the first 12s) so the key moment is
+    // caught wherever it happens; cap at 60s so a very long video can't stall
+    // the phone.
+    const duration = Math.min(rawDuration, 60);
 
     onProgress("載入手機端姿勢模型", 0);
     const pose = await poseLandmarker();
@@ -1714,7 +1718,13 @@ export async function analyzeVideoLocally({
     const hands = needsHands ? await handLandmarker() : null;
 
     const requestedSamples = sampleCountForMode(powerMode);
-    const sampleCount = Math.max(1, Math.min(requestedSamples, Math.ceil(duration * 5)));
+    // Spread samples across the whole clip. A longer clip gets more samples so
+    // the contact frame stays reasonably precise, up to a cap that bounds
+    // on-device analysis time.
+    const sampleCount = Math.max(
+      1,
+      Math.min(48, Math.max(requestedSamples, Math.ceil(duration * 2.5))),
+    );
     let issueCounts = new Map();
     let issueTimes = new Map();
     const angleSums = { elbow: 0, knee: 0 };

@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20260727-frontend-sync-v37";
+        const currentFrontendBuild = "20260727-frontend-sync-v38";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -171,9 +171,10 @@
             <div><strong>01</strong><span>鏡頭固定</span></div>
             <div><strong>02</strong><span>全身入鏡</span></div>
             <div><strong>03</strong><span>光線充足</span></div>
+            <div><strong>04</strong><span>拍到觸球</span></div>
           </div>
           <p id="recordStatus" role="status" aria-live="polite">
-            可直接錄製 12 秒內的動作。錄完先回放確認，再送出分析。
+            會分析整支影片，但建議錄 5–10 秒、拍到完整動作（含觸球那一刻）最準確；影片太長也可以，只是關鍵時間點會抓得比較粗。錄完先回放確認，再送出分析。
           </p>
         </div>
       </section>
@@ -270,7 +271,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260727-frontend-sync-v37";
+        const build = window.VOLLEYFORM_BUILD || "20260727-frontend-sync-v38";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         document.write('<script src="./app.js?v=' + version + '"><\/script>');
