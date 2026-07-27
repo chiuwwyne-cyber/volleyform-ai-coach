@@ -358,6 +358,20 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(poseSource, /relativeSecondCaption/);
   assert.match(poseSource, /第 \$\{second\} 秒/);
   assert.match(poseSource, /constrainHumanProportions\(points\)/);
+  for (const phase of [
+    "block_press",
+    "serve_contact",
+    "receive_platform",
+    "set_release",
+    "spikePhase",
+  ]) {
+    assert.match(poseSource, new RegExp(phase));
+  }
+  assert.match(poseSource, /frameBallPoint/);
+  assert.match(poseSource, /shapeBlockBiomechanics/);
+  assert.match(poseSource, /shapeServeBiomechanics/);
+  assert.doesNotMatch(poseSource, /actualShapeVariant/);
+  assert.doesNotMatch(poseSource, /applyActionShape\(points,\s*action,\s*"mistake"/);
 
   const backendUrl = context.document.querySelector("#backendUrl");
   backendUrl.value = "http://192.168.1.10:8000/";

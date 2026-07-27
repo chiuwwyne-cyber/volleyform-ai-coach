@@ -189,26 +189,32 @@ function buildPose(targets) {
 
 const CORRECT_CYCLES = {
   block: [
-    { elbow: 160, knee: 155, shoulder: 95, hold: 720, cue: "攔網預備：膝蓋微彎，雙手在胸前" },
-    { elbow: 150, knee: 112, shoulder: 70, hold: 680, cue: "下蹲蓄力：髖、膝、腳踝一起彎" },
-    { elbow: 178, knee: 174, shoulder: 178, hold: 820, cue: "向上封網：手臂穿過球，手掌壓住路線" },
-    { elbow: 165, knee: 140, shoulder: 120, hold: 620, cue: "落地緩衝：膝蓋對齊腳尖" },
+    { elbow: 152, knee: 152, shoulder: 90, hold: 620, cue: "攔網預備：重心在腳掌前半部，雙手在臉前", ball: [0.18, -1.0, 0.06], actionPhase: "block_ready" },
+    { elbow: 142, knee: 112, shoulder: 68, hold: 640, cue: "縮：髖、膝、踝一起彎，手臂不往後甩太大", ball: [0.16, -1.12, 0.04], actionPhase: "block_load" },
+    { elbow: 166, knee: 166, shoulder: 148, root: [0, -0.24, 0], hold: 560, cue: "放：髖、膝、踝伸直，雙手直上", ball: [0.14, -1.18, 0.02], actionPhase: "block_rise" },
+    { elbow: 178, knee: 174, shoulder: 176, root: [0, -0.42, 0], hold: 720, cue: "封網：手掌過網上方，手腕壓住球路", ballAttach: "block_hands", actionPhase: "block_press" },
+    { elbow: 158, knee: 130, shoulder: 105, root: [0, -0.1, 0], hold: 660, cue: "落地：膝蓋對齊腳尖，髖膝踝一起吸震", ball: [0.48, -0.8, 0.46], actionPhase: "block_landing" },
   ],
   serve: [
-    { elbow: 160, knee: 170, shoulder: 35, hold: 700, cue: "發球預備：身體側身，非慣用手托球" },
-    { elbow: 135, knee: 160, shoulder: 105, hold: 720, cue: "拋球與引臂：肩膀放鬆，不要聳肩" },
-    { elbow: 176, knee: 168, shoulder: 172, hold: 760, cue: "最高點擊球：手掌在頭前上方" },
-    { elbow: 165, knee: 150, shoulder: 90, hold: 620, cue: "順勢收臂：核心帶動，不硬拉肩膀" },
+    { elbow: 158, knee: 168, shoulder: 38, hold: 680, cue: "發球預備：身體側身，左手托球，右手放鬆", ballAttach: "serve_toss_hand", actionPhase: "serve_ready" },
+    { elbow: 148, knee: 158, shoulder: 82, hold: 640, cue: "拋球：左手往上送，右手開始引臂", ball: [0.02, -1.24, 0.05], actionPhase: "serve_toss" },
+    { elbow: 118, knee: 148, shoulder: 118, armSwingR: -24, hold: 620, cue: "開：右肩往後拉，胸口打開，核心穩住", ball: [0.08, -1.28, 0.08], actionPhase: "serve_load" },
+    { elbow: 176, knee: 170, shoulder: 172, root: [0, -0.1, 0.04], hold: 620, cue: "擊球：手在頭前上方，手肘打開後再壓腕", ballAttach: "wrist_r", actionPhase: "serve_contact" },
+    { elbow: 150, knee: 150, shoulder: 86, armSwingR: 18, root: [0, 0, 0.08], hold: 660, cue: "收臂：手臂順勢往前下方，不硬拉肩膀", ball: [0.48, -0.68, 0.82], actionPhase: "serve_follow" },
   ],
   receive: [
-    { elbow: 170, knee: 150, shoulder: 55, hold: 700, cue: "接球預備：重心低，腳先到球後面" },
-    { elbow: 178, knee: 118, shoulder: 72, hold: 860, cue: "平台鎖穩：手肘伸直，前臂成一整片" },
-    { elbow: 176, knee: 135, shoulder: 65, hold: 700, cue: "面向目標：用身體角度送球" },
+    { elbow: 168, knee: 142, shoulder: 48, root: [0, 0, -0.18], hold: 640, cue: "接球預備：腳先到球後面，重心低", ball: [0.1, -0.52, -0.95], actionPhase: "receive_ready" },
+    { elbow: 172, knee: 125, shoulder: 58, root: [-0.06, 0, -0.06], hold: 540, cue: "移動：小碎步調整，平台先不要亂伸", ball: [0.04, -0.38, -0.48], actionPhase: "receive_step" },
+    { elbow: 178, knee: 112, shoulder: 72, root: [0, 0, 0], hold: 760, cue: "縮：膝蓋和髖一起彎，平台鎖成一整片", ballAttach: "platform", actionPhase: "receive_platform" },
+    { elbow: 176, knee: 132, shoulder: 66, root: [0, -0.02, 0.06], hold: 620, cue: "放：用腿和身體角度送球，不用手撈", ball: [0.0, -0.86, 0.46], actionPhase: "receive_redirect" },
+    { elbow: 166, knee: 148, shoulder: 52, root: [0, 0, 0.12], hold: 620, cue: "回復：平台放鬆，腳步準備下一球", ball: [0.04, -1.16, 0.86], actionPhase: "receive_recover" },
   ],
   set: [
-    { elbow: 150, knee: 158, shoulder: 145, hold: 760, cue: "舉球預備：雙手在額頭上方，手型成三角" },
-    { elbow: 158, knee: 146, shoulder: 158, hold: 760, cue: "接球緩衝：手指張開，手腕放鬆" },
-    { elbow: 172, knee: 168, shoulder: 168, hold: 820, cue: "腿部送球：膝蓋伸展，球往上走" },
+    { elbow: 145, knee: 152, shoulder: 138, hold: 640, cue: "舉球預備：雙手在額頭上方，手型成三角", ball: [0, -1.16, 0.1], actionPhase: "set_ready" },
+    { elbow: 152, knee: 142, shoulder: 154, hold: 620, cue: "接球：手指張開成碗狀，球進到額頭上方", ballAttach: "set_hands", actionPhase: "set_catch" },
+    { elbow: 146, knee: 132, shoulder: 150, hold: 560, cue: "縮：手腕放鬆，膝蓋微彎吸收球", ballAttach: "set_hands", actionPhase: "set_cushion" },
+    { elbow: 172, knee: 166, shoulder: 168, root: [0, -0.06, 0], hold: 680, cue: "放：腿部先送，手指最後推出球", ball: [0.02, -1.36, 0.08], actionPhase: "set_release" },
+    { elbow: 162, knee: 156, shoulder: 132, hold: 620, cue: "回復：雙手自然收回，重心回到腳掌前半部", ball: [0.04, -1.58, 0.1], actionPhase: "set_recover" },
   ],
 };
 
@@ -255,13 +261,14 @@ function setPoint(points, index, x, y, z) {
   points[index] = [x, y, z];
 }
 
-function shapeSetHands(points, variant) {
+function shapeSetHands(points, variant, options = {}) {
   const head = points[HEAD_INDEX];
   const shoulderCenterX = (points[11][0] + points[12][0]) / 2;
-  const z = head[2] + 0.06;
-  const wristY = variant === "mistake" ? head[1] + 0.1 : head[1] - 0.18;
-  const elbowY = variant === "mistake" ? head[1] + 0.22 : head[1] + 0.04;
-  const spread = variant === "mistake" ? 0.22 : 0.12;
+  const z = options.z ?? head[2] + 0.06;
+  const wristY = options.wristY ?? (variant === "mistake" ? head[1] + 0.1 : head[1] - 0.18);
+  const elbowY = options.elbowY ?? (variant === "mistake" ? head[1] + 0.22 : head[1] + 0.04);
+  const spread = options.spread ?? (variant === "mistake" ? 0.22 : 0.12);
+  const fingerY = options.fingerY ?? wristY - 0.055;
 
   setPoint(points, 13, shoulderCenterX - spread * 1.15, elbowY, z);
   setPoint(points, 14, shoulderCenterX + spread * 1.15, elbowY, z);
@@ -269,25 +276,67 @@ function shapeSetHands(points, variant) {
   setPoint(points, 16, shoulderCenterX + spread, wristY, z);
   setPoint(points, 17, shoulderCenterX - spread - 0.035, wristY - 0.03, z + 0.015);
   setPoint(points, 18, shoulderCenterX + spread + 0.035, wristY - 0.03, z + 0.015);
-  setPoint(points, 19, shoulderCenterX - 0.035, wristY - 0.055, z + 0.02);
-  setPoint(points, 20, shoulderCenterX + 0.035, wristY - 0.055, z + 0.02);
+  setPoint(points, 19, shoulderCenterX - 0.035, fingerY, z + 0.02);
+  setPoint(points, 20, shoulderCenterX + 0.035, fingerY, z + 0.02);
   setPoint(points, 21, shoulderCenterX - spread * 0.45, wristY + 0.035, z - 0.005);
   setPoint(points, 22, shoulderCenterX + spread * 0.45, wristY + 0.035, z - 0.005);
 }
 
-function shapeReceivePlatform(points, variant) {
+function shapeReceivePlatform(points, variant, options = {}) {
   const centerX = (points[23][0] + points[24][0]) / 2;
-  const y = variant === "mistake" ? -0.08 : -0.18;
-  const z = variant === "mistake" ? -0.02 : -0.08;
-  const gap = variant === "mistake" ? 0.2 : 0.045;
-  setPoint(points, 13, centerX - 0.2, -0.28, z);
-  setPoint(points, 14, centerX + 0.2, -0.28, z);
+  const y = options.y ?? (variant === "mistake" ? 0.02 : -0.02);
+  const z = options.z ?? (variant === "mistake" ? 0.02 : 0.18);
+  const gap = options.gap ?? (variant === "mistake" ? 0.2 : 0.045);
+  const elbowY = options.elbowY ?? -0.24;
+  setPoint(points, 13, centerX - 0.26, elbowY, z);
+  setPoint(points, 14, centerX + 0.26, elbowY, z);
   setPoint(points, 15, centerX - gap, y, z);
   setPoint(points, 16, centerX + gap, y + (variant === "mistake" ? 0.05 : 0), z);
   setPoint(points, 17, centerX - gap - 0.03, y + 0.03, z);
   setPoint(points, 18, centerX + gap + 0.03, y + 0.03, z);
   setPoint(points, 19, centerX - gap * 0.5, y + 0.045, z);
   setPoint(points, 20, centerX + gap * 0.5, y + 0.045, z);
+}
+
+function shapeSetBiomechanics(points, variant, frame = {}) {
+  if (variant === "mistake") {
+    shapeSetHands(points, "mistake");
+    return;
+  }
+  const head = points[HEAD_INDEX];
+  const phase = frame.actionPhase;
+  if (phase === "set_catch") {
+    shapeSetHands(points, "correct", { wristY: head[1] - 0.2, elbowY: head[1] + 0.02, spread: 0.13 });
+  } else if (phase === "set_cushion") {
+    shapeSetHands(points, "correct", { wristY: head[1] - 0.13, elbowY: head[1] + 0.07, spread: 0.14, fingerY: head[1] - 0.2 });
+  } else if (phase === "set_release") {
+    shapeSetHands(points, "correct", { wristY: head[1] - 0.34, elbowY: head[1] - 0.08, spread: 0.1, fingerY: head[1] - 0.42 });
+  } else if (phase === "set_recover") {
+    shapeSetHands(points, "correct", { wristY: head[1] - 0.05, elbowY: head[1] + 0.1, spread: 0.14 });
+  } else {
+    shapeSetHands(points, "correct");
+  }
+}
+
+function shapeReceiveBiomechanics(points, variant, frame = {}) {
+  if (variant === "mistake") {
+    shapeReceivePlatform(points, "mistake");
+    return;
+  }
+  const phase = frame.actionPhase;
+  if (phase === "receive_ready") {
+    shapeReceivePlatform(points, "correct", { y: 0.08, z: 0.16, gap: 0.08, elbowY: -0.18 });
+  } else if (phase === "receive_step") {
+    shapeReceivePlatform(points, "correct", { y: 0.06, z: 0.2, gap: 0.06, elbowY: -0.2 });
+    shapeLeftFootInward(points, 0.35);
+  } else if (phase === "receive_platform") {
+    shapeReceivePlatform(points, "correct", { y: 0.04, z: 0.24, gap: 0.035, elbowY: -0.24 });
+  } else if (phase === "receive_redirect") {
+    shapeReceivePlatform(points, "correct", { y: -0.02, z: 0.2, gap: 0.04, elbowY: -0.26 });
+    offsetPoseIndices(points, UPPER_BODY_INDICES, 0, -0.02, 0.03);
+  } else {
+    shapeReceivePlatform(points, "correct");
+  }
 }
 
 function offsetPoint(points, index, dx = 0, dy = 0, dz = 0) {
@@ -327,6 +376,88 @@ function setOpenSpikeHand(points, side, wrist, spread = 1, palmTilt = 0) {
   setPoint(points, pinky, wrist[0] - sideSign * 0.075 * spread, wrist[1] - 0.09 * spread, wrist[2] + palmTilt - 0.02);
   setPoint(points, index, wrist[0] + sideSign * 0.075 * spread, wrist[1] - 0.105 * spread, wrist[2] + palmTilt + 0.015);
   setPoint(points, thumb, wrist[0] + sideSign * 0.12 * spread, wrist[1] - 0.035 * spread, wrist[2] + palmTilt - 0.065);
+}
+
+function shapeBlockHands(points, phase) {
+  const head = points[HEAD_INDEX];
+  const centerX = (points[11][0] + points[12][0]) / 2;
+  const ready = {
+    block_ready: { elbowY: head[1] + 0.18, wristY: head[1] - 0.02, spread: 0.2, z: head[2] - 0.02 },
+    block_load: { elbowY: head[1] + 0.26, wristY: head[1] + 0.06, spread: 0.22, z: head[2] - 0.04 },
+    block_rise: { elbowY: head[1] - 0.06, wristY: head[1] - 0.32, spread: 0.2, z: head[2] - 0.06 },
+    block_press: { elbowY: head[1] - 0.16, wristY: head[1] - 0.46, spread: 0.23, z: head[2] - 0.1 },
+    block_landing: { elbowY: head[1] + 0.04, wristY: head[1] - 0.16, spread: 0.18, z: head[2] - 0.02 },
+  }[phase] || { elbowY: head[1] + 0.1, wristY: head[1] - 0.08, spread: 0.2, z: head[2] - 0.02 };
+
+  setPoint(points, 13, centerX - ready.spread, ready.elbowY, ready.z);
+  setPoint(points, 14, centerX + ready.spread, ready.elbowY, ready.z);
+  setPoint(points, 15, centerX - ready.spread * 0.8, ready.wristY, ready.z - 0.03);
+  setPoint(points, 16, centerX + ready.spread * 0.8, ready.wristY, ready.z - 0.03);
+  setOpenSpikeHand(points, "L", points[15], 0.95, -0.03);
+  setOpenSpikeHand(points, "R", points[16], 0.95, -0.03);
+}
+
+function shapeBlockBiomechanics(points, variant, frame = {}) {
+  if (variant !== "correct") return;
+  const phase = frame.actionPhase;
+  shapeBlockHands(points, phase);
+  if (phase === "block_load") {
+    shapeLeftFootInward(points, 0.3);
+    shapeRightFootBrace(points, 0.3);
+  }
+  if (phase === "block_press") {
+    offsetPoseIndices(points, HAND_INDICES, 0, -0.02, -0.08);
+  }
+  if (phase === "block_landing") {
+    shapeLeftFootInward(points, 0.25);
+    shapeRightFootBrace(points, 0.25);
+  }
+}
+
+function shapeServeBiomechanics(points, variant, frame = {}) {
+  if (variant !== "correct") return;
+  const head = points[HEAD_INDEX];
+  const phase = frame.actionPhase;
+  twistSpikeTorso(points, phase === "serve_contact" ? 0.42 : 0.72);
+  shapeLeftFootInward(points, 0.35);
+  shapeRightFootBrace(points, 0.45);
+
+  if (phase === "serve_ready") {
+    setPoint(points, 13, -0.24, head[1] + 0.32, -0.02);
+    setPoint(points, 15, -0.16, head[1] + 0.18, 0.06);
+    setOpenSpikeHand(points, "L", points[15], 0.7, 0.02);
+    setPoint(points, 14, 0.33, head[1] + 0.2, 0.18);
+    setPoint(points, 16, 0.44, head[1] + 0.38, 0.26);
+    setOpenSpikeHand(points, "R", points[16], 0.72, 0.02);
+  } else if (phase === "serve_toss") {
+    setPoint(points, 13, -0.22, head[1] - 0.08, 0);
+    setPoint(points, 15, -0.12, head[1] - 0.34, 0.03);
+    setOpenSpikeHand(points, "L", points[15], 0.78, 0.02);
+    setPoint(points, 14, 0.36, head[1] + 0.04, 0.24);
+    setPoint(points, 16, 0.48, head[1] + 0.18, 0.32);
+    setOpenSpikeHand(points, "R", points[16], 0.75, 0.03);
+  } else if (phase === "serve_load") {
+    setPoint(points, 13, -0.24, head[1] + 0.02, 0);
+    setPoint(points, 15, -0.18, head[1] + 0.16, 0.02);
+    setOpenSpikeHand(points, "L", points[15], 0.68, 0.01);
+    setPoint(points, 14, 0.4, head[1] - 0.06, 0.32);
+    setPoint(points, 16, 0.52, head[1] + 0.08, 0.42);
+    setOpenSpikeHand(points, "R", points[16], 0.9, 0.04);
+  } else if (phase === "serve_contact") {
+    setPoint(points, 13, -0.18, head[1] + 0.22, -0.02);
+    setPoint(points, 15, -0.16, head[1] + 0.38, -0.04);
+    setOpenSpikeHand(points, "L", points[15], 0.65, 0);
+    setPoint(points, 14, 0.25, head[1] - 0.18, 0.12);
+    setPoint(points, 16, 0.32, head[1] - 0.48, 0.14);
+    setOpenSpikeHand(points, "R", points[16], 1, -0.01);
+  } else {
+    setPoint(points, 13, -0.18, head[1] + 0.28, -0.02);
+    setPoint(points, 15, -0.16, head[1] + 0.42, -0.03);
+    setOpenSpikeHand(points, "L", points[15], 0.65, 0);
+    setPoint(points, 14, 0.3, head[1] + 0.12, -0.08);
+    setPoint(points, 16, 0.2, head[1] + 0.34, -0.16);
+    setOpenSpikeHand(points, "R", points[16], 0.76, -0.03);
+  }
 }
 
 function shapeSpikeLoad(points) {
@@ -391,8 +522,10 @@ function shapeSpikeBiomechanics(points, variant, frame) {
 }
 
 function applyActionShape(points, action, variant, frame) {
-  if (action === "set") shapeSetHands(points, variant);
-  if (action === "receive") shapeReceivePlatform(points, variant);
+  if (action === "set") shapeSetBiomechanics(points, variant, frame);
+  if (action === "receive") shapeReceiveBiomechanics(points, variant, frame);
+  if (action === "block") shapeBlockBiomechanics(points, variant, frame);
+  if (action === "serve") shapeServeBiomechanics(points, variant, frame);
   if (action === "spike") shapeSpikeBiomechanics(points, variant, frame);
   constrainHumanProportions(points);
 }
@@ -435,6 +568,7 @@ const CLEAN_REFERENCE_CUES = {
 };
 
 function referenceCue(action, index, fallback) {
+  if (fallback) return fallback;
   const encoded = CLEAN_REFERENCE_CUES[action]?.[index];
   return encoded ? decodeCue(encoded) : fallback;
 }
@@ -449,31 +583,65 @@ function spikeHandBallPoint(points) {
   ];
 }
 
+function setHandsBallPoint(points) {
+  const left = points[19] || points[15];
+  const right = points[20] || points[16];
+  return [
+    (left[0] + right[0]) / 2,
+    Math.min(left[1], right[1]) - 0.13,
+    (left[2] + right[2]) / 2 + 0.02,
+  ];
+}
+
+function platformBallPoint(points) {
+  const left = points[15];
+  const right = points[16];
+  return [
+    (left[0] + right[0]) / 2,
+    Math.min(left[1], right[1]) - 0.09,
+    (left[2] + right[2]) / 2 - 0.04,
+  ];
+}
+
+function blockHandsBallPoint(points) {
+  const left = points[19] || points[15];
+  const right = points[20] || points[16];
+  return [
+    (left[0] + right[0]) / 2,
+    Math.min(left[1], right[1]) - 0.06,
+    (left[2] + right[2]) / 2 - 0.08,
+  ];
+}
+
+function serveTossHandBallPoint(points) {
+  const hand = points[19] || points[15];
+  return [hand[0], hand[1] - 0.09, hand[2] + 0.02];
+}
+
+function frameBallPoint(action, frame, points) {
+  if (frame.ballAttach === "wrist_r") return spikeHandBallPoint(points);
+  if (frame.ballAttach === "set_hands") return setHandsBallPoint(points);
+  if (frame.ballAttach === "platform") return platformBallPoint(points);
+  if (frame.ballAttach === "block_hands") return blockHandsBallPoint(points);
+  if (frame.ballAttach === "serve_toss_hand") return serveTossHandBallPoint(points);
+  if (frame.ball) return frame.ball;
+  if (action === "set") return setHandsBallPoint(points);
+  if (action === "receive") return platformBallPoint(points);
+  if (action === "block") return blockHandsBallPoint(points);
+  return spikeHandBallPoint(points);
+}
+
 function buildSequence(action, variant = "correct") {
   void variant;
-  if (action === "spike") {
-    const sequence = SPIKE_SEQUENCES.correct;
-    return sequence.map((frame, index) => {
-      const points = buildPose(frame);
-      applyActionShape(points, action, "correct", frame);
-      let ball = frame.ball;
-      if (frame.ballAttach === "wrist_r") ball = spikeHandBallPoint(points);
-      return {
-        points,
-        ball,
-        hold: frame.hold,
-        caption: referenceCue(action, index, frame.cue),
-        jointStatus: null,
-      };
-    });
-  }
-  const spec = CORRECT_CYCLES[action] || CORRECT_CYCLES.block;
+  const spec = action === "spike"
+    ? SPIKE_SEQUENCES.correct
+    : (CORRECT_CYCLES[action] || CORRECT_CYCLES.block);
   return spec.map((frame, index) => {
     const points = buildPose(frame);
     applyActionShape(points, action, "correct", frame);
     return {
       points,
-      ball: points[ARM_CHAIN.R.wrist],
+      ball: frameBallPoint(action, frame, points),
       hold: frame.hold,
       caption: referenceCue(action, index, frame.cue),
       jointStatus: null,
@@ -950,19 +1118,6 @@ function smoothActualTargetFrames(frames) {
   });
 }
 
-function statusHasIssue(jointStatus, joints) {
-  return joints.some((joint) => {
-    const status = jointStatus?.[joint];
-    return status === "yellow" || status === "red";
-  });
-}
-
-function actualShapeVariant(action, jointStatus) {
-  if (action === "set" && statusHasIssue(jointStatus, ["wrist", "elbow", "shoulder"])) return "mistake";
-  if (action === "receive" && statusHasIssue(jointStatus, ["wrist", "elbow", "shoulder"])) return "mistake";
-  return "correct";
-}
-
 function actionProgress(action, index, count) {
   if (count <= 1) return ACTUAL_SINGLE_PROGRESS[action] ?? ACTUAL_SINGLE_PROGRESS.default;
   return clamp(index / Math.max(1, count - 1), 0, 1);
@@ -1068,11 +1223,10 @@ function rotateToFiniteTarget(points, aIdx, bIdx, cIdx, distalIdxs, targetDeg) {
 }
 
 function applyActualIssueTargets(points, targets, jointStatus, action) {
-  const lockActionArms = ["spike", "serve", "block", "set", "receive"].includes(action);
   for (const side of ["L", "R"]) {
     const arm = ARM_CHAIN[side];
     const leg = LEG_CHAIN[side];
-    if (!lockActionArms && hasJointIssue(jointStatus, "shoulder")) {
+    if (hasJointIssue(jointStatus, "shoulder")) {
       rotateToFiniteTarget(
         points,
         arm.elbow,
@@ -1082,7 +1236,7 @@ function applyActualIssueTargets(points, targets, jointStatus, action) {
         targets[`shoulder${side}`] ?? targets.shoulder,
       );
     }
-    if (!lockActionArms && hasJointIssue(jointStatus, "elbow")) {
+    if (hasJointIssue(jointStatus, "elbow")) {
       rotateToFiniteTarget(
         points,
         arm.shoulder,
@@ -1103,14 +1257,12 @@ function applyActualIssueTargets(points, targets, jointStatus, action) {
       );
     }
   }
+  constrainHumanProportions(points);
 }
 
 function retargetActualTargets(targets, action, frameStatus, guide) {
   const points = guide?.points ? guide.points.map((point) => [...point]) : buildPose(targets);
   applyActualIssueTargets(points, targets, frameStatus, action);
-  if (actualShapeVariant(action, frameStatus) === "mistake") {
-    applyActionShape(points, action, "mistake", {});
-  }
   return points;
 }
 
