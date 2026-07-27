@@ -1250,14 +1250,20 @@ function normalizeSeconds(value) {
   return Number(Math.max(0, value).toFixed(1));
 }
 
+function tenthSecondWindowLabel(timeSeconds) {
+  const start = normalizeSeconds(timeSeconds);
+  if (start === null) return "影片時間";
+  const end = Number((start + 0.1).toFixed(1));
+  return `影片時間 ${start.toFixed(1)}-${end.toFixed(1)} 秒`;
+}
+
 function issueTimeKey(timeSeconds) {
   const normalized = normalizeSeconds(timeSeconds);
   return normalized === null ? null : normalized.toFixed(1);
 }
 
 function progressTimeLabel(timeSeconds) {
-  const normalized = normalizeSeconds(timeSeconds);
-  return normalized === null ? "影片時間" : `第 ${normalized.toFixed(1)} 秒`;
+  return tenthSecondWindowLabel(timeSeconds);
 }
 
 function pushIssueTime(issueTimes, code, timeSeconds) {
@@ -1383,8 +1389,7 @@ function issueCaption(issueCodes) {
 
 function issueCaptionAtTime(issueCodes, timeSeconds = null) {
   const issue = (issueCodes || []).map((code) => FEEDBACK[code]).find(Boolean);
-  const normalized = normalizeSeconds(timeSeconds);
-  const prefix = normalized === null ? "影片姿勢" : `第 ${normalized.toFixed(1)} 秒`;
+  const prefix = tenthSecondWindowLabel(timeSeconds);
   if (!issue) return `${prefix}：影片中的動作`;
   return `${prefix}：${issue.title}，${issue.instant_cue}`;
 }

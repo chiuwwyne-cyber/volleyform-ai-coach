@@ -425,6 +425,8 @@ const DEMO_SLOW_FACTOR = 1.75;
 const FRAME_INTERVAL_MS = 1000 / 60;
 const DISPLAY_TARGET_HEIGHT = 1.65;
 const POSE_GROUND_Y = -0.92;
+const MIN_ACTUAL_HOLD_MS = 100;
+const MAX_ACTUAL_HOLD_MS = 1200;
 const MIN_DISPLAY_WIDTHS = [
   [11, 12, 0.34],
   [13, 14, 0.38],
@@ -819,6 +821,49 @@ function actionProgress(action, index, count) {
   return clamp(index / Math.max(1, count - 1), 0, 1);
 }
 
+function finiteTimeSeconds(frame) {
+  const seconds = Number(frame?.time_seconds ?? frame?.timeSeconds);
+  return Number.isFinite(seconds) ? Math.max(0, seconds) : null;
+}
+
+function timelineFrames(frames, action) {
+  const ordered = frames
+    .map((frame, order) => ({ ...frame, order }))
+    .sort((a, b) => {
+      const at = finiteTimeSeconds(a);
+      const bt = finiteTimeSeconds(b);
+      if (at !== null && bt !== null && at !== bt) return at - bt;
+      if (at !== null && bt === null) return -1;
+      if (at === null && bt !== null) return 1;
+      return a.order - b.order;
+    });
+  const times = ordered.map(finiteTimeSeconds);
+  const finiteTimes = times.filter((time) => time !== null);
+  const firstTime = finiteTimes.length ? finiteTimes[0] : null;
+  const lastTime = finiteTimes.length > 1 ? finiteTimes[finiteTimes.length - 1] : null;
+
+  return ordered.map((frame, index) => {
+    const currentTime = times[index];
+    const nextTime = times.slice(index + 1).find((time) => time !== null && currentTime !== null && time > currentTime);
+    const previousTime = [...times.slice(0, index)].reverse().find((time) => time !== null && currentTime !== null && time < currentTime);
+    let hold = frame.hold || 720;
+    if (currentTime !== null) {
+      const delta = nextTime !== undefined
+        ? nextTime - currentTime
+        : previousTime !== undefined
+          ? currentTime - previousTime
+          : 0.1;
+      hold = clamp(Math.round(delta * 1000), MIN_ACTUAL_HOLD_MS, MAX_ACTUAL_HOLD_MS);
+    }
+
+    let progress = actionProgress(action, index, ordered.length);
+    if (currentTime !== null && firstTime !== null && lastTime !== null && lastTime > firstTime) {
+      progress = clamp((currentTime - firstTime) / (lastTime - firstTime), 0, 1);
+    }
+    return { ...frame, hold, progress };
+  });
+}
+
 function sampleActionGuide(action, progress) {
   const guide = buildSequence(action, "correct");
   if (!guide.length) {
@@ -1025,23 +1070,24 @@ function preparePoseForDisplay(landmarks) {
 }
 
 function preparePoseSequenceForDisplay(sequence, { caption = "", action = "spike" } = {}) {
-  const rawFrames = (sequence || [])
+  const rawFrames = timelineFrames((sequence || [])
     .filter((frame) => frame.landmarks?.length >= 33)
     .map((frame) => ({
       raw: rawPoseTriples(frame.landmarks),
       landmarks: frame.landmarks,
       jointStatus: frame.joint_status || frame.jointStatus || {},
       displayJointStatus: frame.display_joint_status || frame.displayJointStatus || frame.joint_status || frame.jointStatus || {},
+      timeSeconds: finiteTimeSeconds(frame),
       hold: frame.hold || 720,
       caption: frame.caption || caption,
     }))
-    .filter((frame) => frame.raw?.length >= 33);
+    .filter((frame) => frame.raw?.length >= 33), action);
 
   if (!rawFrames.length) return [];
   const sequenceStatus = aggregateSequenceJointStatus(rawFrames);
   if (rawFrames.length === 1) {
     return rawFrames.map((frame, index) => {
-      const progress = actionProgress(action, index, rawFrames.length);
+      const progress = frame.progress ?? actionProgress(action, index, rawFrames.length);
       const guide = sampleActionGuide(action, progress);
       const displayStatus = mergeDisplayJointStatus(frame.displayJointStatus, sequenceStatus);
       return {
@@ -1055,7 +1101,7 @@ function preparePoseSequenceForDisplay(sequence, { caption = "", action = "spike
   }
 
   let targetFrames = rawFrames.map((frame, index) => {
-    const progress = actionProgress(action, index, rawFrames.length);
+    const progress = frame.progress ?? actionProgress(action, index, rawFrames.length);
     return {
       targets: actualFrameTargets(frame.raw, action),
       frameStatus: frame.jointStatus,

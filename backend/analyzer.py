@@ -55,6 +55,14 @@ def _round_seconds(value):
     return round(max(0.0, float(value)), 1)
 
 
+def _time_window_label(value):
+    rounded = _round_seconds(value)
+    if rounded is None:
+        return "影片時間"
+    end = round(rounded + 0.1, 1)
+    return f"影片時間 {rounded:.1f}-{end:.1f} 秒"
+
+
 def _time_key(value):
     rounded = _round_seconds(value)
     return None if rounded is None else f"{rounded:.1f}"
@@ -122,8 +130,7 @@ def _landmarks_to_triples(world_landmarks):
 
 
 def _issue_caption(issue_codes, time_seconds):
-    rounded = _round_seconds(time_seconds)
-    prefix = "影片姿勢" if rounded is None else f"第 {rounded:.1f} 秒"
+    prefix = _time_window_label(time_seconds)
     first_issue = next((feedback_for(code) for code in issue_codes or [] if code not in ("good", "ok")), None)
     if not first_issue:
         return f"{prefix}：影片中的動作"

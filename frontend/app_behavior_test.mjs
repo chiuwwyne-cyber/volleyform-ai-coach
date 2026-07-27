@@ -421,7 +421,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   const issueCard = context.document.querySelector("#issues").children[0];
   assert.match(issueCard.innerHTML, /Forearms/);
   assert.match(issueCard.innerHTML, /Hold platform shape/);
-  assert.match(issueCard.innerHTML, /第 1\.2 秒/);
+  assert.match(issueCard.innerHTML, /第 1\.2-1\.3 秒/);
   assert.doesNotMatch(issueCard.innerHTML, /影格/);
 
   context.__appTestApi.renderResult({
@@ -510,7 +510,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   phaseIssueCard.innerHTML += phaseKneeCard.innerHTML;
   assert.match(context.document.querySelector("#coachSummary").textContent, /最需要先調整/);
   assert.match(phaseIssueCard.innerHTML, /擊球瞬間/);
-  assert.match(phaseIssueCard.innerHTML, /第 5\.7 秒/);
+  assert.match(phaseIssueCard.innerHTML, /第 5\.7-5\.8 秒/);
   assert.match(phaseIssueCard.innerHTML, /膝蓋/);
   assert.match(phaseIssueCard.innerHTML, /膝蓋對齊腳尖/);
   // No angle numbers should leak into the user-facing copy anymore.

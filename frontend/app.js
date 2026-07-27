@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v47"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v48"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1274,7 +1274,9 @@ function severityLabel(severity) {
 function formatSeconds(value) {
   const seconds = Number(value);
   if (!Number.isFinite(seconds)) return null;
-  return `第 ${Math.max(0, seconds).toFixed(1)} 秒`;
+  const start = Number(Math.max(0, seconds).toFixed(1));
+  const end = Number((start + 0.1).toFixed(1));
+  return `第 ${start.toFixed(1)}-${end.toFixed(1)} 秒`;
 }
 
 function issueTimeSummary(item) {
@@ -1492,7 +1494,9 @@ function severityLabel(severity) {
 function formatSeconds(value) {
   const seconds = Number(value);
   if (!Number.isFinite(seconds)) return null;
-  return `第 ${Math.max(0, seconds).toFixed(1)} 秒`;
+  const start = Number(Math.max(0, seconds).toFixed(1));
+  const end = Number((start + 0.1).toFixed(1));
+  return `第 ${start.toFixed(1)}-${end.toFixed(1)} 秒`;
 }
 
 function issueTimeSummary(item) {
