@@ -170,36 +170,36 @@ const CORRECT_CYCLES = {
 // simulation.
 const SPIKE_SEQUENCES = {
   correct: [
-  { elbow: 170, knee: 165, shoulder: 12, root: [0, 0, -1.3], hold: 620, cue: "扣球助跑：左腳啟動，眼睛看球", ball: [0.15, -1.3, -0.2] },
-  {
-    elbow: 165, knee: 155, shoulder: 18, kneeR: 135, hipSwingL: 26, hipSwingR: -22,
-    root: [0, 0, -1.0], hold: 520, cue: "扣球腳步 1：左", ball: [0.15, -1.31, -0.16],
-  },
-  {
-    elbow: 158, knee: 150, shoulder: 25, kneeL: 132, hipSwingR: 27, hipSwingL: -23,
-    root: [0, 0, -0.65], hold: 520, cue: "扣球腳步 2：右，身體開始蓄力", ball: [0.15, -1.3, -0.1],
-  },
-  {
-    elbow: 148, knee: 140, shoulder: 15, kneeR: 118, hipSwingL: 25, hipSwingR: -20, armSwingL: -20, armSwingR: -20,
-    root: [0, 0, -0.28], hold: 520, cue: "扣球腳步 3：左，雙腳準備起跳", ball: [0.16, -1.26, -0.04],
-  },
-  {
-    elbow: 148, knee: 100, shoulder: 6, armSwingL: -32, armSwingR: -32,
-    root: [0, 0, -0.02], hold: 560, cue: "擺臂下沉：髖膝一起彎，不要膝蓋內扣", ball: [0.17, -1.2, 0.02],
-  },
-  {
-    elbow: 140, knee: 172, shoulder: 95,
-    root: [0, -0.32, 0.05], hold: 520, cue: "起跳：腿部伸展，把身體往上帶", ball: [0.19, -1.05, 0.06],
-  },
-  {
-    elbow: 178, knee: 175, shoulder: 178, elbowL: 150, shoulderL: 60,
-    root: [0, -0.5, 0.1], hold: 520, cue: "最高點扣球：手在頭前上方擊球", ballAttach: "wrist_r",
-  },
-  {
-    elbow: 128, knee: 138, shoulder: 55,
-    root: [0, -0.16, 0.2], hold: 620, cue: "落地緩衝：雙腳吸收衝擊", ball: [0.65, -0.55, 1.0],
-  },
-  { elbow: 165, knee: 135, shoulder: 20, root: [0, 0, 0.12], hold: 760, cue: "收尾：維持平衡，準備下一球", ball: [1.05, -0.05, 1.75] },
+    { elbow: 170, knee: 165, shoulder: 12, root: [0, 0, -1.3], hold: 620, cue: "扣球助跑：左腳啟動，眼睛看球", ball: [0.15, -1.3, -0.2], spikePhase: "approach" },
+    {
+      elbow: 165, knee: 155, shoulder: 18, kneeR: 135, hipSwingL: 26, hipSwingR: -22,
+      root: [0, 0, -1.0], hold: 520, cue: "扣球腳步 1：左", ball: [0.15, -1.31, -0.16], spikePhase: "left_step",
+    },
+    {
+      elbow: 158, knee: 150, shoulder: 25, kneeL: 132, hipSwingR: 27, hipSwingL: -23,
+      root: [0, 0, -0.65], hold: 520, cue: "扣球腳步 2：右，身體開始側身蓄力", ball: [0.15, -1.3, -0.1], spikePhase: "right_step",
+    },
+    {
+      elbow: 148, knee: 140, shoulder: 15, kneeR: 118, hipSwingL: 25, hipSwingR: -20, armSwingL: -20, armSwingR: -20,
+      root: [0, 0, -0.28], hold: 560, cue: "最後左腳：腳尖微內扣，身體側身準備起跳", ball: [0.16, -1.26, -0.04], spikePhase: "plant",
+    },
+    {
+      elbow: 148, knee: 100, shoulder: 6, armSwingL: -32, armSwingR: -32,
+      root: [0, 0, -0.02], hold: 620, cue: "拉弓蓄力：左肩往前，右肩往後拉", ball: [0.17, -1.2, 0.02], spikePhase: "load",
+    },
+    {
+      elbow: 140, knee: 172, shoulder: 95,
+      root: [0, -0.34, 0.05], hold: 560, cue: "側身起跳：肩膀旋轉，右手準備上擺", ball: [0.19, -1.05, 0.06], spikePhase: "jump",
+    },
+    {
+      elbow: 178, knee: 175, shoulder: 178, elbowL: 150, shoulderL: 60,
+      root: [0, -0.52, 0.1], hold: 540, cue: "最高點扣球：手掌打在球後上方", ballAttach: "wrist_r", spikePhase: "contact",
+    },
+    {
+      elbow: 128, knee: 138, shoulder: 55,
+      root: [0, -0.16, 0.2], hold: 620, cue: "落地緩衝：雙腳吸收衝擊", ball: [0.65, -0.55, 1.0], spikePhase: "landing",
+    },
+    { elbow: 165, knee: 135, shoulder: 20, root: [0, 0, 0.12], hold: 760, cue: "收尾：維持平衡，準備下一球", ball: [1.05, -0.05, 1.75], spikePhase: "recover" },
   ],
 };
 
@@ -242,27 +242,110 @@ function shapeReceivePlatform(points, variant) {
   setPoint(points, 20, centerX + gap * 0.5, y + 0.045, z);
 }
 
+function offsetPoint(points, index, dx = 0, dy = 0, dz = 0) {
+  if (!isFiniteTriple(points[index])) return;
+  points[index] = [points[index][0] + dx, points[index][1] + dy, points[index][2] + dz];
+}
+
+function shapeLeftFootInward(points, amount = 1) {
+  const ankle = points[27];
+  if (!isFiniteTriple(ankle)) return;
+  setPoint(points, 29, ankle[0] - 0.025 * amount, ankle[1] + 0.055, ankle[2] + 0.055 * amount);
+  setPoint(points, 31, ankle[0] + 0.13 * amount, ankle[1] + 0.08, ankle[2] - 0.105 * amount);
+}
+
+function shapeRightFootBrace(points, amount = 1) {
+  const ankle = points[28];
+  if (!isFiniteTriple(ankle)) return;
+  setPoint(points, 30, ankle[0] + 0.035 * amount, ankle[1] + 0.05, ankle[2] - 0.02 * amount);
+  setPoint(points, 32, ankle[0] - 0.075 * amount, ankle[1] + 0.085, ankle[2] + 0.07 * amount);
+}
+
+function twistSpikeTorso(points, amount = 1) {
+  // y is down in landmark space; negative z is the hitting side moving forward.
+  offsetPoint(points, 11, -0.025 * amount, -0.015 * amount, -0.18 * amount);
+  offsetPoint(points, 12, 0.055 * amount, 0.02 * amount, 0.2 * amount);
+  offsetPoint(points, 23, 0.02 * amount, 0, 0.06 * amount);
+  offsetPoint(points, 24, -0.02 * amount, 0, -0.06 * amount);
+  offsetPoint(points, 0, 0.015 * amount, -0.015 * amount, -0.06 * amount);
+}
+
+function setOpenSpikeHand(points, side, wrist, spread = 1, palmTilt = 0) {
+  const isRight = side === "R";
+  const pinky = isRight ? 18 : 17;
+  const index = isRight ? 20 : 19;
+  const thumb = isRight ? 22 : 21;
+  const sideSign = isRight ? 1 : -1;
+  setPoint(points, pinky, wrist[0] - sideSign * 0.075 * spread, wrist[1] - 0.09 * spread, wrist[2] + palmTilt - 0.02);
+  setPoint(points, index, wrist[0] + sideSign * 0.075 * spread, wrist[1] - 0.105 * spread, wrist[2] + palmTilt + 0.015);
+  setPoint(points, thumb, wrist[0] + sideSign * 0.12 * spread, wrist[1] - 0.035 * spread, wrist[2] + palmTilt - 0.065);
+}
+
+function shapeSpikeLoad(points) {
+  const head = points[HEAD_INDEX];
+  twistSpikeTorso(points, 1);
+  shapeLeftFootInward(points, 1);
+  shapeRightFootBrace(points, 0.65);
+
+  setPoint(points, 13, -0.38, head[1] + 0.02, -0.3);
+  setPoint(points, 15, -0.54, head[1] - 0.2, -0.36);
+  setOpenSpikeHand(points, "L", points[15], 0.85, -0.02);
+
+  setPoint(points, 14, 0.42, head[1] + 0.2, 0.42);
+  setPoint(points, 16, 0.54, head[1] + 0.04, 0.48);
+  setOpenSpikeHand(points, "R", points[16], 0.9, 0.04);
+}
+
+function shapeSpikeJump(points) {
+  const head = points[HEAD_INDEX];
+  twistSpikeTorso(points, 1.12);
+  shapeLeftFootInward(points, 0.85);
+  setPoint(points, 13, -0.36, head[1] - 0.06, -0.2);
+  setPoint(points, 15, -0.48, head[1] - 0.24, -0.24);
+  setOpenSpikeHand(points, "L", points[15], 0.82, -0.02);
+  setPoint(points, 14, 0.38, head[1] - 0.05, 0.34);
+  setPoint(points, 16, 0.4, head[1] - 0.34, 0.3);
+  setOpenSpikeHand(points, "R", points[16], 0.95, 0.03);
+}
+
 function shapeSpikeContact(points, variant) {
   if (variant !== "correct") return;
   const head = points[HEAD_INDEX];
+  twistSpikeTorso(points, 0.62);
+  shapeLeftFootInward(points, 0.55);
   setPoint(points, 13, -0.34, head[1] + 0.18, -0.04);
   setPoint(points, 15, -0.48, head[1] + 0.42, -0.12);
-  setPoint(points, 17, -0.5, head[1] + 0.45, -0.12);
-  setPoint(points, 19, -0.46, head[1] + 0.47, -0.1);
-  setPoint(points, 21, -0.5, head[1] + 0.38, -0.13);
-  setPoint(points, 14, 0.18, head[1] - 0.18, 0.08);
-  setPoint(points, 16, 0.3, head[1] - 0.56, 0.14);
-  setPoint(points, 18, 0.33, head[1] - 0.59, 0.14);
-  setPoint(points, 20, 0.25, head[1] - 0.61, 0.13);
-  setPoint(points, 22, 0.34, head[1] - 0.52, 0.12);
+  setOpenSpikeHand(points, "L", points[15], 0.7, -0.02);
+  setPoint(points, 14, 0.22, head[1] - 0.26, 0.12);
+  setPoint(points, 16, 0.38, head[1] - 0.7, 0.16);
+  setOpenSpikeHand(points, "R", points[16], 1.15, -0.01);
+}
+
+function shapeSpikeLanding(points) {
+  const head = points[HEAD_INDEX];
+  shapeLeftFootInward(points, 0.35);
+  setPoint(points, 14, 0.22, head[1] + 0.04, 0.02);
+  setPoint(points, 16, 0.26, head[1] + 0.22, 0.02);
+  setOpenSpikeHand(points, "R", points[16], 0.72, 0);
+}
+
+function shapeSpikeBiomechanics(points, variant, frame) {
+  if (variant !== "correct") return;
+  if (frame.spikePhase === "plant") {
+    shapeLeftFootInward(points, 1);
+    shapeRightFootBrace(points, 0.7);
+    twistSpikeTorso(points, 0.35);
+  }
+  if (frame.spikePhase === "load") shapeSpikeLoad(points);
+  if (frame.spikePhase === "jump") shapeSpikeJump(points);
+  if (frame.spikePhase === "contact") shapeSpikeContact(points, variant);
+  if (frame.spikePhase === "landing") shapeSpikeLanding(points);
 }
 
 function applyActionShape(points, action, variant, frame) {
   if (action === "set") shapeSetHands(points, variant);
   if (action === "receive") shapeReceivePlatform(points, variant);
-  if (action === "spike" && (frame.ballAttach === "wrist_r" || frame.root?.[1] < -0.2)) {
-    shapeSpikeContact(points, variant);
-  }
+  if (action === "spike") shapeSpikeBiomechanics(points, variant, frame);
 }
 
 const decodeCue = (value) => decodeURIComponent(value);
@@ -307,6 +390,16 @@ function referenceCue(action, index, fallback) {
   return encoded ? decodeCue(encoded) : fallback;
 }
 
+function spikeHandBallPoint(points) {
+  const index = points[20] || points[ARM_CHAIN.R.wrist];
+  const pinky = points[18] || index;
+  return [
+    (index[0] + pinky[0]) / 2,
+    Math.min(index[1], pinky[1]) - 0.055,
+    (index[2] + pinky[2]) / 2 + 0.025,
+  ];
+}
+
 function buildSequence(action, variant = "correct") {
   void variant;
   if (action === "spike") {
@@ -315,7 +408,7 @@ function buildSequence(action, variant = "correct") {
       const points = buildPose(frame);
       applyActionShape(points, action, "correct", frame);
       let ball = frame.ball;
-      if (frame.ballAttach === "wrist_r") ball = points[ARM_CHAIN.R.wrist];
+      if (frame.ballAttach === "wrist_r") ball = spikeHandBallPoint(points);
       return {
         points,
         ball,
@@ -389,6 +482,7 @@ function easeInOut(t) {
 // ---------------------------------------------------------------------------
 
 const BODY_PARTS = [
+  { a: 11, b: 12, radius: 0.035, joint: null },
   { a: 11, b: 13, radius: 0.055, joint: "shoulder" },
   { a: 12, b: 14, radius: 0.055, joint: "shoulder" },
   { a: 13, b: 15, radius: 0.045, joint: "elbow" },
@@ -405,8 +499,12 @@ const BODY_PARTS = [
   { a: 24, b: 26, radius: 0.075, joint: "knee" },
   { a: 25, b: 27, radius: 0.056, joint: "knee" },
   { a: 26, b: 28, radius: 0.056, joint: "knee" },
+  { a: 27, b: 29, radius: 0.026, joint: null },
+  { a: 28, b: 30, radius: 0.026, joint: null },
   { a: 27, b: 31, radius: 0.035, joint: null },
   { a: 28, b: 32, radius: 0.035, joint: null },
+  { a: 29, b: 31, radius: 0.02, joint: null },
+  { a: 30, b: 32, radius: 0.02, joint: null },
 ];
 const BODY_COLOR = 0xffffff;
 const BODY_SHADOW_COLOR = 0xd7d0c3;
@@ -1198,6 +1296,114 @@ function makeSphere(radius, color, widthSegments = 20, heightSegments = 16) {
   return new THREE.Mesh(geometry, material);
 }
 
+function makePalmMesh(color) {
+  const geometry = new THREE.SphereGeometry(1, 18, 12);
+  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.025 });
+  return new THREE.Mesh(geometry, material);
+}
+
+function normalizedVec3(vector, fallback = new THREE.Vector3(1, 0, 0)) {
+  if (!Number.isFinite(vector.lengthSq()) || vector.lengthSq() < 1e-8) {
+    return fallback.clone().normalize();
+  }
+  return vector.clone().normalize();
+}
+
+const HAND_DETAIL_SPECS = {
+  L: { wrist: 15, elbow: 13, pinky: 17, index: 19, thumb: 21 },
+  R: { wrist: 16, elbow: 14, pinky: 18, index: 20, thumb: 22 },
+};
+
+function lerpVec3(a, b, t) {
+  return a.clone().lerp(b, t);
+}
+
+function ensureFingerTip(base, tip, direction, minLength) {
+  const delta = tip.clone().sub(base);
+  if (delta.length() >= minLength) return tip;
+  return base.clone().add(direction.clone().multiplyScalar(minLength));
+}
+
+function handFrame(points, side) {
+  const spec = HAND_DETAIL_SPECS[side];
+  const wrist = toVec3(points[spec.wrist]);
+  const elbow = toVec3(points[spec.elbow]);
+  const pinky = toVec3(points[spec.pinky]);
+  const index = toVec3(points[spec.index]);
+  const thumb = toVec3(points[spec.thumb]);
+  const fingerMid = lerpVec3(pinky, index, 0.5);
+  const forearm = normalizedVec3(wrist.clone().sub(elbow), new THREE.Vector3(0, 1, 0));
+  let yAxis = normalizedVec3(fingerMid.clone().sub(wrist), forearm);
+  let xAxis = normalizedVec3(index.clone().sub(pinky), new THREE.Vector3(side === "R" ? 1 : -1, 0, 0));
+  let zAxis = xAxis.clone().cross(yAxis);
+  if (zAxis.lengthSq() < 1e-8) zAxis = new THREE.Vector3(0, 0, 1);
+  zAxis.normalize();
+  xAxis = yAxis.clone().cross(zAxis).normalize();
+  const width = clamp(index.distanceTo(pinky) * 1.25, 0.085, 0.19);
+  const length = clamp(wrist.distanceTo(fingerMid) * 0.95, 0.1, 0.22);
+  const center = wrist.clone().add(yAxis.clone().multiplyScalar(length * 0.52));
+  return { wrist, pinky, index, thumb, xAxis, yAxis, zAxis, width, length, center };
+}
+
+function orientEllipsoid(mesh, center, xAxis, yAxis, zAxis, scaleX, scaleY, scaleZ) {
+  const basis = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
+  mesh.position.copy(center);
+  mesh.quaternion.setFromRotationMatrix(basis);
+  mesh.scale.set(scaleX, scaleY, scaleZ);
+}
+
+function orientFinger(mesh, start, end) {
+  orientCapsuleVec(mesh, start, end);
+}
+
+function createHandDetail(side) {
+  const palm = makePalmMesh(BODY_COLOR);
+  const fingers = Array.from({ length: 5 }, () => makeUnitCapsule(0.0115, BODY_COLOR));
+  const tips = Array.from({ length: 5 }, () => makeSphere(0.017, BODY_COLOR, 12, 8));
+  return { side, palm, fingers, tips };
+}
+
+function updateHandDetail(detail, points, jointStatus) {
+  const frame = handFrame(points, detail.side);
+  const wristStatus = jointStatus?.wrist || "green";
+  const color = wristStatus === "green" ? BODY_COLOR : STATUS_COLOR[wristStatus];
+  applyStatusMaterial(detail.palm.material, color, wristStatus);
+  orientEllipsoid(
+    detail.palm,
+    frame.center,
+    frame.xAxis,
+    frame.yAxis,
+    frame.zAxis,
+    frame.width * 0.55,
+    frame.length * 0.72,
+    0.022,
+  );
+
+  const fingerBases = [
+    frame.wrist.clone().add(frame.xAxis.clone().multiplyScalar(-frame.width * 0.34)).add(frame.yAxis.clone().multiplyScalar(frame.length * 0.36)),
+    frame.wrist.clone().add(frame.xAxis.clone().multiplyScalar(-frame.width * 0.12)).add(frame.yAxis.clone().multiplyScalar(frame.length * 0.42)),
+    frame.wrist.clone().add(frame.xAxis.clone().multiplyScalar(frame.width * 0.1)).add(frame.yAxis.clone().multiplyScalar(frame.length * 0.43)),
+    frame.wrist.clone().add(frame.xAxis.clone().multiplyScalar(frame.width * 0.32)).add(frame.yAxis.clone().multiplyScalar(frame.length * 0.36)),
+    frame.wrist.clone().add(frame.xAxis.clone().multiplyScalar(frame.width * 0.42)).add(frame.yAxis.clone().multiplyScalar(frame.length * 0.18)),
+  ];
+  const fingerTips = [
+    frame.pinky,
+    lerpVec3(frame.pinky, frame.index, 0.35).add(frame.yAxis.clone().multiplyScalar(0.032)),
+    lerpVec3(frame.pinky, frame.index, 0.62).add(frame.yAxis.clone().multiplyScalar(0.038)),
+    frame.index,
+    frame.thumb,
+  ].map((tip, index) => ensureFingerTip(fingerBases[index], tip, frame.yAxis, index === 4 ? 0.06 : 0.085));
+
+  detail.fingers.forEach((finger, index) => {
+    applyStatusMaterial(finger.material, color, wristStatus);
+    orientFinger(finger, fingerBases[index], fingerTips[index]);
+  });
+  detail.tips.forEach((tip, index) => {
+    applyStatusMaterial(tip.material, color, wristStatus);
+    tip.position.copy(fingerTips[index]);
+  });
+}
+
 function createFigure(scene) {
   const group = new THREE.Group();
   const limbs = BODY_PARTS.map((part) => ({
@@ -1220,6 +1426,13 @@ function createFigure(scene) {
 
   const headMesh = makeSphere(HEAD_RADIUS, BODY_COLOR, 24, 18);
   group.add(headMesh);
+
+  const handDetails = ["L", "R"].map(createHandDetail);
+  for (const hand of handDetails) {
+    group.add(hand.palm);
+    for (const finger of hand.fingers) group.add(finger);
+    for (const tip of hand.tips) group.add(tip);
+  }
 
   const jointMarkers = JOINT_MARKERS.map((marker) => {
     const geometry = new THREE.SphereGeometry(marker.radius, 16, 12);
@@ -1340,6 +1553,8 @@ function createFigure(scene) {
         }
       }
 
+      for (const hand of handDetails) updateHandDetail(hand, points, jointStatus || {});
+
       const headPos = safeHeadPosition(points, shoulderMid);
       const torsoTop = shoulderMid.clone().lerp(hipMid, 0.12);
       const torsoBottom = shoulderMid.clone().lerp(hipMid, 0.9);
@@ -1390,6 +1605,18 @@ function createFigure(scene) {
       pelvisMesh.geometry.dispose();
       neckMesh.geometry.dispose();
       headMesh.geometry.dispose();
+      for (const hand of handDetails) {
+        hand.palm.geometry.dispose();
+        hand.palm.material.dispose();
+        for (const finger of hand.fingers) {
+          finger.geometry.dispose();
+          finger.material.dispose();
+        }
+        for (const tip of hand.tips) {
+          tip.geometry.dispose();
+          tip.material.dispose();
+        }
+      }
       for (const marker of jointMarkers) {
         marker.geometry.dispose();
         marker.haloGeometry.dispose();
