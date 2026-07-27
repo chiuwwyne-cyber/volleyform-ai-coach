@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v46"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v47"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -913,7 +913,7 @@ analyzeBtn.addEventListener("click", async () => {
 function renderResult(result) {
   summaryTitle.textContent = `${result.action_label} 分析完成`;
   coachSummary.textContent = result.coach_summary;
-  frameCount.textContent = `${result.processed_frames} 影格已分析`;
+  frameCount.textContent = `已用 0.1 秒為單位完成分析`;
   renderCoachPlan(result.coach_plan);
   renderIssues(result.primary_issues);
   renderPoseCompare(result.pose_compare, result.action);
@@ -1021,7 +1021,7 @@ function renderIssues(items) {
     card.innerHTML = `
       <div class="issue-title">
         <span>${escapeHtml(item.title)}</span>
-        <small>${severityLabel(item.severity)} / ${item.count} 影格</small>
+        <small>${severityLabel(item.severity)} / ${item.count} 個 0.1 秒時間點</small>
       </div>
       <div class="issue-meta">
         <span>${escapeHtml(item.body_part || "主要部位")}</span>
@@ -1118,7 +1118,7 @@ function renderPoseCompare(poseCompare, action) {
     : [];
   poseCompareNote.textContent =
     actualSequence.length > 1
-      ? "左側正在重播影片分析到的錯誤關鍵影格；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。"
+      ? "左側正在重播影片分析到的錯誤時間點；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。"
       : "左側是影片或照片分析到的錯誤姿勢；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。";
 
   ensureViewports().then(() => {
@@ -1343,7 +1343,7 @@ function renderResult(result) {
   result = normalizePhaseAwareResult(result);
   summaryTitle.textContent = `${result.action_label} 分析結果`;
   coachSummary.textContent = result.coach_summary;
-  frameCount.textContent = `已分析 ${result.processed_frames || 0} 個姿勢取樣`;
+  frameCount.textContent = `已用 0.1 秒為單位完成分析`;
   renderCoachPlan(result.coach_plan);
   renderIssues(result.primary_issues);
   renderPoseCompare(result.pose_compare, result.action);
@@ -1736,7 +1736,7 @@ function renderResult(result) {
   result = normalizePhaseAwareResult(result);
   summaryTitle.textContent = `${result.action_label} 分析結果`;
   coachSummary.textContent = result.coach_summary;
-  frameCount.textContent = `已分析 ${result.processed_frames || 0} 個姿勢取樣`;
+  frameCount.textContent = `已用 0.1 秒為單位完成分析`;
   renderCoachPlan(result.coach_plan);
   renderIssues(result.primary_issues);
   renderPoseCompare(result.pose_compare, result.action);

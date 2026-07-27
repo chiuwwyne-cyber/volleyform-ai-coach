@@ -1250,21 +1250,38 @@ function normalizeSeconds(value) {
   return Number(Math.max(0, value).toFixed(1));
 }
 
+function issueTimeKey(timeSeconds) {
+  const normalized = normalizeSeconds(timeSeconds);
+  return normalized === null ? null : normalized.toFixed(1);
+}
+
+function progressTimeLabel(timeSeconds) {
+  const normalized = normalizeSeconds(timeSeconds);
+  return normalized === null ? "影片時間" : `第 ${normalized.toFixed(1)} 秒`;
+}
+
 function pushIssueTime(issueTimes, code, timeSeconds) {
   const normalized = normalizeSeconds(timeSeconds);
   if (normalized === null) return;
   const times = issueTimes.get(code) || [];
-  if (!times.some((time) => Math.abs(time - normalized) < 0.05)) {
+  if (!times.some((time) => time.toFixed(1) === normalized.toFixed(1))) {
     times.push(normalized);
   }
   issueTimes.set(code, times);
 }
 
 function issuePayload(code, count, timeSeconds = []) {
+  const seenTimes = new Set();
   const times = (timeSeconds || [])
     .filter(Number.isFinite)
     .map(normalizeSeconds)
     .filter((value) => value !== null)
+    .filter((value) => {
+      const key = value.toFixed(1);
+      if (seenTimes.has(key)) return false;
+      seenTimes.add(key);
+      return true;
+    })
     .slice(0, 8);
   return {
     code,
@@ -1360,7 +1377,7 @@ function jointStatusForIssues(issueCodes) {
 
 function issueCaption(issueCodes) {
   const issue = (issueCodes || []).map((code) => FEEDBACK[code]).find(Boolean);
-  if (!issue) return "影片分析到的姿勢影格";
+  if (!issue) return "影片分析到的姿勢時間點";
   return `影片錯誤：${issue.title}。${issue.instant_cue}`;
 }
 
@@ -1754,6 +1771,7 @@ export async function analyzeVideoLocally({
       Math.min(maxSamples, Math.max(requestedSamples, Math.ceil(duration * 2.5))),
     );
     let issueCounts = new Map();
+    let issueCountBins = new Set();
     let issueTimes = new Map();
     const angleSums = { elbow: 0, knee: 0 };
     const handSums = { extension: 0, gap: 0 };
@@ -1777,7 +1795,7 @@ export async function analyzeVideoLocally({
       const poseResult = detectPose(pose, video, timestampMs);
       const poseLandmarks = poseResult.landmarks?.[0];
       if (!poseLandmarks) {
-        onProgress(`分析影格 ${index + 1}/${sampleCount}`, (index + 1) / sampleCount);
+        onProgress(`分析到${progressTimeLabel(sampleTime)}`, (index + 1) / sampleCount);
         await new Promise((resolve) => setTimeout(resolve, 0));
         continue;
       }
@@ -1806,7 +1824,12 @@ export async function analyzeVideoLocally({
       }
 
       for (const code of frameIssues) {
-        issueCounts.set(code, (issueCounts.get(code) || 0) + 1);
+        const timeKey = issueTimeKey(sampleTime);
+        const countKey = timeKey ? `${code}@${timeKey}` : null;
+        if (!countKey || !issueCountBins.has(countKey)) {
+          if (countKey) issueCountBins.add(countKey);
+          issueCounts.set(code, (issueCounts.get(code) || 0) + 1);
+        }
         pushIssueTime(issueTimes, code, sampleTime);
       }
 
@@ -1821,7 +1844,7 @@ export async function analyzeVideoLocally({
         keyFrameIssueCodes = frameIssues;
       }
 
-      onProgress(`分析影格 ${index + 1}/${sampleCount}`, (index + 1) / sampleCount);
+      onProgress(`分析到${progressTimeLabel(sampleTime)}`, (index + 1) / sampleCount);
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
@@ -1829,6 +1852,7 @@ export async function analyzeVideoLocally({
     if (phaseEval) {
       phaseAnalysis = phaseEval.report;
       issueCounts = new Map();
+      issueCountBins = new Set();
       issueTimes = new Map();
       for (const code of phaseEval.issues) {
         issueCounts.set(code, 1);

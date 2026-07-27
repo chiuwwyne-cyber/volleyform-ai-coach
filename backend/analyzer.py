@@ -55,19 +55,34 @@ def _round_seconds(value):
     return round(max(0.0, float(value)), 1)
 
 
+def _time_key(value):
+    rounded = _round_seconds(value)
+    return None if rounded is None else f"{rounded:.1f}"
+
+
 def _push_issue_time(issue_times, error_code, time_seconds):
     rounded = _round_seconds(time_seconds)
     if rounded is None:
         return
     times = issue_times.setdefault(error_code, [])
-    if not any(abs(existing - rounded) < 0.05 for existing in times):
+    if not any(f"{existing:.1f}" == f"{rounded:.1f}" for existing in times):
         times.append(rounded)
 
 
 def _issue_payload(error_code, count=0, time_seconds=None):
     feedback = feedback_for(error_code)
-    times = [_round_seconds(value) for value in (time_seconds or [])]
-    times = [value for value in times if value is not None][:8]
+    seen_times = set()
+    times = []
+    for value in [_round_seconds(value) for value in (time_seconds or [])]:
+        if value is None:
+            continue
+        key = f"{value:.1f}"
+        if key in seen_times:
+            continue
+        seen_times.add(key)
+        times.append(value)
+        if len(times) >= 8:
+            break
     return {
         "code": error_code,
         "count": count,
@@ -198,6 +213,7 @@ def analyze_video(
 ):
     selected_modalities = normalize_modalities(modalities)
     issue_counts = Counter()
+    issue_count_bins = set()
     issue_times = {}
     processed_frames = 0
     modality_processors = build_modality_processors(selected_modalities)
@@ -267,7 +283,12 @@ def analyze_video(
         if results not in (["good"], ["ok"]):
             for result in results:
                 if result not in ("good", "ok"):
-                    issue_counts[result] += 1
+                    time_key = _time_key(time_seconds)
+                    count_key = f"{result}@{time_key}" if time_key is not None else None
+                    if count_key is None or count_key not in issue_count_bins:
+                        if count_key is not None:
+                            issue_count_bins.add(count_key)
+                        issue_counts[result] += 1
                     _push_issue_time(issue_times, result, time_seconds)
 
         frame_severity = sum(
