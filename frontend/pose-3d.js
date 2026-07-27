@@ -245,17 +245,24 @@ function shapeReceivePlatform(points, variant) {
 function shapeSpikeContact(points, variant) {
   if (variant !== "correct") return;
   const head = points[HEAD_INDEX];
-  setPoint(points, 14, 0.2, head[1] - 0.02, 0.08);
-  setPoint(points, 16, 0.26, head[1] - 0.34, 0.12);
-  setPoint(points, 18, 0.29, head[1] - 0.36, 0.12);
-  setPoint(points, 20, 0.22, head[1] - 0.38, 0.12);
-  setPoint(points, 22, 0.28, head[1] - 0.31, 0.1);
+  setPoint(points, 13, -0.34, head[1] + 0.18, -0.04);
+  setPoint(points, 15, -0.48, head[1] + 0.42, -0.12);
+  setPoint(points, 17, -0.5, head[1] + 0.45, -0.12);
+  setPoint(points, 19, -0.46, head[1] + 0.47, -0.1);
+  setPoint(points, 21, -0.5, head[1] + 0.38, -0.13);
+  setPoint(points, 14, 0.18, head[1] - 0.18, 0.08);
+  setPoint(points, 16, 0.3, head[1] - 0.56, 0.14);
+  setPoint(points, 18, 0.33, head[1] - 0.59, 0.14);
+  setPoint(points, 20, 0.25, head[1] - 0.61, 0.13);
+  setPoint(points, 22, 0.34, head[1] - 0.52, 0.12);
 }
 
 function applyActionShape(points, action, variant, frame) {
   if (action === "set") shapeSetHands(points, variant);
   if (action === "receive") shapeReceivePlatform(points, variant);
-  if (action === "spike" && frame.ballAttach === "wrist_r") shapeSpikeContact(points, variant);
+  if (action === "spike" && (frame.ballAttach === "wrist_r" || frame.root?.[1] < -0.2)) {
+    shapeSpikeContact(points, variant);
+  }
 }
 
 const decodeCue = (value) => decodeURIComponent(value);
@@ -417,6 +424,7 @@ const RISK_RING_COLOR = { yellow: 0xffc43d, red: 0xff3b3b };
 const DEMO_SLOW_FACTOR = 1.75;
 const FRAME_INTERVAL_MS = 1000 / 60;
 const DISPLAY_TARGET_HEIGHT = 1.65;
+const POSE_GROUND_Y = -0.92;
 const MIN_DISPLAY_WIDTHS = [
   [11, 12, 0.34],
   [13, 14, 0.38],
@@ -488,6 +496,14 @@ const ACTUAL_TARGET_KEYS = [
   "armSwingL", "armSwingR",
   "hipSwingL", "hipSwingR",
 ];
+const ACTUAL_SINGLE_PROGRESS = {
+  spike: 0.68,
+  block: 0.58,
+  serve: 0.58,
+  receive: 0.45,
+  set: 0.52,
+  default: 0.55,
+};
 const STATUS_RANK_3D = { green: 0, yellow: 1, red: 2 };
 
 const JOINT_MARKERS = [
@@ -764,7 +780,7 @@ function mergeDisplayJointStatus(...statuses) {
 }
 
 function aggregateSequenceJointStatus(frames) {
-  return mergeDisplayJointStatus(...frames.map((frame) => frame.jointStatus));
+  return mergeDisplayJointStatus(...frames.map((frame) => frame.displayJointStatus || frame.jointStatus));
 }
 
 function smoothActualTargetFrames(frames) {
@@ -798,14 +814,103 @@ function actualShapeVariant(action, jointStatus) {
   return "correct";
 }
 
-function retargetActualTargets(targets, action, jointStatus) {
-  const points = buildPose(targets);
-  applyActionShape(points, action, actualShapeVariant(action, jointStatus), {});
+function actionProgress(action, index, count) {
+  if (count <= 1) return ACTUAL_SINGLE_PROGRESS[action] ?? ACTUAL_SINGLE_PROGRESS.default;
+  return clamp(index / Math.max(1, count - 1), 0, 1);
+}
+
+function sampleActionGuide(action, progress) {
+  const guide = buildSequence(action, "correct");
+  if (!guide.length) {
+    return { points: BASE_POSE.map((point) => [...point]), ball: null, caption: "" };
+  }
+
+  const totalDuration = guide.reduce((sum, frame) => sum + (frame.hold || 720), 0);
+  const elapsed = clamp(progress, 0, 0.999999) * totalDuration;
+  let cursor = 0;
+  let index = guide.length - 1;
+  for (let i = 0; i < guide.length; i += 1) {
+    const hold = guide[i].hold || 720;
+    if (elapsed < cursor + hold) {
+      index = i;
+      break;
+    }
+    cursor += hold;
+  }
+  const current = guide[index];
+  const next = guide[(index + 1) % guide.length];
+  const hold = current.hold || 720;
+  const localT = easeInOut(Math.min(1, (elapsed - cursor) / hold));
+
+  return {
+    points: lerpTriples(current.points, next.points, localT),
+    ball: current.ball && next.ball
+      ? lerpTriple(current.ball, next.ball, localT)
+      : (current.ball || next.ball || null),
+    caption: current.caption || next.caption || "",
+  };
+}
+
+function hasJointIssue(jointStatus, joint) {
+  const status = jointStatus?.[joint];
+  return status === "yellow" || status === "red";
+}
+
+function rotateToFiniteTarget(points, aIdx, bIdx, cIdx, distalIdxs, targetDeg) {
+  if (!Number.isFinite(Number(targetDeg))) return;
+  rotateToAngle(points, aIdx, bIdx, cIdx, distalIdxs, Number(targetDeg));
+}
+
+function applyActualIssueTargets(points, targets, jointStatus, action) {
+  const lockActionArms = ["spike", "serve", "block", "set", "receive"].includes(action);
+  for (const side of ["L", "R"]) {
+    const arm = ARM_CHAIN[side];
+    const leg = LEG_CHAIN[side];
+    if (!lockActionArms && hasJointIssue(jointStatus, "shoulder")) {
+      rotateToFiniteTarget(
+        points,
+        arm.elbow,
+        arm.shoulder,
+        leg.hip,
+        [arm.elbow, ...arm.hand],
+        targets[`shoulder${side}`] ?? targets.shoulder,
+      );
+    }
+    if (!lockActionArms && hasJointIssue(jointStatus, "elbow")) {
+      rotateToFiniteTarget(
+        points,
+        arm.shoulder,
+        arm.elbow,
+        arm.wrist,
+        arm.hand,
+        targets[`elbow${side}`] ?? targets.elbow,
+      );
+    }
+    if (hasJointIssue(jointStatus, "knee")) {
+      rotateToFiniteTarget(
+        points,
+        leg.hip,
+        leg.knee,
+        leg.ankle,
+        leg.foot,
+        targets[`knee${side}`] ?? targets.knee,
+      );
+    }
+  }
+}
+
+function retargetActualTargets(targets, action, frameStatus, guide) {
+  const points = guide?.points ? guide.points.map((point) => [...point]) : buildPose(targets);
+  applyActualIssueTargets(points, targets, frameStatus, action);
+  if (actualShapeVariant(action, frameStatus) === "mistake") {
+    applyActionShape(points, action, "mistake", {});
+  }
   return points;
 }
 
 function retargetActualPose(raw, action, jointStatus) {
-  return retargetActualTargets(actualFrameTargets(raw, action), action, jointStatus);
+  const guide = sampleActionGuide(action, ACTUAL_SINGLE_PROGRESS[action] ?? ACTUAL_SINGLE_PROGRESS.default);
+  return retargetActualTargets(actualFrameTargets(raw, action), action, jointStatus, guide);
 }
 
 function normalizePosePoints(raw, center, scale) {
@@ -926,6 +1031,7 @@ function preparePoseSequenceForDisplay(sequence, { caption = "", action = "spike
       raw: rawPoseTriples(frame.landmarks),
       landmarks: frame.landmarks,
       jointStatus: frame.joint_status || frame.jointStatus || {},
+      displayJointStatus: frame.display_joint_status || frame.displayJointStatus || frame.joint_status || frame.jointStatus || {},
       hold: frame.hold || 720,
       caption: frame.caption || caption,
     }))
@@ -934,28 +1040,43 @@ function preparePoseSequenceForDisplay(sequence, { caption = "", action = "spike
   if (!rawFrames.length) return [];
   const sequenceStatus = aggregateSequenceJointStatus(rawFrames);
   if (rawFrames.length === 1) {
-    return rawFrames.map((frame) => ({
-      points: retargetActualPose(frame.raw, action, mergeDisplayJointStatus(frame.jointStatus, sequenceStatus)),
-      jointStatus: mergeDisplayJointStatus(frame.jointStatus, sequenceStatus),
-      hold: frame.hold,
-      caption: frame.caption,
-    }));
+    return rawFrames.map((frame, index) => {
+      const progress = actionProgress(action, index, rawFrames.length);
+      const guide = sampleActionGuide(action, progress);
+      const displayStatus = mergeDisplayJointStatus(frame.displayJointStatus, sequenceStatus);
+      return {
+        points: retargetActualTargets(actualFrameTargets(frame.raw, action), action, frame.jointStatus, guide),
+        ball: guide.ball,
+        jointStatus: displayStatus,
+        hold: frame.hold,
+        caption: frame.caption || guide.caption,
+      };
+    });
   }
 
-  let targetFrames = rawFrames.map((frame) => ({
-    targets: actualFrameTargets(frame.raw, action),
-    jointStatus: mergeDisplayJointStatus(frame.jointStatus, sequenceStatus),
-    hold: frame.hold,
-    caption: frame.caption,
-  }));
+  let targetFrames = rawFrames.map((frame, index) => {
+    const progress = actionProgress(action, index, rawFrames.length);
+    return {
+      targets: actualFrameTargets(frame.raw, action),
+      frameStatus: frame.jointStatus,
+      displayStatus: mergeDisplayJointStatus(frame.displayJointStatus, sequenceStatus),
+      progress,
+      hold: frame.hold,
+      caption: frame.caption,
+    };
+  });
   targetFrames = smoothActualTargetFrames(targetFrames);
 
-  let frames = targetFrames.map((frame) => ({
-    points: retargetActualTargets(frame.targets, action, frame.jointStatus),
-    jointStatus: frame.jointStatus,
-    hold: frame.hold,
-    caption: frame.caption,
-  }));
+  let frames = targetFrames.map((frame) => {
+    const guide = sampleActionGuide(action, frame.progress);
+    return {
+      points: retargetActualTargets(frame.targets, action, frame.frameStatus, guide),
+      ball: guide.ball,
+      jointStatus: frame.displayStatus,
+      hold: frame.hold,
+      caption: frame.caption || guide.caption,
+    };
+  });
 
   frames = smoothSequencePoints(frames);
   return frames;
@@ -1073,10 +1194,10 @@ function createFigure(scene) {
   });
 
   const shadowGeometry = new THREE.CircleGeometry(0.22, 24);
-  const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 });
+  const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0xffb21a, transparent: true, opacity: 0.2 });
   const shadowMesh = new THREE.Mesh(shadowGeometry, shadowMaterial);
   shadowMesh.rotation.x = -Math.PI / 2;
-  shadowMesh.position.y = 0.001;
+  shadowMesh.position.y = POSE_GROUND_Y;
   group.add(shadowMesh);
 
   scene.add(group);
@@ -1208,12 +1329,12 @@ function createFigure(scene) {
         }
       }
 
-      const feetY = Math.max(toVec3(points[27]).y, toVec3(points[28]).y);
+      const feetY = Math.min(toVec3(points[27]).y, toVec3(points[28]).y);
       const rootX = (toVec3(points[23]).x + toVec3(points[24]).x) / 2;
       const rootZ = (toVec3(points[23]).z + toVec3(points[24]).z) / 2;
-      shadowMesh.position.set(rootX, 0.001, rootZ);
-      const heightAboveGround = Math.max(0.001, feetY - shadowMesh.position.y + 0.05);
-      const scale = Math.max(0.35, 1 - heightAboveGround * 0.6);
+      shadowMesh.position.set(rootX, POSE_GROUND_Y, rootZ);
+      const heightAboveGround = Math.max(0.001, feetY - POSE_GROUND_Y + 0.05);
+      const scale = Math.max(0.32, 1 - heightAboveGround * 0.85);
       shadowMesh.scale.set(scale, scale, scale);
     },
     dispose() {
@@ -1395,7 +1516,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       if (frames[index].ball && frames[nextIndex].ball) {
         ball.setPosition(lerpTriple(frames[index].ball, frames[nextIndex].ball, localT));
       } else {
-        ball.setPosition(null);
+        ball.setPosition(frames[index].ball || frames[nextIndex].ball || null);
       }
 
       draw();
@@ -1449,7 +1570,11 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       const localT = easeInOut(Math.min(1, (elapsed - cursor) / (frames[index].hold * DEMO_SLOW_FACTOR)));
       const points = lerpTriples(frames[index].points, frames[nextIndex].points, localT);
       figure.update(points, frames[index].jointStatus);
-      ball.setPosition(null);
+      if (frames[index].ball && frames[nextIndex].ball) {
+        ball.setPosition(lerpTriple(frames[index].ball, frames[nextIndex].ball, localT));
+      } else {
+        ball.setPosition(frames[index].ball || frames[nextIndex].ball || null);
+      }
       setCue(frames[index].caption);
       draw();
     };
@@ -1509,7 +1634,11 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       const localT = easeInOut(Math.min(1, (elapsed - cursor) / (frames[index].hold * durationScale)));
       const points = lerpTriples(frames[index].points, frames[nextIndex].points, localT);
       figure.update(points, frames[index].jointStatus);
-      ball.setPosition(null);
+      if (frames[index].ball && frames[nextIndex].ball) {
+        ball.setPosition(lerpTriple(frames[index].ball, frames[nextIndex].ball, localT));
+      } else {
+        ball.setPosition(frames[index].ball || frames[nextIndex].ball || null);
+      }
       setCue(frames[index].caption);
       draw();
 

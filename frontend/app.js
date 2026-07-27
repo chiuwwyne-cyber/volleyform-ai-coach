@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v44"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v46"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1160,10 +1160,14 @@ function playableActualSequence(poseCompare) {
     : [];
   if (actualSequence.length > 0) {
     const compareStatus = poseCompare?.joint_status || {};
-    return actualSequence.map((frame) => ({
-      ...frame,
-      joint_status: mergePoseJointStatus(compareStatus, frame.joint_status || frame.jointStatus || {}),
-    }));
+    return actualSequence.map((frame) => {
+      const rawStatus = frame.joint_status || frame.jointStatus || {};
+      return {
+        ...frame,
+        joint_status: rawStatus,
+        display_joint_status: mergePoseJointStatus(compareStatus, rawStatus),
+      };
+    });
   }
   if (poseCompare?.actual_landmarks?.length >= 33) {
     return [{
