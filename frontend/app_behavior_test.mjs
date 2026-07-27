@@ -370,6 +370,10 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(poseSource, /frameBallPoint/);
   assert.match(poseSource, /shapeBlockBiomechanics/);
   assert.match(poseSource, /shapeServeBiomechanics/);
+  assert.match(poseSource, /frameCamera\(bounds,\s*camera\.fov,\s*framePadding,\s*camera\.aspect\)/);
+  assert.match(poseSource, /camera\.position\.set\(lookTarget\.x/);
+  assert.match(poseSource, /renderer\.domElement\.style\.width/);
+  assert.match(poseSource, /renderer\.domElement\.style\.height/);
   assert.doesNotMatch(poseSource, /actualShapeVariant/);
   assert.doesNotMatch(poseSource, /applyActionShape\(points,\s*action,\s*"mistake"/);
 

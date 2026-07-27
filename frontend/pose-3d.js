@@ -669,13 +669,14 @@ function computeFramesBounds(frames) {
 
 // Automatically size and center the camera so the whole bounding box (across
 // every keyframe, including the ball) stays in frame from front or side.
-function frameCamera(bounds, fovDeg, padding = 1.35) {
+function frameCamera(bounds, fovDeg, padding = 1.35, aspect = 1) {
   const center = bounds.min.clone().add(bounds.max).multiplyScalar(0.5);
   const size = bounds.max.clone().sub(bounds.min);
   const halfV = Math.max(size.y / 2, 0.2);
   const halfH = Math.max(size.x, size.z) / 2 || 0.2;
+  const safeAspect = clamp(Number(aspect) || 1, 0.35, 3.5);
   const halfFov = (fovDeg * Math.PI) / 360;
-  const distance = Math.max(halfV, halfH) / Math.tan(halfFov) * padding;
+  const distance = Math.max(halfV, halfH / safeAspect) / Math.tan(halfFov) * padding;
   return { center, distance };
 }
 
@@ -1906,9 +1907,9 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
 
   function applyCamera() {
     if (view === "side") {
-      camera.position.set(distance, lookTarget.y + 0.15, lookTarget.z);
+      camera.position.set(lookTarget.x + distance, lookTarget.y + 0.15, lookTarget.z);
     } else {
-      camera.position.set(0, lookTarget.y + 0.15, lookTarget.z + distance);
+      camera.position.set(lookTarget.x, lookTarget.y + 0.15, lookTarget.z + distance);
     }
     camera.lookAt(lookTarget);
   }
@@ -1918,6 +1919,8 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
     renderer.setSize(width, height, false);
+    renderer.domElement.style.width = `${width}px`;
+    renderer.domElement.style.height = `${height}px`;
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   }
@@ -1952,7 +1955,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     }
     const displayLandmarks = preparePoseForDisplay(landmarks);
     const bounds = computeFramesBounds([{ points: displayLandmarks }]);
-    const framed = frameCamera(bounds, camera.fov, framePadding);
+    const framed = frameCamera(bounds, camera.fov, framePadding, camera.aspect);
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
@@ -1968,7 +1971,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
 
     const frames = buildSequence(action, variant);
     const bounds = computeFramesBounds(frames);
-    const framed = frameCamera(bounds, camera.fov, framePadding);
+    const framed = frameCamera(bounds, camera.fov, framePadding, camera.aspect);
     lookTarget = framed.center;
     distance = framed.distance;
     applyCamera();
@@ -2028,7 +2031,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     figure.setVisible(true);
 
     const bounds = computeFramesBounds(frames);
-    const framed = frameCamera(bounds, camera.fov, framePadding);
+    const framed = frameCamera(bounds, camera.fov, framePadding, camera.aspect);
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
@@ -2095,7 +2098,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     figure.setVisible(true);
 
     const bounds = computeFramesBounds(frames);
-    const framed = frameCamera(bounds, camera.fov, framePadding);
+    const framed = frameCamera(bounds, camera.fov, framePadding, camera.aspect);
     lookTarget = framed.center;
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
