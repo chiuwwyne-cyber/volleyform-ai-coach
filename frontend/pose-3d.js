@@ -107,6 +107,54 @@ const LEG_CHAIN = {
 
 const SWING_AXIS = [1, 0, 0]; // sideways axis: rotating around it swings a limb forward/back (+ = forward)
 
+function segmentDistance(points, aIdx, bIdx) {
+  const a = points[aIdx];
+  const b = points[bIdx];
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+
+const HUMAN_SEGMENT_LIMITS = {
+  upperArm: segmentDistance(BASE_POSE, 11, 13) * 1.16,
+  forearm: segmentDistance(BASE_POSE, 13, 15) * 1.16,
+  hand: 0.17,
+};
+
+function movePosePoints(points, indices, delta) {
+  for (const idx of new Set(indices)) {
+    if (!isFiniteTriple(points[idx])) continue;
+    points[idx] = vecAdd(points[idx], delta);
+  }
+}
+
+function clampDistalSegment(points, startIdx, endIdx, carriedIdxs, maxLength) {
+  if (!isFiniteTriple(points[startIdx]) || !isFiniteTriple(points[endIdx])) return;
+  const start = points[startIdx];
+  const end = points[endIdx];
+  const vector = vecSub(end, start);
+  const length = Math.hypot(...vector);
+  if (length <= maxLength || length < 1e-5) return;
+
+  const scale = maxLength / length;
+  const clamped = [start[0] + vector[0] * scale, start[1] + vector[1] * scale, start[2] + vector[2] * scale];
+  const delta = vecSub(clamped, end);
+  movePosePoints(points, [endIdx, ...carriedIdxs], delta);
+}
+
+function constrainArmProportions(points, side) {
+  const arm = ARM_CHAIN[side];
+  const hand = arm.hand.filter((idx) => idx !== arm.wrist);
+  clampDistalSegment(points, arm.shoulder, arm.elbow, [arm.wrist, ...hand], HUMAN_SEGMENT_LIMITS.upperArm);
+  clampDistalSegment(points, arm.elbow, arm.wrist, hand, HUMAN_SEGMENT_LIMITS.forearm);
+  for (const tip of hand) {
+    clampDistalSegment(points, arm.wrist, tip, [], HUMAN_SEGMENT_LIMITS.hand);
+  }
+}
+
+function constrainHumanProportions(points) {
+  constrainArmProportions(points, "L");
+  constrainArmProportions(points, "R");
+}
+
 function buildPose(targets) {
   const points = BASE_POSE.map((point) => [...point]);
   for (const side of ["L", "R"]) {
@@ -346,6 +394,7 @@ function applyActionShape(points, action, variant, frame) {
   if (action === "set") shapeSetHands(points, variant);
   if (action === "receive") shapeReceivePlatform(points, variant);
   if (action === "spike") shapeSpikeBiomechanics(points, variant, frame);
+  constrainHumanProportions(points);
 }
 
 const decodeCue = (value) => decodeURIComponent(value);
@@ -960,6 +1009,20 @@ function timelineFrames(frames, action) {
     }
     return { ...frame, hold, progress };
   });
+}
+
+function stripTimelineFromCaption(value, fallback = "影片中的動作") {
+  const text = String(value || fallback || "").trim();
+  return text
+    .replace(/^影片時間\s*\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?\s*秒[：:]\s*/, "")
+    .replace(/^第\s*\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?\s*秒[：:]\s*/, "")
+    .trim() || fallback;
+}
+
+function relativeSecondCaption(elapsedMs, totalDurationMs, frameCaption, fallbackCaption) {
+  const totalSeconds = Math.max(1, Math.round(totalDurationMs / 1000));
+  const second = Math.min(totalSeconds, Math.floor(Math.max(0, elapsedMs) / 1000) + 1);
+  return `第 ${second} 秒：${stripTimelineFromCaption(frameCaption, fallbackCaption)}`;
 }
 
 function sampleActionGuide(action, progress) {
@@ -1856,7 +1919,14 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
 
   function playPoseSequenceForVideo(
     sequence,
-    { caption = "影片中的實際動作", loop = false, speedFactor = 1, action = "spike" } = {},
+    {
+      caption = "影片中的實際動作",
+      loop = false,
+      speedFactor = 1,
+      action = "spike",
+      playbackSeconds = null,
+      timeLabel = "source",
+    } = {},
   ) {
     stopAnimation();
     if (!sequence?.length || typeof requestAnimationFrame !== "function") {
@@ -1878,7 +1948,11 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
     distance = Math.max(framed.distance, cameraDistance);
     applyCamera();
 
-    const durationScale = Math.max(0.25, speedFactor);
+    const baseDuration = frames.reduce((sum, frame) => sum + frame.hold, 0);
+    const requestedSeconds = Number(playbackSeconds);
+    const durationScale = Number.isFinite(requestedSeconds) && requestedSeconds > 0 && baseDuration > 0
+      ? (requestedSeconds * 1000) / baseDuration
+      : Math.max(0.25, speedFactor);
     const totalDuration = frames.reduce((sum, frame) => sum + frame.hold * durationScale, 0);
     const state = { startTime: null, lastDraw: 0 };
     animation = { frameId: 0 };
@@ -1912,7 +1986,10 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       } else {
         ball.setPosition(frames[index].ball || frames[nextIndex].ball || null);
       }
-      setCue(frames[index].caption);
+      const cue = timeLabel === "relative-seconds"
+        ? relativeSecondCaption(elapsed, totalDuration, frames[index].caption, caption)
+        : frames[index].caption;
+      setCue(cue);
       draw();
 
       if (!loop && rawElapsed >= totalDuration) {

@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v49"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v50"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1067,7 +1067,14 @@ function renderPoseCompareView() {
       ? lastPoseCompare.actual_sequence
       : [];
     if (actualSequence.length > 1 && typeof actualViewport?.playPoseSequence === "function") {
-      actualViewport.playPoseSequence(actualSequence, { caption: "影片分析到的錯誤姿勢" });
+      actualViewport.playPoseSequence(actualSequence, {
+        caption: "影片分析到的錯誤姿勢",
+        loop: true,
+        speedFactor: 1,
+        action: lastPoseCompareAction,
+        playbackSeconds: 6,
+        timeLabel: "relative-seconds",
+      });
     } else {
       actualViewport?.setStaticPose(
         lastPoseCompare.actual_landmarks,
@@ -1124,7 +1131,14 @@ function renderPoseCompare(poseCompare, action) {
   ensureViewports().then(() => {
     actualViewport.setView(poseCompareView);
     if (actualSequence.length > 1 && typeof actualViewport.playPoseSequence === "function") {
-      actualViewport.playPoseSequence(actualSequence, { caption: "影片分析到的錯誤姿勢" });
+      actualViewport.playPoseSequence(actualSequence, {
+        caption: "影片分析到的錯誤姿勢",
+        loop: true,
+        speedFactor: 1,
+        action: lastPoseCompareAction,
+        playbackSeconds: 6,
+        timeLabel: "relative-seconds",
+      });
       return;
     }
     actualViewport.setStaticPose(
@@ -1187,7 +1201,14 @@ function renderPoseCompareView() {
 
   const actualSequence = playableActualSequence(lastPoseCompare);
   if (actualSequence.length > 0 && typeof actualViewport?.playPoseSequence === "function") {
-    actualViewport.playPoseSequence(actualSequence, { caption: actualPoseCaption });
+    actualViewport.playPoseSequence(actualSequence, {
+      caption: actualPoseCaption,
+      loop: true,
+      speedFactor: 1,
+      action: lastPoseCompareAction,
+      playbackSeconds: 6,
+      timeLabel: "relative-seconds",
+    });
     return;
   }
   actualViewport?.setStaticPose(
@@ -1216,7 +1237,14 @@ function renderPoseCompare(poseCompare, action) {
   ensureViewports().then(() => {
     actualViewport.setView(poseCompareView);
     if (actualSequence.length > 0 && typeof actualViewport.playPoseSequence === "function") {
-      actualViewport.playPoseSequence(actualSequence, { caption: actualPoseCaption });
+      actualViewport.playPoseSequence(actualSequence, {
+        caption: actualPoseCaption,
+        loop: true,
+        speedFactor: 1,
+        action: lastPoseCompareAction,
+        playbackSeconds: 6,
+        timeLabel: "relative-seconds",
+      });
       return;
     }
     actualViewport.setStaticPose(
@@ -1395,6 +1423,8 @@ function renderPoseCompareView() {
       loop: true,
       speedFactor: 1,
       action: lastPoseCompareAction,
+      playbackSeconds: 6,
+      timeLabel: "relative-seconds",
     });
     return;
   }
@@ -1429,6 +1459,8 @@ function renderPoseCompare(poseCompare, action) {
         loop: true,
         speedFactor: 1,
         action: lastPoseCompareAction,
+        playbackSeconds: 6,
+        timeLabel: "relative-seconds",
       });
       return;
     }

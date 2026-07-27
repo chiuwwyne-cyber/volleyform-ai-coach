@@ -313,8 +313,10 @@ function makeContext() {
 
 async function main() {
   const appPath = path.join(process.cwd(), "frontend", "app.js");
+  const pose3dPath = path.join(process.cwd(), "frontend", "pose-3d.js");
   const source = `${fs.readFileSync(appPath, "utf8")}
 globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalities, resolveShareUrl };`;
+  const poseSource = fs.readFileSync(pose3dPath, "utf8");
   const context = makeContext();
   context.__pose3dLoader = async () => ({
     createPoseViewport: () => ({
@@ -351,6 +353,11 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(source, /serviceWorker\.register/);
   assert.match(source, /analyzeMediaLocally/);
   assert.match(source, /startRealtimeAnalysis/);
+  assert.match(source, /playbackSeconds:\s*6/);
+  assert.match(source, /timeLabel:\s*"relative-seconds"/);
+  assert.match(poseSource, /relativeSecondCaption/);
+  assert.match(poseSource, /第 \$\{second\} 秒/);
+  assert.match(poseSource, /constrainHumanProportions\(points\)/);
 
   const backendUrl = context.document.querySelector("#backendUrl");
   backendUrl.value = "http://192.168.1.10:8000/";
