@@ -464,20 +464,31 @@ const UPPER_BODY_INDICES = [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
 const HAND_INDICES = [15, 16, 17, 18, 19, 20, 21, 22];
 const LOWER_BODY_INDICES = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
 const SEQUENCE_ROOT_FOLLOW = 0.28;
-const SEQUENCE_POINT_FOLLOW = 0.68;
+const SEQUENCE_POINT_FOLLOW = 0.52;
+const ACTUAL_TARGET_FOLLOW = 0.5;
 const ACTUAL_RETARGET_LIMITS = {
   elbow: [70, 178],
   shoulder: [10, 178],
   knee: [78, 178],
+  armSwing: [-58, 58],
+  hipSwing: [-40, 40],
 };
 const ACTUAL_RETARGET_DEFAULTS = {
-  spike: { elbow: 150, shoulder: 75, knee: 142 },
-  block: { elbow: 168, shoulder: 128, knee: 145 },
-  serve: { elbow: 155, shoulder: 105, knee: 160 },
-  receive: { elbow: 174, shoulder: 68, knee: 132 },
-  set: { elbow: 154, shoulder: 150, knee: 152 },
-  default: { elbow: 155, shoulder: 95, knee: 150 },
+  spike: { elbow: 150, shoulder: 75, knee: 142, armSwing: -8, hipSwing: 0 },
+  block: { elbow: 168, shoulder: 128, knee: 145, armSwing: 0, hipSwing: 0 },
+  serve: { elbow: 155, shoulder: 105, knee: 160, armSwing: -10, hipSwing: 0 },
+  receive: { elbow: 174, shoulder: 68, knee: 132, armSwing: 6, hipSwing: 0 },
+  set: { elbow: 154, shoulder: 150, knee: 152, armSwing: 0, hipSwing: 0 },
+  default: { elbow: 155, shoulder: 95, knee: 150, armSwing: 0, hipSwing: 0 },
 };
+const ACTUAL_TARGET_KEYS = [
+  "elbowL", "elbowR",
+  "shoulderL", "shoulderR",
+  "kneeL", "kneeR",
+  "armSwingL", "armSwingR",
+  "hipSwingL", "hipSwingR",
+];
+const STATUS_RANK_3D = { green: 0, yellow: 1, red: 2 };
 
 const JOINT_MARKERS = [
   { index: 11, joint: "shoulder", radius: 0.044 },
@@ -552,6 +563,21 @@ function orientKrunkPart(mesh, proximal, distal) {
 function statusColor(joint, jointStatus) {
   if (!joint) return BODY_COLOR;
   return STATUS_COLOR[jointStatus?.[joint] || "green"];
+}
+
+function applyStatusMaterial(material, color, status = "green") {
+  material.color.setHex(color);
+  if (!material.emissive) return;
+  if (status === "red") {
+    material.emissive.setHex(0x5a1010);
+    material.emissiveIntensity = 0.42;
+  } else if (status === "yellow") {
+    material.emissive.setHex(0x4a3600);
+    material.emissiveIntensity = 0.32;
+  } else {
+    material.emissive.setHex(0x000000);
+    material.emissiveIntensity = 0;
+  }
 }
 
 function landmarkTriple(point) {
@@ -688,6 +714,17 @@ function finitePoseAngle(points, aIdx, bIdx, cIdx, fallback, limits) {
   return clamp(angle, limits[0], limits[1]);
 }
 
+function finiteLimbSwing(points, startIdx, endIdx, fallback, limits) {
+  const start = landmarkTriple(points?.[startIdx]);
+  const end = landmarkTriple(points?.[endIdx]);
+  if (!start || !end) return fallback;
+  const vector = vecSub(end, start);
+  if (Math.hypot(...vector) < 1e-5) return fallback;
+  const swing = (Math.atan2(vector[2], Math.abs(vector[1]) + 0.08) * 180) / Math.PI;
+  if (!Number.isFinite(swing)) return fallback;
+  return clamp(swing, limits[0], limits[1]);
+}
+
 function retargetDefaults(action) {
   return ACTUAL_RETARGET_DEFAULTS[action] || ACTUAL_RETARGET_DEFAULTS.default;
 }
@@ -705,7 +742,47 @@ function actualFrameTargets(raw, action) {
     shoulderR: finitePoseAngle(raw, 14, 12, 24, defaults.shoulder, shoulderLimits),
     kneeL: finitePoseAngle(raw, 23, 25, 27, defaults.knee, kneeLimits),
     kneeR: finitePoseAngle(raw, 24, 26, 28, defaults.knee, kneeLimits),
+    armSwingL: finiteLimbSwing(raw, 11, 15, defaults.armSwing, ACTUAL_RETARGET_LIMITS.armSwing),
+    armSwingR: finiteLimbSwing(raw, 12, 16, defaults.armSwing, ACTUAL_RETARGET_LIMITS.armSwing),
+    hipSwingL: finiteLimbSwing(raw, 23, 27, defaults.hipSwing, ACTUAL_RETARGET_LIMITS.hipSwing),
+    hipSwingR: finiteLimbSwing(raw, 24, 28, defaults.hipSwing, ACTUAL_RETARGET_LIMITS.hipSwing),
   };
+}
+
+function strongerStatus(first = "green", second = "green") {
+  return (STATUS_RANK_3D[second] || 0) > (STATUS_RANK_3D[first] || 0) ? second : first;
+}
+
+function mergeDisplayJointStatus(...statuses) {
+  const merged = { shoulder: "green", elbow: "green", wrist: "green", knee: "green" };
+  for (const status of statuses) {
+    for (const joint of Object.keys(merged)) {
+      merged[joint] = strongerStatus(merged[joint], status?.[joint] || "green");
+    }
+  }
+  return merged;
+}
+
+function aggregateSequenceJointStatus(frames) {
+  return mergeDisplayJointStatus(...frames.map((frame) => frame.jointStatus));
+}
+
+function smoothActualTargetFrames(frames) {
+  if (frames.length < 2) return frames;
+  let previous = { ...frames[0].targets };
+  return frames.map((frame, index) => {
+    if (index === 0) return frame;
+    const targets = { ...frame.targets };
+    for (const key of ACTUAL_TARGET_KEYS) {
+      const current = Number(frame.targets[key]);
+      const last = Number(previous[key]);
+      if (Number.isFinite(current) && Number.isFinite(last)) {
+        targets[key] = last + (current - last) * ACTUAL_TARGET_FOLLOW;
+      }
+    }
+    previous = targets;
+    return { ...frame, targets };
+  });
 }
 
 function statusHasIssue(jointStatus, joints) {
@@ -721,10 +798,14 @@ function actualShapeVariant(action, jointStatus) {
   return "correct";
 }
 
-function retargetActualPose(raw, action, jointStatus) {
-  const points = buildPose(actualFrameTargets(raw, action));
+function retargetActualTargets(targets, action, jointStatus) {
+  const points = buildPose(targets);
   applyActionShape(points, action, actualShapeVariant(action, jointStatus), {});
   return points;
+}
+
+function retargetActualPose(raw, action, jointStatus) {
+  return retargetActualTargets(actualFrameTargets(raw, action), action, jointStatus);
 }
 
 function normalizePosePoints(raw, center, scale) {
@@ -851,17 +932,26 @@ function preparePoseSequenceForDisplay(sequence, { caption = "", action = "spike
     .filter((frame) => frame.raw?.length >= 33);
 
   if (!rawFrames.length) return [];
+  const sequenceStatus = aggregateSequenceJointStatus(rawFrames);
   if (rawFrames.length === 1) {
     return rawFrames.map((frame) => ({
-      points: retargetActualPose(frame.raw, action, frame.jointStatus),
-      jointStatus: frame.jointStatus,
+      points: retargetActualPose(frame.raw, action, mergeDisplayJointStatus(frame.jointStatus, sequenceStatus)),
+      jointStatus: mergeDisplayJointStatus(frame.jointStatus, sequenceStatus),
       hold: frame.hold,
       caption: frame.caption,
     }));
   }
 
-  let frames = rawFrames.map((frame) => ({
-    points: retargetActualPose(frame.raw, action, frame.jointStatus),
+  let targetFrames = rawFrames.map((frame) => ({
+    targets: actualFrameTargets(frame.raw, action),
+    jointStatus: mergeDisplayJointStatus(frame.jointStatus, sequenceStatus),
+    hold: frame.hold,
+    caption: frame.caption,
+  }));
+  targetFrames = smoothActualTargetFrames(targetFrames);
+
+  let frames = targetFrames.map((frame) => ({
+    points: retargetActualTargets(frame.targets, action, frame.jointStatus),
     jointStatus: frame.jointStatus,
     hold: frame.hold,
     caption: frame.caption,
@@ -1037,7 +1127,7 @@ function createFigure(scene) {
       const keep = limb.part.joint === "wrist" || isForearm;
       limb.mesh.visible = keep;
       if (keep) {
-        limb.mesh.material.color.setHex(KRUNK_BODY_COLOR);
+        applyStatusMaterial(limb.mesh.material, KRUNK_BODY_COLOR, "green");
         krunk.handLimbs.push(limb);
       }
     }
@@ -1065,7 +1155,7 @@ function createFigure(scene) {
           orientKrunkPart(bone.mesh, toVec3(points[bone.a]), toVec3(points[bone.b]));
           const status = bone.joint ? jointStatus?.[bone.joint] || "green" : "green";
           const color = status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status];
-          bone.mesh.material.color.setHex(color);
+          applyStatusMaterial(bone.mesh.material, color, status);
         }
         for (const part of krunk.torsoParts) {
           orientKrunkPart(part.mesh, hipMid, shoulderMid);
@@ -1073,12 +1163,13 @@ function createFigure(scene) {
         for (const limb of krunk.handLimbs) {
           orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
           const status = limb.part.joint ? jointStatus?.[limb.part.joint] || "green" : "green";
-          limb.mesh.material.color.setHex(status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status]);
+          applyStatusMaterial(limb.mesh.material, status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status], status);
         }
       } else {
         for (const limb of limbs) {
           orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
-          limb.mesh.material.color.setHex(statusColor(limb.part.joint, jointStatus));
+          const status = limb.part.joint ? jointStatus?.[limb.part.joint] || "green" : "green";
+          applyStatusMaterial(limb.mesh.material, statusColor(limb.part.joint, jointStatus), status);
         }
       }
 
@@ -1104,10 +1195,10 @@ function createFigure(scene) {
           // In Krunk mode the markers are permanent white ball-joints that cap
           // the seams between the STL parts (and the capsule forearms/fingers),
           // hiding the decimated part edges; they still turn yellow/red to flag.
-          marker.mesh.material.color.setHex(status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status]);
+          applyStatusMaterial(marker.mesh.material, status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status], status);
           marker.mesh.visible = true;
         } else {
-          marker.mesh.material.color.setHex(statusColor(marker.joint, jointStatus));
+          applyStatusMaterial(marker.mesh.material, statusColor(marker.joint, jointStatus), status);
           marker.mesh.visible = status !== "green";
         }
         marker.halo.position.copy(position);

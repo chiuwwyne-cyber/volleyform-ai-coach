@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v42"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260727-frontend-sync-v44"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1139,12 +1139,32 @@ const actualPoseCaption = decodeUiText("%E5%BD%B1%E7%89%87%E5%88%86%E6%9E%90%E5%
 const noPoseCompareText = decodeUiText("%E6%B2%92%E6%9C%89%E5%81%B5%E6%B8%AC%E5%88%B0%E5%8F%AF%E7%94%A8%E7%9A%84%203D%20%E5%A7%BF%E5%8B%A2%E3%80%82%E8%AB%8B%E8%AE%93%E5%85%A8%E8%BA%AB%E3%80%81%E9%9B%99%E6%89%8B%E8%88%87%E8%85%B3%E6%AD%A5%E5%AE%8C%E6%95%B4%E5%85%A5%E9%8F%A1%E5%BE%8C%E5%86%8D%E5%88%86%E6%9E%90%E3%80%82");
 const actualPoseReplayText = decodeUiText("%E5%B7%A6%E5%81%B4%E6%AD%A3%E5%9C%A8%E9%87%8D%E6%92%AD%E5%BD%B1%E7%89%87%E5%88%86%E6%9E%90%E5%88%B0%E7%9A%84%E9%8C%AF%E8%AA%A4%E9%97%9C%E9%8D%B5%E5%BD%B1%E6%A0%BC%EF%BC%9B%E7%B4%85%E8%89%B2%E6%98%AF%E9%AB%98%E9%A2%A8%E9%9A%AA%E5%8F%97%E5%8A%9B%E9%BB%9E%EF%BC%8C%E9%BB%83%E8%89%B2%E6%98%AF%E9%9C%80%E8%A6%81%E4%BF%AE%E6%AD%A3%E7%9A%84%E4%BD%8D%E7%BD%AE%E3%80%82%E5%8F%B3%E5%81%B4%E6%98%AF%E5%90%8C%E5%8B%95%E4%BD%9C%E7%9A%84%E6%AD%A3%E7%A2%BA%E6%85%A2%E5%8B%95%E4%BD%9C%E7%A4%BA%E7%AF%84%E3%80%82");
 const actualPoseStillText = decodeUiText("%E5%B7%A6%E5%81%B4%E6%98%AF%E5%BD%B1%E7%89%87%E6%88%96%E7%85%A7%E7%89%87%E5%88%86%E6%9E%90%E5%88%B0%E7%9A%84%E9%8C%AF%E8%AA%A4%E5%A7%BF%E5%8B%A2%EF%BC%9B%E7%B4%85%E8%89%B2%E6%98%AF%E9%AB%98%E9%A2%A8%E9%9A%AA%E5%8F%97%E5%8A%9B%E9%BB%9E%EF%BC%8C%E9%BB%83%E8%89%B2%E6%98%AF%E9%9C%80%E8%A6%81%E4%BF%AE%E6%AD%A3%E7%9A%84%E4%BD%8D%E7%BD%AE%E3%80%82%E5%8F%B3%E5%81%B4%E6%98%AF%E5%90%8C%E5%8B%95%E4%BD%9C%E7%9A%84%E6%AD%A3%E7%A2%BA%E6%85%A2%E5%8B%95%E4%BD%9C%E7%A4%BA%E7%AF%84%E3%80%82");
+const poseStatusRank = { green: 0, yellow: 1, red: 2 };
+
+function mergePoseJointStatus(...statuses) {
+  const merged = { shoulder: "green", elbow: "green", wrist: "green", knee: "green" };
+  for (const status of statuses) {
+    for (const joint of Object.keys(merged)) {
+      const next = status?.[joint] || "green";
+      if ((poseStatusRank[next] || 0) > (poseStatusRank[merged[joint]] || 0)) {
+        merged[joint] = next;
+      }
+    }
+  }
+  return merged;
+}
 
 function playableActualSequence(poseCompare) {
   const actualSequence = Array.isArray(poseCompare?.actual_sequence)
     ? poseCompare.actual_sequence
     : [];
-  if (actualSequence.length > 0) return actualSequence;
+  if (actualSequence.length > 0) {
+    const compareStatus = poseCompare?.joint_status || {};
+    return actualSequence.map((frame) => ({
+      ...frame,
+      joint_status: mergePoseJointStatus(compareStatus, frame.joint_status || frame.jointStatus || {}),
+    }));
+  }
   if (poseCompare?.actual_landmarks?.length >= 33) {
     return [{
       landmarks: poseCompare.actual_landmarks,
@@ -1366,7 +1386,7 @@ function renderPoseCompareView() {
   if (actualSequence.length > 0 && typeof actualViewport?.playPoseSequence === "function") {
     actualViewport.playPoseSequence(actualSequence, {
       caption: "影片中的實際動作",
-      loop: false,
+      loop: true,
       speedFactor: 1,
       action: lastPoseCompareAction,
     });
@@ -1400,7 +1420,7 @@ function renderPoseCompare(poseCompare, action) {
     if (actualSequence.length > 0 && typeof actualViewport.playPoseSequence === "function") {
       actualViewport.playPoseSequence(actualSequence, {
         caption: "影片中的實際動作",
-        loop: false,
+        loop: true,
         speedFactor: 1,
         action: lastPoseCompareAction,
       });
