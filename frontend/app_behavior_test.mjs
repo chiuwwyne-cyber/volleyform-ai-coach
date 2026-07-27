@@ -503,7 +503,11 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
     },
     pose_compare: { available: false },
   });
-  const phaseIssueCard = context.document.querySelector("#issues").children[0];
+  const phaseIssueCards = context.document.querySelector("#issues").children;
+  const phaseIssueCard = phaseIssueCards[0];
+  const phaseKneeCard = phaseIssueCards[1];
+  assert.equal(phaseIssueCards.length, 2);
+  phaseIssueCard.innerHTML += phaseKneeCard.innerHTML;
   assert.match(context.document.querySelector("#coachSummary").textContent, /最需要先調整/);
   assert.match(phaseIssueCard.innerHTML, /擊球瞬間/);
   assert.match(phaseIssueCard.innerHTML, /第 5\.7 秒/);

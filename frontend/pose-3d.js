@@ -463,6 +463,8 @@ const SINGLE_POSE_MOTION = [
 const UPPER_BODY_INDICES = [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
 const HAND_INDICES = [15, 16, 17, 18, 19, 20, 21, 22];
 const LOWER_BODY_INDICES = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
+const SEQUENCE_ROOT_FOLLOW = 0.28;
+const SEQUENCE_POINT_FOLLOW = 0.68;
 
 const JOINT_MARKERS = [
   { index: 11, joint: "shoulder", radius: 0.044 },
@@ -651,28 +653,167 @@ function addFallbackDepth(points) {
   }
 }
 
-function preparePoseForDisplay(landmarks) {
+function rawPoseTriples(landmarks) {
   if (!landmarks || landmarks.length < 33) return landmarks;
   let raw = landmarks.map((point) => landmarkTriple(point) || [0, 0, 0]);
   if (shouldConvertYUpToYDown(raw)) {
     raw = raw.map((point) => [point[0], -point[1], point[2]]);
   }
-  const center = poseDisplayCenter(raw);
-  const rawBounds = poseBounds(raw);
-  const height = poseDisplayHeight(raw, rawBounds);
-  const scale = clamp(DISPLAY_TARGET_HEIGHT / height, 0.4, 5);
-  let prepared = raw.map((point) => [
+  return raw;
+}
+
+function normalizePosePoints(raw, center, scale) {
+  return raw.map((point) => [
     (point[0] - center[0]) * scale,
     (point[1] - center[1]) * scale,
     (point[2] - center[2]) * scale,
   ]);
+}
+
+function applyMinimumDisplayWidths(points) {
+  for (const [leftIdx, rightIdx, width] of MIN_DISPLAY_WIDTHS) {
+    enforcePairWidth(points, leftIdx, rightIdx, width);
+  }
+}
+
+function medianNumber(values, fallback = 0) {
+  const finite = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!finite.length) return fallback;
+  const middle = Math.floor(finite.length / 2);
+  return finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
+}
+
+function medianTriple(values, fallback = [0, 0, 0]) {
+  return [0, 1, 2].map((axis) => medianNumber(values.map((point) => point?.[axis]), fallback[axis]));
+}
+
+function sequenceAxisBounds(frames, axis) {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const frame of frames) {
+    for (const point of frame.points) {
+      if (!isFiniteTriple(point)) continue;
+      min = Math.min(min, point[axis]);
+      max = Math.max(max, point[axis]);
+    }
+  }
+  if (!Number.isFinite(min)) return { min: 0, max: 0, size: 0 };
+  return { min, max, size: max - min };
+}
+
+function compressDepthAcrossFrames(frames, maxDepth) {
+  const depth = sequenceAxisBounds(frames, 2);
+  if (depth.size <= maxDepth) return frames;
+  const centerZ = (depth.min + depth.max) / 2;
+  const scale = maxDepth / depth.size;
+  return frames.map((frame) => ({
+    ...frame,
+    points: frame.points.map((point) => [point[0], point[1], centerZ + (point[2] - centerZ) * scale]),
+  }));
+}
+
+function addFallbackDepthAcrossFrames(frames) {
+  const depth = sequenceAxisBounds(frames, 2);
+  if (depth.size >= 0.18) return frames;
+  return frames.map((frame) => {
+    const points = frame.points.map((point) => [...point]);
+    for (const [key, offset] of Object.entries(FALLBACK_DEPTH_OFFSETS)) {
+      const index = Number(key);
+      if (isFiniteTriple(points[index])) points[index][2] += offset;
+    }
+    return { ...frame, points };
+  });
+}
+
+function shiftPose(points, delta) {
+  return points.map((point) => [point[0] + delta[0], point[1] + delta[1], point[2] + delta[2]]);
+}
+
+function smoothTriple(previous, current, follow) {
+  return [
+    previous[0] + (current[0] - previous[0]) * follow,
+    previous[1] + (current[1] - previous[1]) * follow,
+    previous[2] + (current[2] - previous[2]) * follow,
+  ];
+}
+
+function stabilizeSequenceRoots(frames) {
+  if (frames.length < 2) return frames;
+  let stableRoot = poseDisplayCenter(frames[0].points);
+  return frames.map((frame, index) => {
+    const root = poseDisplayCenter(frame.points);
+    if (index > 0) stableRoot = smoothTriple(stableRoot, root, SEQUENCE_ROOT_FOLLOW);
+    return { ...frame, points: shiftPose(frame.points, vecSub(stableRoot, root)) };
+  });
+}
+
+function smoothSequencePoints(frames) {
+  if (frames.length < 2) return frames;
+  let previous = frames[0].points.map((point) => [...point]);
+  return frames.map((frame, index) => {
+    if (index === 0) return frame;
+    const points = frame.points.map((point, pointIndex) => smoothTriple(previous[pointIndex], point, SEQUENCE_POINT_FOLLOW));
+    previous = points.map((point) => [...point]);
+    return { ...frame, points };
+  });
+}
+
+function preparePoseForDisplay(landmarks) {
+  const raw = rawPoseTriples(landmarks);
+  if (!raw || raw.length < 33) return landmarks;
+  const center = poseDisplayCenter(raw);
+  const rawBounds = poseBounds(raw);
+  const height = poseDisplayHeight(raw, rawBounds);
+  const scale = clamp(DISPLAY_TARGET_HEIGHT / height, 0.4, 5);
+  let prepared = normalizePosePoints(raw, center, scale);
   prepared = compressDepth(prepared, DISPLAY_TARGET_HEIGHT * 0.75);
 
-  for (const [leftIdx, rightIdx, width] of MIN_DISPLAY_WIDTHS) {
-    enforcePairWidth(prepared, leftIdx, rightIdx, width);
-  }
+  applyMinimumDisplayWidths(prepared);
   addFallbackDepth(prepared);
   return prepared;
+}
+
+function preparePoseSequenceForDisplay(sequence, { caption = "" } = {}) {
+  const rawFrames = (sequence || [])
+    .filter((frame) => frame.landmarks?.length >= 33)
+    .map((frame) => ({
+      raw: rawPoseTriples(frame.landmarks),
+      landmarks: frame.landmarks,
+      jointStatus: frame.joint_status || frame.jointStatus || {},
+      hold: frame.hold || 720,
+      caption: frame.caption || caption,
+    }))
+    .filter((frame) => frame.raw?.length >= 33);
+
+  if (!rawFrames.length) return [];
+  if (rawFrames.length === 1) {
+    return rawFrames.map((frame) => ({
+      points: preparePoseForDisplay(frame.landmarks),
+      jointStatus: frame.jointStatus,
+      hold: frame.hold,
+      caption: frame.caption,
+    }));
+  }
+
+  const centers = rawFrames.map((frame) => poseDisplayCenter(frame.raw));
+  const center = medianTriple(centers);
+  const heights = rawFrames.map((frame) => poseDisplayHeight(frame.raw, poseBounds(frame.raw)));
+  const height = Math.max(medianNumber(heights, DISPLAY_TARGET_HEIGHT), 0.35);
+  const scale = clamp(DISPLAY_TARGET_HEIGHT / height, 0.4, 5);
+
+  let frames = rawFrames.map((frame) => ({
+    points: normalizePosePoints(frame.raw, center, scale),
+    jointStatus: frame.jointStatus,
+    hold: frame.hold,
+    caption: frame.caption,
+  }));
+
+  frames = compressDepthAcrossFrames(frames, DISPLAY_TARGET_HEIGHT * 0.75);
+  frames = addFallbackDepthAcrossFrames(frames);
+  for (const frame of frames) applyMinimumDisplayWidths(frame.points);
+  frames = stabilizeSequenceRoots(frames);
+  frames = smoothSequencePoints(frames);
+  return frames;
 }
 
 function offsetPoseIndices(points, indices, dx = 0, dy = 0, dz = 0) {
@@ -1123,14 +1264,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       return;
     }
 
-    let frames = sequence
-      .filter((frame) => frame.landmarks?.length >= 33)
-      .map((frame) => ({
-        points: preparePoseForDisplay(frame.landmarks),
-        jointStatus: frame.joint_status || frame.jointStatus || {},
-        hold: frame.hold || 720,
-        caption: frame.caption || caption,
-      }));
+    let frames = preparePoseSequenceForDisplay(sequence, { caption });
     if (!frames.length) {
       setStaticPose(null, null);
       return;
@@ -1183,14 +1317,7 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
       return;
     }
 
-    let frames = sequence
-      .filter((frame) => frame.landmarks?.length >= 33)
-      .map((frame) => ({
-        points: preparePoseForDisplay(frame.landmarks),
-        jointStatus: frame.joint_status || frame.jointStatus || {},
-        hold: frame.hold || 720,
-        caption: frame.caption || caption,
-      }));
+    let frames = preparePoseSequenceForDisplay(sequence, { caption });
     if (!frames.length) {
       setStaticPose(null, null);
       return;
