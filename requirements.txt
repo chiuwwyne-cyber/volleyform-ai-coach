@@ -2,5 +2,8 @@ opencv-contrib-python==4.11.0.86
 mediapipe==0.10.21
 numpy==1.26.4
 pillow
-# Build-time only: quadric mesh decimation for tools/segment_krunk.py
+# Build-time only: quadric mesh decimation for the Krunk mannequin.
+# pymeshlab drives tools/build_krunk_parts.py (MeshLab Quadric Edge Collapse,
+# topology-preserving). fast-simplification is the older tools/segment_krunk.py.
+pymeshlab==2025.7.post1
 fast-simplification==0.1.13

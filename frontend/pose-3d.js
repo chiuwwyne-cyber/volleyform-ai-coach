@@ -1747,10 +1747,8 @@ function createFigure(scene) {
         side: THREE.DoubleSide,
       });
     for (const [name, bone] of Object.entries(KRUNK_BONES)) {
-      // Forearms are drawn as clean capsules plus real finger capsules instead
-      // of the STL part: the model's hand is a featureless ball that decimates
-      // into spikes and shows no fingers, so the set (托球) hand shape is lost.
-      if (name === "forearm_L" || name === "forearm_R") continue;
+      // Arms are now full STL (upper_arm + forearm, shoulder->elbow->wrist); the
+      // hand ball is not exported, so finger capsules keep the set (托球) shape.
       const geometry = data.geometries[name];
       if (!geometry) continue;
       const mesh = new THREE.Mesh(geometry, material());
@@ -1770,10 +1768,11 @@ function createFigure(scene) {
     // finger capsules — they render the hand and fingers (the STL hand is a
     // featureless ball). Recolor the kept capsules to the Krunk white.
     for (const limb of limbs) {
-      const isForearm =
-        (limb.part.a === 13 && limb.part.b === 15) ||
-        (limb.part.a === 14 && limb.part.b === 16);
-      const keep = limb.part.joint === "wrist" || isForearm;
+      // Keep the finger capsules (the STL hand is a featureless ball) and the
+      // ankle/heel/toe foot capsules (they articulate the foot at the ankle).
+      // The STL now covers the forearm, so its capsule is hidden.
+      const isFoot = limb.part.b >= 29 && limb.part.b <= 32;
+      const keep = limb.part.joint === "wrist" || isFoot;
       limb.mesh.visible = keep;
       if (keep) {
         applyStatusMaterial(limb.mesh.material, KRUNK_BODY_COLOR, "green");
@@ -1946,11 +1945,13 @@ export function createPoseViewport(container, { cameraDistance = 2.1, framePaddi
 
   const figure = createFigure(scene);
   figure.setVisible(false);
-  // The Krunk STL body can't be decimated into a clean articulated mesh — its
-  // irregular topology collapses into per-part slivers/holes no matter the
-  // method (grid, clustering, loft, quadric via fast-simplification). Use the
-  // clean built-in capsule mannequin (big head, fingers, white) instead.
-  // attachKrunk + loadKrunkParts stay available if a fixed asset is supplied.
+  // Krunk STL body, rebuilt by tools/build_krunk_parts.py: each pre-existing
+  // body-part component is decimated with pymeshlab's quadric edge-collapse
+  // (topology-preserving, no spikes), so the parts stay clean and articulate.
+  // Falls back to the capsule mannequin if the asset fails to load.
+  loadKrunkParts().then((data) => {
+    if (data) figure.attachKrunk(data);
+  });
   const ball = createBall(scene);
   ball.setPosition(null);
 
