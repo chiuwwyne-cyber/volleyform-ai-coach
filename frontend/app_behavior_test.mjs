@@ -595,7 +595,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   });
   assert.equal(context.document.querySelector("#issues").children.length, 0);
   assert.doesNotMatch(context.document.querySelector("#issues").textContent, /144/);
-  assert.match(context.document.querySelector("#coachSummary").textContent, /都沒有明顯問題/);
+  assert.match(context.document.querySelector("#coachSummary").textContent, /沒挑到明顯問題/);
 
   console.log("frontend behavior ok");
   console.log(`fetch calls: ${context.calls.length}`);
