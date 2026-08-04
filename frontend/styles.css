@@ -1095,6 +1095,36 @@ h3 {
   font-size: 13px;
 }
 
+.pose-error-skeleton {
+  margin: 12px 0 0;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.pose-error-skeleton[hidden] {
+  display: none;
+}
+
+.pose-error-skeleton figcaption {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pose-error-skeleton canvas {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin: 0 auto;
+  background: var(--surface);
+  border-radius: 4px;
+}
+
 .video-link {
   display: inline-flex;
   min-height: 42px;

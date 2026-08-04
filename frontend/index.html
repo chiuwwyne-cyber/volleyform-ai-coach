@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20260801-frontend-sync-v54";
+        const currentFrontendBuild = "20260804-frontend-sync-v55";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -249,6 +249,10 @@
                 <span>正確的姿勢</span>
               </div>
             </div>
+            <figure class="pose-error-skeleton" id="poseErrorSkeleton" hidden>
+              <figcaption>分析到的錯誤畫面骨架（紅＝高風險受力點，黃＝要修正）</figcaption>
+              <canvas id="poseErrorSkeletonCanvas" width="720" height="360" role="img" aria-label="錯誤畫面骨架"></canvas>
+            </figure>
             <p id="poseCompareNote" class="pose-compare-note">選擇動作後會示範正確姿勢，分析完成後會顯示你的姿勢比對。</p>
           </article>
         </div>
@@ -271,7 +275,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260801-frontend-sync-v54";
+        const build = window.VOLLEYFORM_BUILD || "20260804-frontend-sync-v55";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         document.write('<script src="./app.js?v=' + version + '"><\/script>');

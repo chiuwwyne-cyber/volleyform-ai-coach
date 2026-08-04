@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260801-frontend-sync-v54"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260804-frontend-sync-v55"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -31,6 +31,8 @@ const poseViewToggle = document.querySelector("#poseViewToggle");
 const poseCompareActual = document.querySelector("#poseCompareActual");
 const poseCompareCorrected = document.querySelector("#poseCompareCorrected");
 const poseCompareNote = document.querySelector("#poseCompareNote");
+const poseErrorSkeleton = document.querySelector("#poseErrorSkeleton");
+const poseErrorSkeletonCanvas = document.querySelector("#poseErrorSkeletonCanvas");
 const dropZone = document.querySelector("#dropZone");
 const modalityList = document.querySelector("#modalityList");
 const recordPreview = document.querySelector("#recordPreview");
@@ -1092,6 +1094,102 @@ async function startDemoAnimation(action) {
   demoViewport.playDemo(action, { variant: "correct" });
 }
 
+// The 2D skeleton of the exact frame the analysis judged as the error, drawn
+// below the 3D compare. Action-agnostic: any pose landmarks render the same way,
+// with the flagged joints (red/yellow) matching the 3D figure's coloring.
+const ERROR_SKELETON_BONES = [
+  [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
+  [15, 17], [15, 19], [15, 21], [16, 18], [16, 20], [16, 22],
+  [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
+  [27, 29], [27, 31], [29, 31], [28, 30], [28, 32], [30, 32],
+];
+const ERROR_SKELETON_JOINT = {
+  11: "shoulder", 12: "shoulder", 13: "elbow", 14: "elbow",
+  15: "wrist", 16: "wrist", 17: "wrist", 18: "wrist", 19: "wrist", 20: "wrist", 21: "wrist", 22: "wrist",
+  25: "knee", 26: "knee",
+};
+const ERROR_SKELETON_COLOR = { green: "#c7d0c6", yellow: "#ffd34f", red: "#ff5d5d" };
+const ERROR_SKELETON_RANK = { green: 0, yellow: 1, red: 2 };
+
+function drawErrorSkeleton(canvas, landmarks, jointStatus) {
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+  const pad = 28;
+  ctx.clearRect(0, 0, W, H);
+
+  // World landmarks have no fixed y sign; orient so the shoulders sit above the
+  // hips on screen (head up), then scale uniformly to fit the canvas.
+  const shoulderY = (landmarks[11][1] + landmarks[12][1]) / 2;
+  const hipY = (landmarks[23][1] + landmarks[24][1]) / 2;
+  const upSign = shoulderY < hipY ? -1 : 1;
+  const body = [];
+  for (let i = 11; i < landmarks.length; i += 1) if (landmarks[i]) body.push(i);
+  const xs = body.map((i) => landmarks[i][0]);
+  const us = body.map((i) => upSign * landmarks[i][1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minU = Math.min(...us);
+  const maxU = Math.max(...us);
+  const spanX = maxX - minX || 1;
+  const spanU = maxU - minU || 1;
+  const scale = Math.min((W - 2 * pad) / spanX, (H - 2 * pad) / spanU);
+  const offX = (W - spanX * scale) / 2;
+  const offY = (H - spanU * scale) / 2;
+  const project = (i) => [
+    offX + (landmarks[i][0] - minX) * scale,
+    offY + (maxU - upSign * landmarks[i][1]) * scale,
+  ];
+  const statusOf = (i) => jointStatus?.[ERROR_SKELETON_JOINT[i]] || "green";
+  const colorOf = (s) => ERROR_SKELETON_COLOR[s] || ERROR_SKELETON_COLOR.green;
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(3, W / 150);
+  for (const [a, b] of ERROR_SKELETON_BONES) {
+    if (!landmarks[a] || !landmarks[b]) continue;
+    const sa = statusOf(a);
+    const sb = statusOf(b);
+    ctx.strokeStyle = colorOf(ERROR_SKELETON_RANK[sa] >= ERROR_SKELETON_RANK[sb] ? sa : sb);
+    const [x1, y1] = project(a);
+    const [x2, y2] = project(b);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+  const headR = Math.max(9, spanU * scale * 0.06);
+  const [hx, hy] = project(landmarks[0] ? 0 : 11);
+  ctx.fillStyle = colorOf("green");
+  ctx.beginPath();
+  ctx.arc(hx, landmarks[0] ? hy : hy - headR, headR, 0, Math.PI * 2);
+  ctx.fill();
+  for (const i of body) {
+    if (!(i in ERROR_SKELETON_JOINT)) continue;
+    const [x, y] = project(i);
+    ctx.fillStyle = colorOf(statusOf(i));
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(4, W / 130), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function renderErrorSkeleton(poseCompare) {
+  if (!poseErrorSkeleton || !poseErrorSkeletonCanvas) return;
+  let landmarks = poseCompare?.actual_landmarks;
+  if ((!Array.isArray(landmarks) || landmarks.length < 33) && Array.isArray(poseCompare?.actual_sequence)) {
+    let best = null;
+    for (const frame of poseCompare.actual_sequence) {
+      if (Array.isArray(frame?.landmarks) && frame.landmarks.length >= 33
+        && (!best || (frame.severity || 0) > (best.severity || 0))) best = frame;
+    }
+    landmarks = best?.landmarks || null;
+  }
+  const ok = Array.isArray(landmarks) && landmarks.length >= 33 && landmarks[11] && landmarks[23];
+  poseErrorSkeleton.hidden = !ok;
+  if (ok) drawErrorSkeleton(poseErrorSkeletonCanvas, landmarks, poseCompare.joint_status || {});
+}
+
 function renderPoseCompare(poseCompare, action) {
   lastPoseCompare = poseCompare;
   lastPoseCompareAction = action || actionInput?.value || lastPoseCompareAction;
@@ -1116,6 +1214,7 @@ function renderPoseCompare(poseCompare, action) {
 
   if (!poseCompare || !poseCompare.available) {
     poseCompareNote.textContent = "沒有偵測到可用的 3D 姿勢。請讓全身、雙手與腳步完整入鏡後再分析。";
+    if (poseErrorSkeleton) poseErrorSkeleton.hidden = true;
     ensureViewports().then(() => actualViewport.setStaticPose(null, null));
     return;
   }
@@ -1127,6 +1226,8 @@ function renderPoseCompare(poseCompare, action) {
     actualSequence.length > 1
       ? "左側正在重播影片分析到的錯誤時間點；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。"
       : "左側是影片或照片分析到的錯誤姿勢；紅色是高風險受力點，黃色是需要修正的位置。右側是同動作的正確慢動作示範。";
+
+  renderErrorSkeleton(poseCompare);
 
   ensureViewports().then(() => {
     actualViewport.setView(poseCompareView);
