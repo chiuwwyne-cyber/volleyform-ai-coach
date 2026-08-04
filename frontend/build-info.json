@@ -1,7 +1,7 @@
 {
-  "buildVersion": "20260804-frontend-sync-v55",
-  "serviceWorkerCache": "volleyform-shell-v55",
+  "buildVersion": "20260804-frontend-sync-v56",
+  "serviceWorkerCache": "volleyform-shell-v56",
   "referenceSource": "backend/reference_standards.json",
-  "shellFingerprint": "d2173c75f7869493003985ce4aaee022d2dc510c0135c6e42a7743fec9b08006",
+  "shellFingerprint": "9af178d47d728dedfe0aa3dcbf5f77e812def4d49c641e912f8d47a870b3a0e0",
   "generatedAt": "2026-08-04"
 }

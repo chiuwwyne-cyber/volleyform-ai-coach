@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260804-frontend-sync-v55"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260804-frontend-sync-v56"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -731,8 +731,8 @@ async function startLiveAnalysis() {
     liveFeedback.classList.remove("alert");
     liveFeedback.classList.add("active");
     liveStatus.textContent = "正在開啟相機";
-    liveCue.textContent = "請將手機固定，讓全身與雙手完整入鏡。";
-    liveMetrics.textContent = "模型只會低頻率取樣，降低手機發熱與耗電。";
+    liveCue.textContent = "把手機放穩，讓全身跟雙手都入鏡，我們就可以開始了。";
+    liveMetrics.textContent = "我會一邊看一邊提醒你，手機也不會太耗電，放心。";
 
     mediaStream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -781,18 +781,21 @@ function renderLiveUpdate(result) {
   if (!result.poseDetected) {
     liveFeedback.classList.add("alert");
     liveStatus.textContent = "等待完整人體";
-    liveCue.textContent = "請退後一點，讓頭、雙手與雙腳完整入鏡。";
-    liveMetrics.textContent = `裝置端取樣 ${result.fps || "--"} FPS`;
+    liveCue.textContent = "退後一點，讓頭、雙手跟雙腳都進到畫面裡，我才看得到你的動作。";
+    liveMetrics.textContent = "喬好位置我們就開始，不用急。";
     return;
   }
 
   const primaryIssue = result.issues?.[0];
   liveFeedback.classList.add(primaryIssue ? "alert" : "active");
-  liveStatus.textContent = primaryIssue ? primaryIssue.title : "動作穩定";
+  liveStatus.textContent = primaryIssue ? primaryIssue.title : "這球做得不錯！";
   liveCue.textContent = result.cue;
-  liveMetrics.textContent =
-    `手肘 ${result.angles.elbow}° · 膝蓋 ${result.angles.knee}° · ` +
-    `手部 ${result.handsDetected || 0} · ${result.fps || "--"} FPS`;
+  const hands = result.handsDetected || 0;
+  liveMetrics.textContent = primaryIssue
+    ? "跟著上面那句話慢慢調，抓到感覺就會穩下來了。"
+    : hands >= 2
+      ? "很好，就是這個手型，保持住！"
+      : "先讓全身跟雙手都進到畫面裡，我才看得清楚喔。";
 }
 
 function stopLiveAnalysis(showPlaceholder = true) {
@@ -809,8 +812,8 @@ function stopLiveAnalysis(showPlaceholder = true) {
   clearRecordBtn.disabled = false;
   liveFeedback.classList.remove("active", "alert");
   liveStatus.textContent = "即時分析尚未啟動";
-  liveCue.textContent = "選擇動作後開啟相機，AI 會顯示目前最重要的修正提示。";
-  liveMetrics.textContent = "手機模式約每秒分析 3 幀，兼顧溫度與續航。";
+  liveCue.textContent = "選好動作、開啟相機，我就會一邊看你做、一邊告訴你哪裡可以更好。";
+  liveMetrics.textContent = "先挑一個動作，準備好就開始吧。";
   if (showPlaceholder) {
     previewPlaceholder?.classList.remove("hidden");
     recordStatus.textContent = "即時分析已停止，相機資源已釋放。";
@@ -1763,10 +1766,10 @@ function phaseProblemDetails(phaseAnalysis, result = {}) {
 function stablePhasePlan(actionLabel) {
   return {
     status: "stable",
-    headline: `${actionLabel}關鍵階段穩定`,
-    focus: "維持動作品質",
-    reason: "在觸球、蓄力和出手這幾個關鍵瞬間，都沒有找到明顯要修正的地方。",
-    next_steps: ["保留全身與雙手入鏡。", "用同一個角度再錄一段，確認穩定度。", "下一輪可以換側面角度檢查落地與重心。"],
+    headline: `${actionLabel}做得很不錯！`,
+    focus: "保持這個手感",
+    reason: "觸球、蓄力、出手這幾個關鍵瞬間，我都沒挑到明顯要修的地方，這球很穩。",
+    next_steps: ["繼續保持全身跟雙手都入鏡。", "用同一個角度再錄一段，看看能不能一樣穩。", "下次可以換側面拍，我們一起看落地跟重心。"],
     video_url: "https://www.youtube.com/results?search_query=volleyball+warm+up+injury+prevention",
   };
 }
@@ -1781,11 +1784,11 @@ function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
     ? `${timeText}：${tip}`
     : `${timeText}：${original.instant_cue || problem.message || "先修正這個動作點"}`;
   const message = hasAngle
-    ? `在 ${actionLabel}${problem.phaseLabel}那一刻，${phrase}。系統只看這個關鍵瞬間，不會整段影片一直挑毛病。`
+    ? `在你${actionLabel}${problem.phaseLabel}的那一刻，${phrase}。放心，我只看這個最關鍵的瞬間，不會整段影片一直挑你毛病。`
     : (problem.message || original.message || "這個問題出現在關鍵動作的那一刻，主要是手部或平台的狀態。");
   const drill = hasAngle
-    ? `慢動作做 8 次 ${actionLabel}，做到${problem.phaseLabel}時停一秒，照上面的提示調整${problem.jointLabel}。`
-    : (original.practice_drill || `慢動作做 8 次 ${actionLabel}，確認關鍵動作穩定後再加速。`);
+    ? `慢慢做 8 次 ${actionLabel}，做到${problem.phaseLabel}時停一秒，照上面的提示把${problem.jointLabel}調好，不用求快，先把動作做對。`
+    : (original.practice_drill || `慢慢做 8 次 ${actionLabel}，先把關鍵動作做穩，再慢慢加速。`);
   const fixes = [
     `把影片停在 ${timeText}，對照左邊 3D 小人的${problem.jointLabel}。`,
     tip,
@@ -1802,8 +1805,8 @@ function phaseAwareIssue(problem, original = {}, actionLabel = "排球") {
     instant_cue: instantCue,
     message,
     why_it_matters: hasAngle
-      ? "這個瞬間的動作和一般標準差比較多，長期下來會影響出力和球的穩定，也會讓身體多花力氣。"
-      : "這個問題會影響球的穩定度，也會讓身體多花力氣。",
+      ? "這個地方跟標準動作差比較多，把它練順了，球會更穩、更省力，長期下來也比較不容易受傷。"
+      : "這個地方練順了，球會更穩，身體也比較省力、不容易受傷。",
     practice_drill: drill,
     fixes,
     video_url:
@@ -1817,9 +1820,9 @@ function phaseAwareCoachSummary(details, actionLabel) {
   const timeText = formatSeconds(first.time_seconds) || "關鍵動作";
   const phrase = plainProblemPhrase(first);
   const tip = phaseIssueTips[first.code];
-  const base = `這支影片最需要先調整的是：${actionLabel}${first.phaseLabel}（約 ${timeText}）的時候，${phrase}。`;
-  const how = tip ? tip : "跟著左邊 3D 小人對照調整就可以。";
-  return `${base}${how}只要抓住這個關鍵瞬間，不用整段影片慢慢挑。`;
+  const base = `我幫你看完囉！這球最需要先調整的，是${actionLabel}${first.phaseLabel}（大約 ${timeText}）的時候，${phrase}。`;
+  const how = tip ? tip : "可以對照左邊的 3D 小人，看它跟你差在哪，跟著調就好。";
+  return `${base}${how}先把這一個地方練起來，其他不用急，抓到這個關鍵瞬間，你會進步很多。`;
 }
 
 function phaseAwareCoachPlan(details, actionLabel) {
@@ -1828,15 +1831,15 @@ function phaseAwareCoachPlan(details, actionLabel) {
   const phrase = plainProblemPhrase(first);
   return {
     status: "needs_fix",
-    headline: `先修：${first.phaseLabel}的${first.jointLabel}`,
-    focus: "重點修正",
+    headline: `我們先從這裡開始：${first.phaseLabel}的${first.jointLabel}`,
+    focus: "這一次的練習重點",
     reason: first.code
-      ? `${timeText}的時候，${phrase}。`
-      : `${timeText}的手部或平台狀態不穩，建議先用慢動作確認。`,
+      ? `${timeText}那一下，${phrase}，我們先把這裡調順。`
+      : `${timeText}的手部或平台有點不穩，先用慢動作看一下、慢慢喬。`,
     next_steps: [
-      `把影片停在 ${timeText}，對照左邊 3D 小人。`,
-      phaseIssueTips[first.code] || "先放慢動作，確認關鍵姿勢後再加速。",
-      `再錄一段 5 到 10 秒 ${actionLabel}，讓全身與雙手完整入鏡。`,
+      `把影片停在 ${timeText}，跟左邊的 3D 小人比一比，看差在哪。`,
+      phaseIssueTips[first.code] || "先放慢速度，把關鍵姿勢做對，再慢慢加快。",
+      `調好之後，再錄一段 5 到 10 秒，全身跟雙手都入鏡，我們一起看看有沒有變好。`,
     ],
     video_url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`volleyball ${actionLabel} technique slow motion`)}`,
   };
@@ -1852,7 +1855,7 @@ function normalizePhaseAwareResult(result) {
     return {
       ...result,
       primary_issues: [],
-      coach_summary: `${actionLabel}的關鍵動作很穩定，在觸球、蓄力、出手這幾個瞬間都沒有明顯問題。`,
+      coach_summary: `這球${actionLabel}做得很不錯！觸球、蓄力、出手這幾個關鍵瞬間我都沒挑到明顯問題，保持下去。`,
       coach_plan: stablePhasePlan(actionLabel),
     };
   }
