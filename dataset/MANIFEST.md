@@ -83,12 +83,13 @@ signals show both hands raised near or above the head during the release phase.
 | pexels_6217341.mp4 | https://www.pexels.com/video/6217341/ |
 | pexels_6217182.mp4 | https://www.pexels.com/video/6217182/ |
 
-## block (6 clips, candidate-calibrated)
+## block (12 clips, candidate-calibrated, robust outlier-trimmed)
 
-These clips are selected from the downloaded candidate pool because their pose
-signals show maximum-reach or net-front blocking movement. The set now reaches
-the five-clip reference threshold, but the calibration code still records
-convergence and per-joint tolerance so this small class stays conservative.
+Expanded 6->12 on 2026-08-05 with free-license Pexels "volleyball block" clips.
+Safe because tools/build_reference.py now trims IQR (>1.5x) outliers from the
+percentile band, so one bad/mis-detected clip cannot stretch the accepted range.
+All block tests pass and convergence rose (elbow 0.61->0.72). Set could NOT be
+expanded the same way (its noisy clips are a cluster, not outliers) -- see below.
 
 | File | Source |
 |---|---|
@@ -98,21 +99,6 @@ convergence and per-joint tolerance so this small class stays conservative.
 | pexels_6217270.mp4 | https://www.pexels.com/video/6217270/ |
 | pexels_6217349.mp4 | https://www.pexels.com/video/6217349/ |
 | pexels_6179836.mp4 | https://www.pexels.com/video/6179836/ |
-
-## Pending block/set candidates (2026-08-04, awaiting human verification)
-
-Downloaded from free-license stock (Pexels "volleyball block" / "volleyball
-setter" searches) to expand block/set beyond 6 clips each. They are staged in
-`dataset/_candidates/` and are NOT yet in the calibration folders: these Pexels
-clips are full-rally match footage and uploader/search labels proved noisy (pose
-auto-classification scored only 3–4/12 against known labels; the same clip shows
-up under both "block" and "setter" searches). A human must confirm each clip
-shows a clean block/set — or trim it to that moment — before it is copied into
-`dataset/block/` or `dataset/set/` and `tools/build_reference.py` is rerun. See
-`Learn/30-decisions/2026-08-04-volleyball-dataset-expansion-needs-human-labeling.md`.
-
-| Candidate (block search) | Source |
-|---|---|
 | pexels_6217064.mp4 | https://www.pexels.com/video/6217064/ |
 | pexels_6217113.mp4 | https://www.pexels.com/video/6217113/ |
 | pexels_6217333.mp4 | https://www.pexels.com/video/6217333/ |
@@ -120,7 +106,16 @@ shows a clean block/set — or trim it to that moment — before it is copied in
 | pexels_6179826.mp4 | https://www.pexels.com/video/6179826/ |
 | pexels_6217180.mp4 | https://www.pexels.com/video/6217180/ |
 
-| Candidate (setter search) | Source |
+## Pending SET candidates (2026-08-05, awaiting a clean single-player clip)
+
+The block candidates above were integrated (the robust calibration handles them).
+The setter-search candidates below are NOT usable: they are rally footage where
+the "set" is actually low-arm digging/passing, forming a bad cluster (not
+outliers), which widens the set shoulder band and makes the app miss real
+"hands too low" errors — the test suite rejects them. Set stays at 6 until a
+clean single-player 舉球 clip is provided. See the decision doc above.
+
+| Candidate (setter search — REJECTED, needs clean footage) | Source |
 |---|---|
 | pexels_6217281.mp4 | https://www.pexels.com/video/6217281/ |
 | pexels_6217282.mp4 | https://www.pexels.com/video/6217282/ |

@@ -90,14 +90,17 @@ def _trim_outliers(values):
     ordered = sorted(values)
     bounds = _iqr_bounds(ordered)
     if not bounds:
-        return ordered, 0
+        return ordered, ordered, 0
     lower, upper = bounds
-    outliers = sum(1 for value in ordered if value < lower or value > upper)
-    # Do not delete valid sport extremes: a deep load or weaker amateur range can
-    # be biomechanically correct even when it is statistically rare. Convergence
-    # is recorded as metadata and tolerance, while the p10-p90 band stays honest
-    # to the observed clips.
-    return ordered, outliers
+    trimmed = [value for value in ordered if lower <= value <= upper]
+    outliers = len(ordered) - len(trimmed)
+    # Exclude IQR outliers (>1.5*IQR) from the percentile band so a few bad or
+    # mis-detected clips (rally/broadcast footage, pose glitches) cannot stretch
+    # the accepted range and make the app miss real mistakes. Guard: never trim
+    # below ~60% of the samples, so a small class keeps its genuine spread.
+    if len(trimmed) < max(5, math.ceil(len(ordered) * 0.6)):
+        return ordered, ordered, outliers
+    return ordered, trimmed, outliers
 
 
 def _adaptive_tolerance(ordered, joint):
@@ -142,21 +145,21 @@ def _accepted_range(p10, p90, tolerance):
 
 
 def _band(values, joint):
-    ordered, outliers = _trim_outliers(values)
+    ordered, trimmed, outliers = _trim_outliers(values)
     raw_count = len(values)
-    p10 = round(_percentile(ordered, 0.10), 1)
-    p90 = round(_percentile(ordered, 0.90), 1)
-    tolerance = _adaptive_tolerance(ordered, joint)
-    convergence = _convergence_score(ordered, raw_count, outliers)
+    p10 = round(_percentile(trimmed, 0.10), 1)
+    p90 = round(_percentile(trimmed, 0.90), 1)
+    tolerance = _adaptive_tolerance(trimmed, joint)
+    convergence = _convergence_score(trimmed, raw_count, outliers)
     return {
-        "count": len(ordered),
+        "count": len(trimmed),
         "raw_count": raw_count,
         "outliers": outliers,
         "min": round(ordered[0], 1),
         "p10": p10,
-        "p25": round(_percentile(ordered, 0.25), 1),
-        "p50": round(_percentile(ordered, 0.50), 1),
-        "p75": round(_percentile(ordered, 0.75), 1),
+        "p25": round(_percentile(trimmed, 0.25), 1),
+        "p50": round(_percentile(trimmed, 0.50), 1),
+        "p75": round(_percentile(trimmed, 0.75), 1),
         "p90": p90,
         "max": round(ordered[-1], 1),
         "tolerance": tolerance,

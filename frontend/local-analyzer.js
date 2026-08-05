@@ -577,7 +577,7 @@ function checkAction(action, angles, positions, hands) {
 
 const REFERENCE_STANDARDS = {
   "version": 1,
-  "generated": "2026-07-20",
+  "generated": "2026-08-05",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -585,62 +585,62 @@ const REFERENCE_STANDARDS = {
       "phases": {
         "contact": {
           "elbow": {
-            "count": 17,
+            "count": 16,
             "raw_count": 17,
             "outliers": 1,
             "min": 91.4,
-            "p10": 119.0,
-            "p25": 141.9,
-            "p50": 155.8,
-            "p75": 165.8,
-            "p90": 167.1,
+            "p10": 130.6,
+            "p25": 144.4,
+            "p50": 156.2,
+            "p75": 165.9,
+            "p90": 167.3,
             "max": 172.5,
-            "tolerance": 17.4,
+            "tolerance": 17.1,
             "accepted_range": [
-              101.6,
+              113.5,
               180.0
             ],
-            "convergence": 0.77,
+            "convergence": 0.78,
             "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 17,
+            "count": 16,
             "raw_count": 17,
             "outliers": 1,
             "min": 26.4,
-            "p10": 87.6,
-            "p25": 121.5,
-            "p50": 148.3,
-            "p75": 159.9,
-            "p90": 165.1,
+            "p10": 104.0,
+            "p25": 129.2,
+            "p50": 151.0,
+            "p75": 160.0,
+            "p90": 166.1,
             "max": 173.7,
-            "tolerance": 19.8,
+            "tolerance": 19.5,
             "accepted_range": [
-              67.8,
+              84.5,
               180.0
             ],
-            "convergence": 0.72,
+            "convergence": 0.74,
             "convergence_state": "stable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 12,
+            "count": 10,
             "raw_count": 12,
             "outliers": 2,
             "min": 68.0,
-            "p10": 80.4,
-            "p25": 125.3,
-            "p50": 139.1,
-            "p75": 144.6,
-            "p90": 148.3,
+            "p10": 128.0,
+            "p25": 137.6,
+            "p50": 141.7,
+            "p75": 145.5,
+            "p90": 148.7,
             "max": 149.2,
-            "tolerance": 20.9,
+            "tolerance": 19.3,
             "accepted_range": [
-              59.5,
-              169.2
+              108.7,
+              168.0
             ],
-            "convergence": 0.67,
+            "convergence": 0.74,
             "convergence_state": "usable"
           }
         }
@@ -713,66 +713,66 @@ const REFERENCE_STANDARDS = {
       }
     },
     "block": {
-      "clips": 6,
+      "clips": 12,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 6,
-            "raw_count": 6,
-            "outliers": 0,
-            "min": 152.5,
-            "p10": 153.8,
-            "p25": 155.3,
-            "p50": 160.0,
-            "p75": 164.1,
-            "p90": 166.1,
+            "count": 11,
+            "raw_count": 12,
+            "outliers": 1,
+            "min": 87.6,
+            "p10": 140.6,
+            "p25": 151.2,
+            "p50": 155.9,
+            "p75": 162.9,
+            "p90": 164.1,
             "max": 168.1,
-            "tolerance": 16.9,
+            "tolerance": 16.1,
             "accepted_range": [
-              136.9,
+              124.5,
               180.0
             ],
-            "convergence": 0.61,
+            "convergence": 0.72,
             "convergence_state": "usable"
           },
           "shoulder": {
-            "count": 6,
-            "raw_count": 6,
-            "outliers": 0,
-            "min": 126.1,
-            "p10": 129.3,
-            "p25": 136.4,
-            "p50": 149.9,
-            "p75": 163.2,
-            "p90": 169.0,
+            "count": 11,
+            "raw_count": 12,
+            "outliers": 1,
+            "min": 63.6,
+            "p10": 132.4,
+            "p25": 137.0,
+            "p50": 141.8,
+            "p75": 149.9,
+            "p90": 167.1,
             "max": 171.0,
-            "tolerance": 21.0,
+            "tolerance": 17.1,
             "accepted_range": [
-              108.3,
+              115.3,
               180.0
             ],
-            "convergence": 0.52,
+            "convergence": 0.71,
             "convergence_state": "usable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 6,
-            "raw_count": 6,
-            "outliers": 0,
+            "count": 11,
+            "raw_count": 12,
+            "outliers": 1,
             "min": 23.6,
-            "p10": 56.0,
-            "p25": 96.4,
-            "p50": 122.9,
-            "p75": 145.4,
-            "p90": 152.8,
-            "max": 153.7,
-            "tolerance": 24.0,
+            "p10": 99.8,
+            "p25": 120.8,
+            "p50": 125.6,
+            "p75": 146.5,
+            "p90": 153.7,
+            "max": 153.9,
+            "tolerance": 22.2,
             "accepted_range": [
-              32.0,
-              176.8
+              77.6,
+              175.9
             ],
-            "convergence": 0.45,
+            "convergence": 0.65,
             "convergence_state": "usable"
           }
         }
@@ -783,19 +783,19 @@ const REFERENCE_STANDARDS = {
       "phases": {
         "contact": {
           "elbow": {
-            "count": 12,
+            "count": 11,
             "raw_count": 12,
             "outliers": 1,
             "min": 96.5,
-            "p10": 138.1,
-            "p25": 145.6,
-            "p50": 154.7,
-            "p75": 166.1,
-            "p90": 173.2,
+            "p10": 145.3,
+            "p25": 146.6,
+            "p50": 159.3,
+            "p75": 167.4,
+            "p90": 173.6,
             "max": 174.2,
-            "tolerance": 17.5,
+            "tolerance": 17.7,
             "accepted_range": [
-              120.6,
+              127.6,
               180.0
             ],
             "convergence": 0.67,
