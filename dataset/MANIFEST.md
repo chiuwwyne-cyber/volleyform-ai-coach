@@ -98,3 +98,33 @@ convergence and per-joint tolerance so this small class stays conservative.
 | pexels_6217270.mp4 | https://www.pexels.com/video/6217270/ |
 | pexels_6217349.mp4 | https://www.pexels.com/video/6217349/ |
 | pexels_6179836.mp4 | https://www.pexels.com/video/6179836/ |
+
+## Pending block/set candidates (2026-08-04, awaiting human verification)
+
+Downloaded from free-license stock (Pexels "volleyball block" / "volleyball
+setter" searches) to expand block/set beyond 6 clips each. They are staged in
+`dataset/_candidates/` and are NOT yet in the calibration folders: these Pexels
+clips are full-rally match footage and uploader/search labels proved noisy (pose
+auto-classification scored only 3–4/12 against known labels; the same clip shows
+up under both "block" and "setter" searches). A human must confirm each clip
+shows a clean block/set — or trim it to that moment — before it is copied into
+`dataset/block/` or `dataset/set/` and `tools/build_reference.py` is rerun. See
+`Learn/30-decisions/2026-08-04-volleyball-dataset-expansion-needs-human-labeling.md`.
+
+| Candidate (block search) | Source |
+|---|---|
+| pexels_6217064.mp4 | https://www.pexels.com/video/6217064/ |
+| pexels_6217113.mp4 | https://www.pexels.com/video/6217113/ |
+| pexels_6217333.mp4 | https://www.pexels.com/video/6217333/ |
+| pexels_6216855.mp4 | https://www.pexels.com/video/6216855/ |
+| pexels_6179826.mp4 | https://www.pexels.com/video/6179826/ |
+| pexels_6217180.mp4 | https://www.pexels.com/video/6217180/ |
+
+| Candidate (setter search) | Source |
+|---|---|
+| pexels_6217281.mp4 | https://www.pexels.com/video/6217281/ |
+| pexels_6217282.mp4 | https://www.pexels.com/video/6217282/ |
+| pexels_6217332.mp4 | https://www.pexels.com/video/6217332/ |
+| pexels_6179963.mp4 | https://www.pexels.com/video/6179963/ |
+| pexels_6217273.mp4 | https://www.pexels.com/video/6217273/ |
+| pexels_6217175.mp4 | https://www.pexels.com/video/6217175/ |
