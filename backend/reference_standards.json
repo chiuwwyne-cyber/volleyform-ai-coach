@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-08-05",
+  "generated": "2026-08-06",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -266,46 +266,46 @@
       }
     },
     "set": {
-      "clips": 6,
+      "clips": 14,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 6,
-            "raw_count": 6,
+            "count": 14,
+            "raw_count": 14,
             "outliers": 0,
             "min": 98.0,
-            "p10": 104.8,
-            "p25": 121.5,
-            "p50": 152.8,
-            "p75": 168.2,
-            "p90": 175.3,
+            "p10": 101.8,
+            "p25": 111.4,
+            "p50": 120.5,
+            "p75": 145.2,
+            "p90": 167.3,
             "max": 177.8,
-            "tolerance": 21.3,
+            "tolerance": 19.5,
             "accepted_range": [
-              83.5,
+              82.3,
               180.0
             ],
-            "convergence": 0.46,
-            "convergence_state": "usable"
+            "convergence": 0.67,
+            "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 6,
-            "raw_count": 6,
+            "count": 14,
+            "raw_count": 14,
             "outliers": 0,
-            "min": 84.6,
-            "p10": 93.4,
-            "p25": 109.3,
-            "p50": 132.0,
-            "p75": 141.9,
-            "p90": 155.6,
+            "min": 75.2,
+            "p10": 83.4,
+            "p25": 86.4,
+            "p50": 102.3,
+            "p75": 127.4,
+            "p90": 141.3,
             "max": 166.4,
-            "tolerance": 22.0,
+            "tolerance": 20.2,
             "accepted_range": [
-              71.4,
-              177.6
+              63.2,
+              161.5
             ],
-            "convergence": 0.5,
-            "convergence_state": "usable"
+            "convergence": 0.65,
+            "convergence_state": "stable"
           }
         }
       }

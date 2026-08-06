@@ -69,10 +69,14 @@ studio/professional body control.
 | pexels_6216965.mp4 | https://www.pexels.com/video/6216965/ |
 | pexels_6179955.mp4 | https://www.pexels.com/video/6179955/ |
 
-## set (6 clips, candidate-calibrated)
+## set (14 clips)
 
-These clips are selected from the downloaded candidate pool because their pose
-signals show both hands raised near or above the head during the release phase.
+6 original Pexels candidates + 8 clips (usertut_set_01..08) trimmed on 2026-08-06
+from a single-player setting tutorial the user provided (`videoplayback (1).mp4`,
+not committed). The tutorial windows were auto-located by pose (single player,
+hands in overhead-set position) then trimmed. This expansion raised convergence
+(elbow 0.46->0.67, shoulder 0.50->0.65) AND kept correctness (phase_reference_test
+still flags "hands too low"), unlike the rejected setter-search rally clips.
 
 | File | Source |
 |---|---|
@@ -82,6 +86,7 @@ signals show both hands raised near or above the head during the release phase.
 | pexels_6217125.mp4 | https://www.pexels.com/video/6217125/ |
 | pexels_6217341.mp4 | https://www.pexels.com/video/6217341/ |
 | pexels_6217182.mp4 | https://www.pexels.com/video/6217182/ |
+| usertut_set_01..08.mp4 | user-provided single-player set tutorial (trimmed) |
 
 ## block (12 clips, candidate-calibrated, robust outlier-trimmed)
 
