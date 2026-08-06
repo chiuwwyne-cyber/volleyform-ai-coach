@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20260806-frontend-sync-v59";
+        const currentFrontendBuild = "20260806-frontend-sync-v60";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -215,6 +215,7 @@
             <div class="coach-copy">
               <h3 id="summaryTitle">等待分析</h3>
               <p id="coachSummary">錄影或上傳影片後，AI 會先找出最值得修正的動作問題。</p>
+              <p id="qualityHint" class="quality-hint" hidden>💡 影片偏暗或模糊時，把「分析效能」切成「高精度」再分析一次，判定會更準。</p>
               <div id="coachPlan" class="coach-plan empty" role="status" aria-live="polite">
                 完成分析後會顯示優先修正方向、練習方法與教學影片。
               </div>
@@ -249,6 +250,10 @@
                 <span>正確的姿勢</span>
               </div>
             </div>
+            <div class="pose-actions" id="poseActions">
+              <button class="pose-action-btn" id="slowmoBtn" type="button" disabled>慢動作</button>
+              <button class="pose-action-btn primary" id="practiceBtn" type="button" disabled>練習建議</button>
+            </div>
             <figure class="pose-error-skeleton" id="poseErrorSkeleton" hidden>
               <figcaption>分析到的錯誤畫面骨架（紅＝高風險受力點，黃＝要修正）</figcaption>
               <canvas id="poseErrorSkeletonCanvas" width="720" height="360" role="img" aria-label="錯誤畫面骨架"></canvas>
@@ -275,7 +280,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260806-frontend-sync-v59";
+        const build = window.VOLLEYFORM_BUILD || "20260806-frontend-sync-v60";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         document.write('<script src="./app.js?v=' + version + '"><\/script>');

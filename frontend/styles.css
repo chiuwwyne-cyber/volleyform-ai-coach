@@ -1095,6 +1095,65 @@ h3 {
   font-size: 13px;
 }
 
+.quality-hint {
+  margin: 8px 0 0;
+  padding: 9px 11px;
+  color: #ffe7a6;
+  background: #2a2213;
+  border: 1px solid #5e4b20;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.quality-hint[hidden] {
+  display: none;
+}
+
+.pose-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pose-action-btn {
+  min-height: 44px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pose-action-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1d1607;
+}
+
+.pose-action-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(255, 177, 26, 0.12);
+}
+
+.pose-action-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.coach-plan.flash {
+  animation: coachFlash 1.4s ease;
+}
+
+@keyframes coachFlash {
+  0%, 100% { box-shadow: none; }
+  30% { box-shadow: 0 0 0 2px var(--accent); }
+}
+
 .pose-error-skeleton {
   margin: 12px 0 0;
   padding: 10px;

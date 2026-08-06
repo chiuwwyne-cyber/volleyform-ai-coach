@@ -353,7 +353,7 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(source, /serviceWorker\.register/);
   assert.match(source, /analyzeMediaLocally/);
   assert.match(source, /startRealtimeAnalysis/);
-  assert.match(source, /playbackSeconds:\s*6/);
+  assert.match(source, /playbackSeconds:\s*poseSlowmo \? 18 : 6/);
   assert.match(source, /timeLabel:\s*"relative-seconds"/);
   assert.match(poseSource, /relativeSecondCaption/);
   assert.match(poseSource, /第 \$\{second\} 秒/);

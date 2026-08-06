@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260806-frontend-sync-v59"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260806-frontend-sync-v60"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -33,6 +33,9 @@ const poseCompareCorrected = document.querySelector("#poseCompareCorrected");
 const poseCompareNote = document.querySelector("#poseCompareNote");
 const poseErrorSkeleton = document.querySelector("#poseErrorSkeleton");
 const poseErrorSkeletonCanvas = document.querySelector("#poseErrorSkeletonCanvas");
+const slowmoBtn = document.querySelector("#slowmoBtn");
+const practiceBtn = document.querySelector("#practiceBtn");
+const qualityHint = document.querySelector("#qualityHint");
 const dropZone = document.querySelector("#dropZone");
 const modalityList = document.querySelector("#modalityList");
 const recordPreview = document.querySelector("#recordPreview");
@@ -1043,6 +1046,33 @@ function renderIssues(items) {
 }
 
 let poseCompareView = "front";
+let poseSlowmo = false;
+
+function setPoseActionsEnabled(on) {
+  if (!slowmoBtn) return;
+  slowmoBtn.disabled = !on;
+  practiceBtn.disabled = !on;
+  if (!on && poseSlowmo) {
+    poseSlowmo = false;
+    slowmoBtn.classList.remove("active");
+    slowmoBtn.textContent = "慢動作";
+  }
+}
+
+slowmoBtn?.addEventListener("click", () => {
+  poseSlowmo = !poseSlowmo;
+  slowmoBtn.classList.toggle("active", poseSlowmo);
+  slowmoBtn.textContent = poseSlowmo ? "正常速度" : "慢動作";
+  renderPoseCompareView();
+});
+
+practiceBtn?.addEventListener("click", () => {
+  if (!coachPlan) return;
+  coachPlan.scrollIntoView({ behavior: "smooth", block: "center" });
+  coachPlan.classList.remove("flash");
+  void coachPlan.offsetWidth;
+  coachPlan.classList.add("flash");
+});
 let lastPoseCompare = null;
 let lastPoseCompareAction = "spike";
 let actualViewport = null;
@@ -1077,7 +1107,7 @@ function renderPoseCompareView() {
         loop: true,
         speedFactor: 1,
         action: lastPoseCompareAction,
-        playbackSeconds: 6,
+        playbackSeconds: poseSlowmo ? 18 : 6,
         timeLabel: "relative-seconds",
       });
     } else {
@@ -1240,7 +1270,7 @@ function renderPoseCompare(poseCompare, action) {
         loop: true,
         speedFactor: 1,
         action: lastPoseCompareAction,
-        playbackSeconds: 6,
+        playbackSeconds: poseSlowmo ? 18 : 6,
         timeLabel: "relative-seconds",
       });
       return;
@@ -1310,7 +1340,7 @@ function renderPoseCompareView() {
       loop: true,
       speedFactor: 1,
       action: lastPoseCompareAction,
-      playbackSeconds: 6,
+      playbackSeconds: poseSlowmo ? 18 : 6,
       timeLabel: "relative-seconds",
     });
     return;
@@ -1346,7 +1376,7 @@ function renderPoseCompare(poseCompare, action) {
         loop: true,
         speedFactor: 1,
         action: lastPoseCompareAction,
-        playbackSeconds: 6,
+        playbackSeconds: poseSlowmo ? 18 : 6,
         timeLabel: "relative-seconds",
       });
       return;
@@ -1481,6 +1511,8 @@ function renderResult(result) {
   renderCoachPlan(result.coach_plan);
   renderIssues(result.primary_issues);
   renderPoseCompare(result.pose_compare, result.action);
+  // Low-quality hint: nudge toward 高精度 unless already on it (UC004).
+  if (qualityHint) qualityHint.hidden = powerModeInput?.value === "quality";
 }
 
 function renderIssues(items) {
@@ -1527,7 +1559,7 @@ function renderPoseCompareView() {
       loop: true,
       speedFactor: 1,
       action: lastPoseCompareAction,
-      playbackSeconds: 6,
+      playbackSeconds: poseSlowmo ? 18 : 6,
       timeLabel: "relative-seconds",
     });
     return;
@@ -1546,11 +1578,13 @@ function renderPoseCompare(poseCompare, action) {
 
   if (!poseCompare || !poseCompare.available) {
     poseCompareNote.textContent = noPoseCompareText;
+    setPoseActionsEnabled(false);
     ensureViewports().then(() => actualViewport.setStaticPose(null, null));
     return;
   }
 
   const actualSequence = playableActualSequence(poseCompare);
+  setPoseActionsEnabled(true);
   poseCompareNote.textContent = actualSequence.length > 0
     ? "左側 3D 小人會依照影片時間順序重播你的實際動作一次；錯誤會標示在第幾秒。黃色代表需要修正，紅色是高風險受力點。右側是同動作的正確慢動作示範。"
     : "左側是影片或照片分析到的姿勢；黃色代表需要修正，紅色是高風險受力點。右側是同動作的正確慢動作示範。";
@@ -1563,7 +1597,7 @@ function renderPoseCompare(poseCompare, action) {
         loop: true,
         speedFactor: 1,
         action: lastPoseCompareAction,
-        playbackSeconds: 6,
+        playbackSeconds: poseSlowmo ? 18 : 6,
         timeLabel: "relative-seconds",
       });
       return;
@@ -1880,6 +1914,8 @@ function renderResult(result) {
   renderCoachPlan(result.coach_plan);
   renderIssues(result.primary_issues);
   renderPoseCompare(result.pose_compare, result.action);
+  // Low-quality hint: nudge toward 高精度 unless already on it (UC004).
+  if (qualityHint) qualityHint.hidden = powerModeInput?.value === "quality";
 }
 
 function renderIssues(items) {
