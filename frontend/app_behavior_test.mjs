@@ -250,9 +250,12 @@ function makeContext() {
       setItem: (key, value) => storage.set(key, String(value)),
     },
     location: {
-      href: "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/",
+      // The local launcher serves the frontend from 127.0.0.1 with a real
+      // same-origin backend, so the capabilities probe is expected to run.
+      // (A static host like *.github.io skips the probe — covered separately.)
+      href: "http://127.0.0.1:8000/",
       search: "",
-      hostname: "chiuwwyne-cyber.github.io",
+      hostname: "127.0.0.1",
     },
     URL,
     URLSearchParams,
@@ -391,6 +394,25 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.match(qrShareUrl, /^https:\/\/chiuwwyne-cyber\.github\.io\/volleyform-ai-coach\//);
   assert.match(qrShareUrl, /backend=http%3A%2F%2F192\.168\.1\.10%3A8000/);
   assert.doesNotMatch(qrShareUrl, /127\.0\.0\.1/);
+
+  // On a static public host (GitHub Pages) with no configured backend, the app
+  // must skip both same-origin probes so the console stays free of 404s.
+  context.location.hostname = "chiuwwyne-cyber.github.io";
+  context.location.href = "https://chiuwwyne-cyber.github.io/volleyform-ai-coach/";
+  backendUrl.value = "";
+  context.calls.length = 0;
+  await context.__appTestApi.checkHealth();
+  assert.ok(
+    !context.calls.includes("/api/capabilities"),
+    "static public host should not probe same-origin /api/capabilities",
+  );
+  assert.equal(context.document.querySelector("#serverStatus").textContent, "手機本地");
+  const staticShareUrl = await context.__appTestApi.resolveShareUrl();
+  assert.ok(
+    !context.calls.includes("./runtime-share.json"),
+    "static public host should not fetch runtime-share.json",
+  );
+  assert.match(staticShareUrl, /^https:\/\/chiuwwyne-cyber\.github\.io\/volleyform-ai-coach\//);
 
   context.__appTestApi.renderResult({
     action_label: "Receive",

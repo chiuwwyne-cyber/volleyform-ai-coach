@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260810-frontend-sync-v61"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260810-frontend-sync-v62"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -74,6 +74,15 @@ function currentPageUrl() {
   return globalThis.location?.href || openSourceFrontendUrl;
 }
 
+function isStaticPublicHost() {
+  // GitHub Pages (and other static hosts) can't serve a same-origin API, and
+  // the launcher's runtime-share.json is git-ignored so it never ships there
+  // either. Probing them would only print guaranteed 404s to the console, so
+  // we skip the probes and go straight to the on-device / page-url fallbacks.
+  const host = globalThis.location?.hostname || "";
+  return host === "github.io" || host.endsWith(".github.io");
+}
+
 function normalizeShareUrl(url) {
   try {
     const parsed = new URL(url, currentPageUrl());
@@ -118,15 +127,20 @@ function bestRuntimeShareUrl(payload) {
 }
 
 async function resolveShareUrl() {
-  try {
-    const response = await fetch("./runtime-share.json", { cache: "no-store" });
-    if (response.ok) {
-      const payload = await response.json();
-      const runtimeUrl = bestRuntimeShareUrl(payload);
-      if (runtimeUrl) return shareUrlWithBackend(runtimeUrl);
+  // runtime-share.json is only written by the local launcher (and is
+  // git-ignored), so on a static public host it can never exist — skip the
+  // guaranteed-404 fetch and share the page's own URL instead.
+  if (!isStaticPublicHost()) {
+    try {
+      const response = await fetch("./runtime-share.json", { cache: "no-store" });
+      if (response.ok) {
+        const payload = await response.json();
+        const runtimeUrl = bestRuntimeShareUrl(payload);
+        if (runtimeUrl) return shareUrlWithBackend(runtimeUrl);
+      }
+    } catch {
+      // The file only exists when the local launcher writes it.
     }
-  } catch {
-    // The file only exists when the local launcher writes it.
   }
   return shareUrlWithBackend(currentPageUrl());
 }
@@ -354,10 +368,29 @@ async function setBackendUrl(value, message) {
   await checkHealth();
 }
 
+function useOnDeviceMode() {
+  backendAvailable = false;
+  serverStatus.textContent = "手機本地";
+  serverStatus.classList.remove("bad");
+  serverStatus.classList.add("ok");
+  renderActionOptions(fallbackActions);
+  renderModalityOptions(fallbackModalities);
+  updateConnectionNote(
+    "目前使用手機本地 MediaPipe 模型分析，影片不會上傳到伺服器。也可以填入固定 API 網址切換到雲端分析。",
+  );
+}
+
 async function checkHealth() {
   persistBackendUrl();
   serverStatus.textContent = "檢查中";
   serverStatus.classList.remove("ok", "bad");
+  // A static public host (GitHub Pages) has no same-origin backend, so unless
+  // the user configured a cloud API we skip the probe that would 404 and go
+  // straight to on-device analysis — keeping the console clean.
+  if (!backendUrlInput.value.trim() && isStaticPublicHost()) {
+    useOnDeviceMode();
+    return;
+  }
   try {
     const response = await fetch(apiUrl("/api/capabilities"));
     if (!response.ok) throw new Error("bad status");
@@ -370,15 +403,7 @@ async function checkHealth() {
     const target = backendUrlInput.value.trim() || "目前網頁同網域";
     updateConnectionNote(`後端連線正常：${target}`);
   } catch {
-    backendAvailable = false;
-    serverStatus.textContent = "手機本地";
-    serverStatus.classList.remove("bad");
-    serverStatus.classList.add("ok");
-    renderActionOptions(fallbackActions);
-    renderModalityOptions(fallbackModalities);
-    updateConnectionNote(
-      "目前使用手機本地 MediaPipe 模型分析，影片不會上傳到伺服器。也可以填入固定 API 網址切換到雲端分析。",
-    );
+    useOnDeviceMode();
   }
 }
 
