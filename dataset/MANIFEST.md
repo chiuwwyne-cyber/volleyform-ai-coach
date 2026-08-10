@@ -47,12 +47,14 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_10350521.mp4 | https://www.pexels.com/video/10350521/ |
 | pexels_12169479.mp4 | https://www.pexels.com/video/12169479/ |
 
-## receive (12 clips, candidate-calibrated)
+## receive (16 clips)
 
-These clips are selected from the downloaded candidate pool because their pose
-signals show forearm-platform or low defensive movement phases. The newer clips
-include beach and game-play footage so the reference does not only reflect
-studio/professional body control.
+12 Pexels candidates + 4 clips (usertut_dig_01..04) trimmed on 2026-08-07 from a
+user-provided single-player defensive drill (`videoplayback (9).mp4`, not
+committed) with clear LOW bent-knee digs. Windows were pose-located (wrists
+together + low + knee < 150) so the knee band stays correct (p10 93.5, p90 149.7)
+— unlike the earlier straight-knee tutorials that were rejected. Convergence rose
+(elbow 0.67->0.75, knee 0.62->0.71, shoulder 0.64->0.69).
 
 | File | Source |
 |---|---|
@@ -68,6 +70,7 @@ studio/professional body control.
 | pexels_12169640.mp4 | https://www.pexels.com/video/12169640/ |
 | pexels_6216965.mp4 | https://www.pexels.com/video/6216965/ |
 | pexels_6179955.mp4 | https://www.pexels.com/video/6179955/ |
+| usertut_dig_01..04.mp4 | user-provided single-player low-dig drill (trimmed) |
 
 ## set (14 clips)
 
@@ -88,13 +91,13 @@ still flags "hands too low"), unlike the rejected setter-search rally clips.
 | pexels_6217182.mp4 | https://www.pexels.com/video/6217182/ |
 | usertut_set_01..08.mp4 | user-provided single-player set tutorial (trimmed) |
 
-## block (12 clips, candidate-calibrated, robust outlier-trimmed)
+## block (18 clips, candidate-calibrated, robust outlier-trimmed)
 
-Expanded 6->12 on 2026-08-05 with free-license Pexels "volleyball block" clips.
-Safe because tools/build_reference.py now trims IQR (>1.5x) outliers from the
-percentile band, so one bad/mis-detected clip cannot stretch the accepted range.
-All block tests pass and convergence rose (elbow 0.61->0.72). Set could NOT be
-expanded the same way (its noisy clips are a cluster, not outliers) -- see below.
+Expanded 6->12 (2026-08-05, Pexels) then 12->18 (2026-08-07) with 6 clips
+(usertut_block_01..06) trimmed from a user-provided single-player over-net
+blocking drill (`videoplayback (8).mp4`, not committed). tools/build_reference.py
+trims IQR (>1.5x) outliers so one bad clip cannot stretch the band. All tests pass
+and convergence rose (elbow 0.61->0.86, shoulder ->0.83, crouch.knee ->0.72).
 
 | File | Source |
 |---|---|
@@ -110,6 +113,7 @@ expanded the same way (its noisy clips are a cluster, not outliers) -- see below
 | pexels_6216855.mp4 | https://www.pexels.com/video/6216855/ |
 | pexels_6179826.mp4 | https://www.pexels.com/video/6179826/ |
 | pexels_6217180.mp4 | https://www.pexels.com/video/6217180/ |
+| usertut_block_01..06.mp4 | user-provided single-player over-net block drill (trimmed) |
 
 ## Pending SET candidates (2026-08-05, awaiting a clean single-player clip)
 

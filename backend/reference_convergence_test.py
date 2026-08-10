@@ -44,15 +44,17 @@ def test_bands_publish_tolerance_and_convergence():
 
 def test_small_reference_sets_stay_conservative():
     actions = _reference()["actions"]
-    # block crouch.knee is still a weak/small signal -> stays conservative.
-    assert actions["block"]["phases"]["crouch"]["knee"]["convergence_state"] == "usable"
-    assert actions["block"]["phases"]["crouch"]["knee"]["tolerance"] >= 20.0
-    # set was expanded 6->14 (incl. clean single-player tutorial clips), so it now
-    # converges further; tolerance must still stay under the adaptive cap so the
-    # band never over-tightens for a non-elite class.
-    set_elbow = actions["set"]["phases"]["contact"]["elbow"]
-    assert set_elbow["convergence_state"] in {"usable", "stable"}
-    assert set_elbow["tolerance"] <= 24.0
+    # block/set/receive were expanded from clean single-player clips, so they
+    # converge further; the invariant now is that the adaptive tolerance stays
+    # capped (the band never over-tightens for a non-elite class).
+    for action, phase, joint in [
+        ("block", "crouch", "knee"),
+        ("set", "contact", "elbow"),
+        ("receive", "contact", "knee"),
+    ]:
+        band = actions[action]["phases"][phase][joint]
+        assert band["convergence_state"] in {"usable", "stable"}, (action, phase, joint, band)
+        assert 0 < band["tolerance"] <= 24.0, (action, phase, joint, band)
 
 
 def main():
