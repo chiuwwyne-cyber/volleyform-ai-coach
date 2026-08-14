@@ -91,6 +91,14 @@ def _frontend_fingerprint():
     for path in sorted(set(paths), key=lambda p: str(p)):
         if not path.exists():
             continue
+        # Hash the REPO-RELATIVE path, posix-normalized. Absolute paths differ
+        # between this machine and the Linux CI runner, which made the CI's
+        # fingerprint never match the committed one: CI then bumped the cache
+        # version on every deploy, so the deployed version was always one ahead
+        # of main. That is not cosmetic -- it lets a later deploy reuse a cache
+        # name that clients already hold, and cache-first assets
+        # (krunk-parts.json, icons, manifest) would then never refresh.
+        rel = path.relative_to(ROOT_DIR).as_posix()
         data = path.read_bytes()
         try:
             text = data.decode("utf-8")
@@ -102,7 +110,7 @@ def _frontend_fingerprint():
             data = text.encode("utf-8")
         except UnicodeDecodeError:
             pass  # binary asset (icons/images): hash the raw bytes
-        digest.update(str(path).encode("utf-8"))
+        digest.update(rel.encode("utf-8"))
         digest.update(b"\0")
         digest.update(data)
     return digest.hexdigest()
