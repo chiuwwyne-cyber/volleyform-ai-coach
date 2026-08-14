@@ -1,8 +1,12 @@
 import cv2, os
 
-SAFE = r"C:\Users\test\AppData\Local\Temp\claude\C--Users-test-Desktop-volleyball\8c6d2969-18a8-4aa9-a54c-72b0609096ee\scratchpad\src"
-SRC = os.path.join(SAFE, "vp1.mp4")
+# --- 改這裡 -----------------------------------------------------------------
+SRC = r"C:\path\to\your\serve_tutorial.mp4"
 OUT_DIR = r"C:\Users\test\Desktop\volleyball\dataset\serve"
+# WINDOWS 來自 serve_montage.py 的人眼把關結果；起訖點要避開 serve_cuts.json 的
+# 場景切換，並在 contact 前留 ~0.5s 以上讓 crouch 期取得到。
+# 下面這組是 2026-08-14 實際採用的（產出 usertut_serve_01..05）。
+# ---------------------------------------------------------------------------
 
 # (start, end) chosen to sit inside one camera shot, with lead-in for the crouch
 # phase and a little follow-through after contact. Verified full-body overhand

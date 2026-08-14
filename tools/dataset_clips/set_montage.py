@@ -1,7 +1,11 @@
 import cv2, json, os, math
 
-SRC = r"C:\Users\test\Downloads\videoplayback (10).mp4"
-OUT = r"C:\Users\test\AppData\Local\Temp\claude\C--Users-test-Desktop-volleyball\8c6d2969-18a8-4aa9-a54c-72b0609096ee\scratchpad"
+# --- 改這裡 -----------------------------------------------------------------
+# 讀 <OUT>/set_windows.json，輸出把關圖。**人眼在這一步剔除**：多人入鏡、比賽轉播
+# 畫面、球鞋/器材特寫、教學片的錯誤示範。確認後把要留的 index 填進 set_trim.ACCEPT。
+SRC = r"C:\path\to\your\set_tutorial.mp4"
+OUT = r"C:\path\to\output\dir"
+# ---------------------------------------------------------------------------
 data = json.load(open(os.path.join(OUT, "set_windows.json")))
 wins = data["windows"]
 

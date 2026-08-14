@@ -1,8 +1,12 @@
 import cv2, json, os
 
-SRC = r"C:\Users\test\Downloads\videoplayback (10).mp4"
+# --- 改這裡 -----------------------------------------------------------------
+SRC = r"C:\path\to\your\set_tutorial.mp4"
 OUT_DIR = r"C:\Users\test\Desktop\volleyball\dataset\set"
-WIN = r"C:\Users\test\AppData\Local\Temp\claude\C--Users-test-Desktop-volleyball\8c6d2969-18a8-4aa9-a54c-72b0609096ee\scratchpad\set_windows.json"
+WIN = r"C:\path\to\output\dir\set_windows.json"
+# ACCEPT = 看過 set_montage.py 的把關圖後，確定是乾淨單人舉球的 window index。
+# 下面這組是 2026-08-14 實際採用的（產出 usertut_set_09..18）。
+# ---------------------------------------------------------------------------
 
 wins = json.load(open(WIN))["windows"]
 ACCEPT = [3, 8, 10, 11, 12, 13, 26, 28, 31, 32]  # clean single-player set demos (from montage review)

@@ -1,9 +1,12 @@
 import cv2, math, json, os
 from mediapipe import solutions
 
-SRC = r"C:\Users\test\Downloads\videoplayback (10).mp4"
-OUT = r"C:\Users\test\AppData\Local\Temp\claude\C--Users-test-Desktop-volleyball\8c6d2969-18a8-4aa9-a54c-72b0609096ee\scratchpad"
+# --- 改這裡 -----------------------------------------------------------------
+SRC = r"C:\path\to\your\set_tutorial.mp4"
+OUT = r"C:\path\to\output\dir"
 STRIDE = 8  # sample ~3.7 fps at 29.97
+# 輸出 <OUT>/set_windows.json，接著跑 set_montage.py 做人眼把關
+# ---------------------------------------------------------------------------
 
 mp_pose = solutions.pose
 
