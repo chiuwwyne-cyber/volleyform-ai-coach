@@ -23,7 +23,13 @@ SERVICE_WORKER_PATH = ROOT_DIR / "frontend" / "service-worker.js"
 BUILD_INFO_PATH = ROOT_DIR / "frontend" / "build-info.json"
 
 BUILD_RE = re.compile(r"20\d{6}-[A-Za-z0-9-]+-v(\d+)")
-SERVICE_WORKER_RE = re.compile(r'volleyform-shell-v(\d+)')
+# The cache name carries a content digest suffix as well as the counter, so two
+# different frontends can never share a cache name even if the counter repeats
+# (which happens when an asset change is committed without running this script:
+# CI then bumps from the same stale base twice). Same name + byte-identical
+# service-worker.js means the browser never reinstalls the worker, activate()
+# never purges, and every cache-first asset stays stale forever.
+SERVICE_WORKER_RE = re.compile(r'volleyform-shell-v(\d+)(?:-[0-9a-f]{8})?')
 REFERENCE_RE = re.compile(r"const REFERENCE_STANDARDS = \{.*?\n\};", re.S)
 
 
@@ -58,15 +64,25 @@ def _replace_build_markers(text, build_label):
     return text
 
 
-def _replace_service_worker_cache(text, version):
-    return SERVICE_WORKER_RE.sub(f"volleyform-shell-v{version}", text)
+def _cache_name(version, fingerprint):
+    return f"volleyform-shell-v{version}-{fingerprint[:8]}"
+
+
+def _replace_service_worker_cache(text, version, fingerprint):
+    return SERVICE_WORKER_RE.sub(_cache_name(version, fingerprint), text)
 
 
 def _app_shell_files():
-    """The frontend files the service worker caches, resolved to real paths.
+    """Every frontend file the service worker can serve from cache.
 
-    Parsed from the APP_SHELL array so it stays in step with what actually gets
-    cached; that array is the exact set whose changes require a cache bump.
+    APP_SHELL is precached, but the fetch handler also caches anything else
+    same-origin that is not network-first -- the vendored libraries (MediaPipe
+    wasm, Three.js, the QR lib) and the MediaPipe .task models. Those are
+    requested WITHOUT a ?v= build parameter and hit the cache-first branch, so
+    if they were left out of the fingerprint a vendor or model upgrade would
+    bump nothing and clients would keep the old copy for as long as the cache
+    name stayed the same. They are large but rarely change, and hashing them
+    costs a fraction of a second.
     """
     text = _read(SERVICE_WORKER_PATH)
     match = re.search(r"const APP_SHELL = \[(.*?)\]", text, re.S)
@@ -76,6 +92,10 @@ def _app_shell_files():
             rel = entry.lstrip("./")
             if rel:  # skip the "./" root entry
                 paths.append(FRONTEND_DIR / rel)
+    for extra_dir in ("vendor", "models"):
+        root = FRONTEND_DIR / extra_dir
+        if root.is_dir():
+            paths.extend(path for path in root.rglob("*") if path.is_file())
     return paths
 
 
@@ -160,12 +180,12 @@ def sync_frontend(root_dir=ROOT_DIR, build_label=None, bump_if_changed=True):
         changed |= _write_if_changed(path, _replace_build_markers(_read(path), build_label))
 
     sw = _replace_build_markers(_read(SERVICE_WORKER_PATH), build_label)
-    sw = _replace_service_worker_cache(sw, next_version)
+    sw = _replace_service_worker_cache(sw, next_version, fingerprint)
     changed |= _write_if_changed(SERVICE_WORKER_PATH, sw)
 
     info = {
         "buildVersion": build_label,
-        "serviceWorkerCache": f"volleyform-shell-v{next_version}",
+        "serviceWorkerCache": _cache_name(next_version, fingerprint),
         "referenceSource": "backend/reference_standards.json",
         "shellFingerprint": fingerprint,
         "generatedAt": date.today().isoformat(),
