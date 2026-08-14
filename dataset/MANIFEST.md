@@ -72,7 +72,7 @@ together + low + knee < 150) so the knee band stays correct (p10 93.5, p90 149.7
 | pexels_6179955.mp4 | https://www.pexels.com/video/6179955/ |
 | usertut_dig_01..04.mp4 | user-provided single-player low-dig drill (trimmed) |
 
-## set (14 clips)
+## set (24 clips)
 
 6 original Pexels candidates + 8 clips (usertut_set_01..08) trimmed on 2026-08-06
 from a single-player setting tutorial the user provided (`videoplayback (1).mp4`,
@@ -80,6 +80,17 @@ not committed). The tutorial windows were auto-located by pose (single player,
 hands in overhead-set position) then trimmed. This expansion raised convergence
 (elbow 0.46->0.67, shoulder 0.50->0.65) AND kept correctness (phase_reference_test
 still flags "hands too low"), unlike the rejected setter-search rally clips.
+
+Expanded 14->24 on 2026-08-14 with 10 clips (usertut_set_09..18) trimmed from a
+second user-provided single-player setting tutorial (`videoplayback (10).mp4`, ~15
+min, not committed). All 34 pose-located "both wrists overhead + hands close"
+windows were reviewed in an annotated montage; rejected inserts were broadcast
+match footage (multi-player), a shoe close-up, and the "DON'T WANT TO BE TOO
+TIGHT" wrong-form demo (elbow 44-71 deg). Only 10 clean overhead-set reps kept.
+Convergence rose (shoulder 0.65->0.79, elbow 0.67->0.83; set avg 0.66->0.81) AND
+correctness held: set shoulder p10 stayed high (83.9, accepted-low 65.1) so
+phase_reference_test still flags shoulder_low -- unlike the rally clips that
+pushed p10 down to ~45. All 11 backend + 1 frontend tests pass.
 
 | File | Source |
 |---|---|
@@ -90,6 +101,7 @@ still flags "hands too low"), unlike the rejected setter-search rally clips.
 | pexels_6217341.mp4 | https://www.pexels.com/video/6217341/ |
 | pexels_6217182.mp4 | https://www.pexels.com/video/6217182/ |
 | usertut_set_01..08.mp4 | user-provided single-player set tutorial (trimmed) |
+| usertut_set_09..18.mp4 | 2nd user set tutorial (videoplayback (10), trimmed) |
 
 ## block (18 clips, candidate-calibrated, robust outlier-trimmed)
 

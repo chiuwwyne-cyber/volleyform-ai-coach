@@ -577,7 +577,7 @@ function checkAction(action, angles, positions, hands) {
 
 const REFERENCE_STANDARDS = {
   "version": 1,
-  "generated": "2026-08-10",
+  "generated": "2026-08-14",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -843,45 +843,45 @@ const REFERENCE_STANDARDS = {
       }
     },
     "set": {
-      "clips": 14,
+      "clips": 24,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 14,
-            "raw_count": 14,
+            "count": 24,
+            "raw_count": 24,
             "outliers": 0,
             "min": 98.0,
-            "p10": 101.8,
-            "p25": 111.4,
-            "p50": 120.5,
-            "p75": 145.2,
-            "p90": 167.3,
+            "p10": 104.5,
+            "p25": 112.6,
+            "p50": 121.7,
+            "p75": 139.7,
+            "p90": 154.0,
             "max": 177.8,
-            "tolerance": 19.5,
+            "tolerance": 17.1,
             "accepted_range": [
-              82.3,
-              180.0
+              87.4,
+              171.1
             ],
-            "convergence": 0.67,
+            "convergence": 0.83,
             "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 14,
-            "raw_count": 14,
+            "count": 24,
+            "raw_count": 24,
             "outliers": 0,
             "min": 75.2,
-            "p10": 83.4,
-            "p25": 86.4,
-            "p50": 102.3,
-            "p75": 127.4,
-            "p90": 141.3,
+            "p10": 83.9,
+            "p25": 89.2,
+            "p50": 106.1,
+            "p75": 129.5,
+            "p90": 135.0,
             "max": 166.4,
-            "tolerance": 20.2,
+            "tolerance": 18.8,
             "accepted_range": [
-              63.2,
-              161.5
+              65.1,
+              153.8
             ],
-            "convergence": 0.65,
+            "convergence": 0.79,
             "convergence_state": "stable"
           }
         }
