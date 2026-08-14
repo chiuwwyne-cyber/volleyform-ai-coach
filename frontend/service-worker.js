@@ -1,4 +1,4 @@
-const CACHE_NAME = "volleyform-shell-v66-bfa6d718";
+const CACHE_NAME = "volleyform-shell-v67-e28a7d05";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -52,7 +52,17 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || url.pathname.includes("/api/")) {
+  // runtime-share.json is per-session launcher state: it holds the CURRENT
+  // cloudflare tunnel / LAN address, which changes every time the launcher
+  // runs. Caching it would make the QR code hand out a dead tunnel from an
+  // earlier session, so it bypasses the worker entirely like /api/ does.
+  // (The page requests it with cache: "no-store", but that only governs the
+  // HTTP cache -- the service worker still intercepts unless excluded here.)
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname.includes("/api/") ||
+    url.pathname.endsWith("/runtime-share.json")
+  ) {
     return;
   }
 

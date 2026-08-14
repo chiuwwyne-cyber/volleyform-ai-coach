@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260815-frontend-sync-v66"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260815-frontend-sync-v67"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
