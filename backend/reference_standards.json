@@ -70,66 +70,66 @@
       }
     },
     "serve": {
-      "clips": 14,
+      "clips": 19,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 14,
-            "raw_count": 14,
+            "count": 19,
+            "raw_count": 19,
             "outliers": 0,
             "min": 106.9,
-            "p10": 115.2,
-            "p25": 132.9,
-            "p50": 147.3,
-            "p75": 162.1,
-            "p90": 165.6,
+            "p10": 116.0,
+            "p25": 140.4,
+            "p50": 155.7,
+            "p75": 163.7,
+            "p90": 166.4,
             "max": 177.4,
-            "tolerance": 18.7,
+            "tolerance": 17.0,
             "accepted_range": [
-              96.5,
+              99.0,
               180.0
             ],
-            "convergence": 0.69,
+            "convergence": 0.82,
             "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 14,
-            "raw_count": 14,
-            "outliers": 0,
+            "count": 16,
+            "raw_count": 19,
+            "outliers": 3,
             "min": 64.4,
-            "p10": 79.6,
-            "p25": 108.7,
-            "p50": 127.5,
-            "p75": 139.2,
-            "p90": 156.3,
+            "p10": 116.9,
+            "p25": 124.6,
+            "p50": 131.5,
+            "p75": 137.2,
+            "p90": 155.9,
             "max": 157.0,
-            "tolerance": 19.7,
+            "tolerance": 16.2,
             "accepted_range": [
-              59.9,
-              176.0
+              100.7,
+              172.1
             ],
-            "convergence": 0.68,
+            "convergence": 0.86,
             "convergence_state": "stable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 14,
-            "raw_count": 14,
+            "count": 15,
+            "raw_count": 15,
             "outliers": 0,
             "min": 97.7,
-            "p10": 101.3,
-            "p25": 121.4,
-            "p50": 148.9,
-            "p75": 152.6,
-            "p90": 162.7,
+            "p10": 102.0,
+            "p25": 125.9,
+            "p50": 148.7,
+            "p75": 152.2,
+            "p90": 162.5,
             "max": 167.4,
-            "tolerance": 22.6,
+            "tolerance": 21.6,
             "accepted_range": [
-              78.7,
+              80.4,
               180.0
             ],
-            "convergence": 0.68,
+            "convergence": 0.72,
             "convergence_state": "stable"
           }
         }

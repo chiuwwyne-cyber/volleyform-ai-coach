@@ -28,7 +28,23 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_6217269.mp4 | https://www.pexels.com/video/6217269/ |
 | pexels_6217338.mp4 | https://www.pexels.com/video/6217338/ |
 
-## serve (14 clips)
+## serve (19 clips)
+
+14 Pexels clips + 5 clips (usertut_serve_01..05) trimmed on 2026-08-14 from a
+user-provided single-player serve tutorial (`videoplayback (1).mp4`, Sikana,
+111s, not committed). The tutorial teaches BOTH underhand and overhand serves;
+only overhand reps were kept, because serve is an OVERHEAD_ACTION whose contact
+frame is "highest wrist" -- an underhand rep would sample a follow-through as if
+it were contact and corrupt the band. Candidate events were ranked by reach
+normalized to torso length (raw image-space reach under-rates wide shots), then
+filtered to full-body only (ankle visibility > 0.5, inside frame) so the crouch
+knee sample is real; leg-cropped close-ups, a two-person split-screen intro, and
+toss/prep frames (elbow 120-149) were rejected. Windows avoid scene cuts.
+
+Convergence rose 0.68->0.80 and the band TIGHTENED rather than loosened:
+contact.shoulder accepted-low 59.9->100.7 (p10 79.6->116.9), so "arm not raised
+enough" stays detectable. crouch.knee's 180 upper cap is pre-existing, unchanged
+by this expansion. All 11 backend + 1 frontend tests pass.
 
 | File | Source |
 |---|---|
@@ -46,6 +62,7 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_12169508.mp4 | https://www.pexels.com/video/12169508/ |
 | pexels_10350521.mp4 | https://www.pexels.com/video/10350521/ |
 | pexels_12169479.mp4 | https://www.pexels.com/video/12169479/ |
+| usertut_serve_01..05.mp4 | user-provided single-player serve tutorial (overhand reps only, trimmed) |
 
 ## receive (16 clips)
 
