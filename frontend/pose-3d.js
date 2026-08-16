@@ -311,10 +311,30 @@ function shapeReceivePlatform(points, variant, options = {}) {
   const z = options.z ?? (variant === "mistake" ? 0.02 : 0.18);
   const gap = options.gap ?? (variant === "mistake" ? 0.2 : 0.045);
   const elbowY = options.elbowY ?? -0.24;
-  setPoint(points, 13, centerX - 0.26, elbowY, z);
-  setPoint(points, 14, centerX + 0.26, elbowY, z);
   setPoint(points, 15, centerX - gap, y, z);
   setPoint(points, 16, centerX + gap, y + (variant === "mistake" ? 0.05 : 0), z);
+  if (variant === "mistake") {
+    // The mistake pose keeps the old splayed elbows: that IS the error.
+    setPoint(points, 13, centerX - 0.26, elbowY, z);
+    setPoint(points, 14, centerX + 0.26, elbowY, z);
+  } else {
+    // A correct platform is nearly straight -- the app's own cue is
+    // "手肘伸直，前臂成一整片". The demo used to splay the elbows out to
+    // +/-0.26 while the wrists were together, which bends them to about 120
+    // degrees: the very fault the coaching tells users to fix. Real receives
+    // measure 147. Putting each elbow on the shoulder-to-wrist line, with a
+    // small outward bow so it does not look locked, gives that.
+    for (const [shoulderIdx, elbowIdx, wristIdx, side] of
+         [[11, 13, 15, -1], [12, 14, 16, 1]]) {
+      const shoulder = points[shoulderIdx];
+      const wrist = points[wristIdx];
+      if (!isFiniteTriple(shoulder) || !isFiniteTriple(wrist)) continue;
+      setPoint(points, elbowIdx,
+               shoulder[0] + (wrist[0] - shoulder[0]) * 0.5 + side * 0.1,
+               shoulder[1] + (wrist[1] - shoulder[1]) * 0.5,
+               shoulder[2] + (wrist[2] - shoulder[2]) * 0.5);
+    }
+  }
   setPoint(points, 17, centerX - gap - 0.03, y + 0.03, z);
   setPoint(points, 18, centerX + gap + 0.03, y + 0.03, z);
   setPoint(points, 19, centerX - gap * 0.5, y + 0.045, z);
@@ -334,7 +354,7 @@ function shapeSetBiomechanics(points, variant, frame = {}) {
   } else if (phase === "set_cushion") {
     shapeSetHands(points, "correct", { wristY: head[1] - 0.13, elbowY: head[1] + 0.07, spread: 0.14, fingerY: head[1] - 0.2 });
   } else if (phase === "set_release") {
-    shapeSetHands(points, "correct", { wristY: head[1] - 0.34, elbowY: head[1] - 0.08, spread: 0.1, fingerY: head[1] - 0.42 });
+    shapeSetHands(points, "correct", { wristY: head[1] - 0.12, elbowY: head[1] + 0.06, spread: 0.1, fingerY: head[1] - 0.24 });
   } else if (phase === "set_recover") {
     shapeSetHands(points, "correct", { wristY: head[1] - 0.05, elbowY: head[1] + 0.1, spread: 0.14 });
   } else {
@@ -352,12 +372,12 @@ function shapeReceiveBiomechanics(points, variant, frame = {}) {
   if (phase === "receive_ready") {
     shapeReceivePlatform(points, "correct", { y: 0.08, z: 0.16, gap: 0.08, elbowY: -0.18 });
   } else if (phase === "receive_step") {
-    shapeReceivePlatform(points, "correct", { y: 0.06, z: 0.2, gap: 0.06, elbowY: -0.2 });
+    shapeReceivePlatform(points, "correct", { y: 0.06, z: 0.2, gap: 0.03, elbowY: -0.2 });
     shapeLeftFootInward(points, 0.35);
   } else if (phase === "receive_platform") {
-    shapeReceivePlatform(points, "correct", { y: 0.04, z: 0.24, gap: 0.035, elbowY: -0.24 });
+    shapeReceivePlatform(points, "correct", { y: 0.04, z: 0.24, gap: 0.017, elbowY: -0.24 });
   } else if (phase === "receive_redirect") {
-    shapeReceivePlatform(points, "correct", { y: -0.02, z: 0.2, gap: 0.04, elbowY: -0.26 });
+    shapeReceivePlatform(points, "correct", { y: -0.02, z: 0.2, gap: 0.02, elbowY: -0.26 });
     offsetPoseIndices(points, UPPER_BODY_INDICES, 0, -0.02, 0.03);
   } else {
     shapeReceivePlatform(points, "correct");
@@ -1910,6 +1930,14 @@ function createFigure(scene) {
   backMesh.scale.set(1, 0.5, 0.32);
   group.add(backMesh);
 
+  // The head marker alone is not enough. This mannequin's torso is close to
+  // square in cross-section, so yawing it barely changes its silhouette -- the
+  // chest can be turned 60 degrees and still look like the same blank slab.
+  // A patch on the front of the chest gives the torso itself a readable facing.
+  const chestFrontMesh = makeSphere(HEAD_RADIUS * 0.6, FACE_COLOR, 18, 14);
+  chestFrontMesh.scale.set(1, 1.25, 0.3);
+  group.add(chestFrontMesh);
+
   const handDetails = ["L", "R"].map(createHandDetail);
   for (const hand of handDetails) {
     group.add(hand.palm);
@@ -2069,9 +2097,14 @@ function createFigure(scene) {
           faceMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
           backMesh.position.copy(headPos).addScaledVector(forward, -HEAD_RADIUS * 0.88);
           backMesh.quaternion.copy(faceMesh.quaternion);
+          // Chest patch: sits on the front of the upper torso and turns with it.
+          chestFrontMesh.visible = true;
+          chestFrontMesh.position.copy(chestPos).addScaledVector(forward, HEAD_RADIUS * 0.62);
+          chestFrontMesh.quaternion.copy(faceMesh.quaternion);
         } else {
           faceMesh.visible = false;
           backMesh.visible = false;
+          chestFrontMesh.visible = false;
         }
       }
       if (!krunk.active) {
@@ -2124,6 +2157,8 @@ function createFigure(scene) {
       faceMesh.material.dispose();
       backMesh.geometry.dispose();
       backMesh.material.dispose();
+      chestFrontMesh.geometry.dispose();
+      chestFrontMesh.material.dispose();
       for (const hand of handDetails) {
         hand.palm.geometry.dispose();
         hand.palm.material.dispose();
