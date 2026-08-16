@@ -530,8 +530,13 @@ function shapeSpikeLanding(points) {
 // fraction of a unit instead, which left the arms wherever the shapers had
 // written them and read as no turn at all.
 //
-// Yaw about the vertical axis through the hips, in degrees. NEGATIVE turns the
-// right (dominant) shoulder backwards, into the cocked position.
+// Yaw about the vertical axis through the hips, in degrees.
+//
+// SIGN: the run-up travels toward +z (the spike sequence carries root z from
+// -1.3 up to +0.1), so "behind the player" is -z. POSITIVE yaw sends the right
+// shoulder to -z, i.e. BACK -- which is where a right-hander's hitting shoulder
+// cocks. Negative would put the hitting shoulder in FRONT, mirroring the whole
+// action; that shipped once and looked wrong immediately.
 const ACTION_TORSO_YAW = {
   // Spike: turns side-on so the hitting shoulder is cocked behind the body,
   // then unwinds into a contact made square to the net. The hips lead and the
@@ -546,25 +551,25 @@ const ACTION_TORSO_YAW = {
   // The hips are turned further too: the last step plants across the approach,
   // it does not land square. Separation still peaks at a realistic 44 degrees.
   spike: {
-    approach: { hips: 0, shoulders: -8 },
-    left_step: { hips: -8, shoulders: -20 },
-    right_step: { hips: -20, shoulders: -40 },
-    plant: { hips: -32, shoulders: -60 }, // planted across, clearly side-on
-    load: { hips: -22, shoulders: -66 }, // hips releasing first: 44 of separation
-    jump: { hips: -8, shoulders: -42 }, // shoulders start to unwind
-    contact: { hips: 4, shoulders: -6 }, // squared up to the net
-    landing: { hips: 4, shoulders: 8 }, // follow-through carries past square
+    approach: { hips: 0, shoulders: 8 },
+    left_step: { hips: 8, shoulders: 20 },
+    right_step: { hips: 20, shoulders: 40 },
+    plant: { hips: 32, shoulders: 60 }, // planted across, clearly side-on
+    load: { hips: 22, shoulders: 66 }, // hips releasing first: 44 of separation
+    jump: { hips: 8, shoulders: 42 }, // shoulders start to unwind
+    contact: { hips: -4, shoulders: 6 }, // squared up to the net
+    landing: { hips: -4, shoulders: -8 }, // follow-through carries past square
     recover: { hips: 0, shoulders: 0 },
   },
   // Serve: the same chain as the spike but smaller, because there is no run-up
   // to turn -- the coil has to come from the stance. The coaching cue already
   // said 身體側身; this is what makes the figure actually stand side-on.
   serve: {
-    serve_ready: { hips: -28, shoulders: -46 }, // stance is already side-on
-    serve_toss: { hips: -26, shoulders: -48 },
-    serve_load: { hips: -16, shoulders: -60 }, // drawn back, hips releasing first
-    serve_contact: { hips: 4, shoulders: -6 }, // chest square, hit out front
-    serve_follow: { hips: 2, shoulders: 12 },
+    serve_ready: { hips: 28, shoulders: 46 }, // stance is already side-on
+    serve_toss: { hips: 26, shoulders: 48 },
+    serve_load: { hips: 16, shoulders: 60 }, // drawn back, hips releasing first
+    serve_contact: { hips: -4, shoulders: 6 }, // chest square, hit out front
+    serve_follow: { hips: -2, shoulders: -12 },
   },
   // Receive: the ball goes where the PLATFORM faces, so here the turn IS the
   // technique rather than decoration. Square to the incoming ball, then turn
