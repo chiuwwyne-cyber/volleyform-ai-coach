@@ -270,8 +270,14 @@ function shapeSetHands(points, variant, options = {}) {
   const spread = options.spread ?? (variant === "mistake" ? 0.22 : 0.12);
   const fingerY = options.fingerY ?? wristY - 0.055;
 
-  setPoint(points, 13, shoulderCenterX - spread * 1.15, elbowY, z);
-  setPoint(points, 14, shoulderCenterX + spread * 1.15, elbowY, z);
+  // The elbows must sit PART WAY forward, not level with the wrists. Putting
+  // both at the same depth means the upper arm carries the whole forward reach
+  // and the forearm is purely vertical, which folds the elbow to about 107
+  // degrees against a measured 133. Half a step forward keeps the angle right.
+  const shoulderZ = (points[11][2] + points[12][2]) / 2;
+  const elbowZ = shoulderZ + (z - shoulderZ) * 0.78;
+  setPoint(points, 13, shoulderCenterX - spread * 1.15, elbowY, elbowZ);
+  setPoint(points, 14, shoulderCenterX + spread * 1.15, elbowY, elbowZ);
   setPoint(points, 15, shoulderCenterX - spread, wristY, z);
   setPoint(points, 16, shoulderCenterX + spread, wristY, z);
   setPoint(points, 17, shoulderCenterX - spread - 0.035, wristY - 0.03, z + 0.015);
@@ -354,7 +360,7 @@ function shapeSetBiomechanics(points, variant, frame = {}) {
   } else if (phase === "set_cushion") {
     shapeSetHands(points, "correct", { wristY: head[1] - 0.13, elbowY: head[1] + 0.07, spread: 0.14, fingerY: head[1] - 0.2 });
   } else if (phase === "set_release") {
-    shapeSetHands(points, "correct", { wristY: head[1] - 0.12, elbowY: head[1] + 0.06, spread: 0.1, fingerY: head[1] - 0.24 });
+    shapeSetHands(points, "correct", { wristY: head[1] - 0.12, elbowY: head[1] + 0.06, spread: 0.1, fingerY: head[1] - 0.24, z: head[2] + 0.34 });
   } else if (phase === "set_recover") {
     shapeSetHands(points, "correct", { wristY: head[1] - 0.05, elbowY: head[1] + 0.1, spread: 0.14 });
   } else {
@@ -370,14 +376,14 @@ function shapeReceiveBiomechanics(points, variant, frame = {}) {
   }
   const phase = frame.actionPhase;
   if (phase === "receive_ready") {
-    shapeReceivePlatform(points, "correct", { y: 0.08, z: 0.16, gap: 0.08, elbowY: -0.18 });
+    shapeReceivePlatform(points, "correct", { y: 0.08, z: 0.34, gap: 0.08, elbowY: -0.18 });
   } else if (phase === "receive_step") {
-    shapeReceivePlatform(points, "correct", { y: 0.06, z: 0.2, gap: 0.03, elbowY: -0.2 });
+    shapeReceivePlatform(points, "correct", { y: 0.06, z: 0.38, gap: 0.03, elbowY: -0.2 });
     shapeLeftFootInward(points, 0.35);
   } else if (phase === "receive_platform") {
-    shapeReceivePlatform(points, "correct", { y: 0.04, z: 0.24, gap: 0.017, elbowY: -0.24 });
+    shapeReceivePlatform(points, "correct", { y: 0.04, z: 0.44, gap: 0.017, elbowY: -0.24 });
   } else if (phase === "receive_redirect") {
-    shapeReceivePlatform(points, "correct", { y: -0.02, z: 0.2, gap: 0.02, elbowY: -0.26 });
+    shapeReceivePlatform(points, "correct", { y: -0.02, z: 0.4, gap: 0.02, elbowY: -0.26 });
     offsetPoseIndices(points, UPPER_BODY_INDICES, 0, -0.02, 0.03);
   } else {
     shapeReceivePlatform(points, "correct");
@@ -414,21 +420,40 @@ function setOpenSpikeHand(points, side, wrist, spread = 1, palmTilt = 0) {
   setPoint(points, thumb, wrist[0] + sideSign * 0.12 * spread, wrist[1] - 0.035 * spread, wrist[2] + palmTilt - 0.065);
 }
 
+// Put an elbow on the shoulder-to-wrist line with a sideways bow. The bow is
+// what sets the elbow angle -- 0 is locked straight, bigger values bend it --
+// so a shape can be tuned to a MEASURED angle instead of guessing an absolute
+// elbow position and hoping. This is how the receive platform was matched to
+// the clips at 147 degrees.
+function placeElbowOnLine(points, shoulderIdx, elbowIdx, wristIdx, bowX, bowZ = 0) {
+  const shoulder = points[shoulderIdx];
+  const wrist = points[wristIdx];
+  if (!isFiniteTriple(shoulder) || !isFiniteTriple(wrist)) return;
+  setPoint(points, elbowIdx,
+           shoulder[0] + (wrist[0] - shoulder[0]) * 0.5 + bowX,
+           shoulder[1] + (wrist[1] - shoulder[1]) * 0.5,
+           shoulder[2] + (wrist[2] - shoulder[2]) * 0.5 + bowZ);
+}
+
 function shapeBlockHands(points, phase) {
   const head = points[HEAD_INDEX];
   const centerX = (points[11][0] + points[12][0]) / 2;
   const ready = {
-    block_ready: { elbowY: head[1] + 0.18, wristY: head[1] - 0.02, spread: 0.2, z: head[2] - 0.02 },
-    block_load: { elbowY: head[1] + 0.26, wristY: head[1] + 0.06, spread: 0.22, z: head[2] - 0.04 },
-    block_rise: { elbowY: head[1] - 0.06, wristY: head[1] - 0.32, spread: 0.2, z: head[2] - 0.06 },
-    block_press: { elbowY: head[1] - 0.16, wristY: head[1] - 0.46, spread: 0.23, z: head[2] - 0.1 },
-    block_landing: { elbowY: head[1] + 0.04, wristY: head[1] - 0.16, spread: 0.18, z: head[2] - 0.02 },
-  }[phase] || { elbowY: head[1] + 0.1, wristY: head[1] - 0.08, spread: 0.2, z: head[2] - 0.02 };
+    block_ready: { wristY: head[1] - 0.02, spread: 0.2, z: head[2] - 0.02, reach: 0.06 },
+    block_load: { wristY: head[1] + 0.06, spread: 0.22, z: head[2] - 0.04, reach: 0.04 },
+    block_rise: { wristY: head[1] - 0.38, spread: 0.2, z: head[2] - 0.06, reach: 0.22 },
+    block_press: { wristY: head[1] - 0.5, spread: 0.23, z: head[2] - 0.1, reach: 0.34 },
+    block_landing: { wristY: head[1] - 0.16, spread: 0.18, z: head[2] - 0.02, reach: 0.1 },
+  }[phase] || { wristY: head[1] - 0.08, spread: 0.2, z: head[2] - 0.02, reach: 0.08 };
 
-  setPoint(points, 13, centerX - ready.spread, ready.elbowY, ready.z);
-  setPoint(points, 14, centerX + ready.spread, ready.elbowY, ready.z);
-  setPoint(points, 15, centerX - ready.spread * 0.8, ready.wristY, ready.z - 0.03);
-  setPoint(points, 16, centerX + ready.spread * 0.8, ready.wristY, ready.z - 0.03);
+  // Real blocks measure an elbow of 144 degrees and an arm elevation of 56 off
+  // horizontal at the press -- the arms reach up AND forward over the net, they
+  // are not stabbed vertically with locked elbows (the demo was at 162 and 77).
+  // So the wrists carry a forward reach and the elbows are bowed onto the line.
+  setPoint(points, 15, centerX - ready.spread * 0.8, ready.wristY, ready.z - ready.reach);
+  setPoint(points, 16, centerX + ready.spread * 0.8, ready.wristY, ready.z - ready.reach);
+  placeElbowOnLine(points, 11, 13, 15, -0.1, 0.05);
+  placeElbowOnLine(points, 12, 14, 16, 0.1, 0.05);
   setOpenSpikeHand(points, "L", points[15], 0.95, -0.03);
   setOpenSpikeHand(points, "R", points[16], 0.95, -0.03);
 }
@@ -484,8 +509,8 @@ function shapeServeBiomechanics(points, variant, frame = {}) {
     setPoint(points, 13, -0.18, head[1] + 0.22, -0.02);
     setPoint(points, 15, -0.16, head[1] + 0.38, -0.04);
     setOpenSpikeHand(points, "L", points[15], 0.65, 0);
-    setPoint(points, 14, 0.25, head[1] - 0.18, 0.12);
-    setPoint(points, 16, 0.32, head[1] - 0.48, 0.14);
+    setPoint(points, 16, 0.34, head[1] - 0.24, -0.46);
+    placeElbowOnLine(points, 12, 14, 16, 0.09, 0.09);
     setOpenSpikeHand(points, "R", points[16], 1, -0.01);
   } else {
     setPoint(points, 13, -0.18, head[1] + 0.28, -0.02);
