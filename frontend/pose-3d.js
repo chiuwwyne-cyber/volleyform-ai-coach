@@ -1032,6 +1032,37 @@ function orientKrunkPart(mesh, proximal, distal) {
   mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
 }
 
+// The torso needs the SAME treatment plus one more degree of freedom.
+// setFromUnitVectors gives the shortest-arc rotation, which carries no twist
+// about the direction it aligns to -- and for the torso that direction is the
+// hip-to-shoulder spine, which is exactly the axis the trunk rotates about. So
+// a torso oriented that way stays front-facing no matter how far the shoulders
+// turn, leaving the arms swinging around a chest that never moves.
+// Building the full basis from the spine AND the shoulder line fixes it. With
+// the shoulders square this reduces to the same identity rotation as before, so
+// nothing changes for actions that do not turn (block, and every neutral pose).
+function orientKrunkTorso(mesh, proximal, distal, shoulderVec) {
+  const dir = distal.clone().sub(proximal);
+  const length = Math.max(dir.length(), 0.001);
+  mesh.position.copy(proximal);
+  mesh.scale.setScalar(length);
+  const up = dir.clone().normalize();
+  const right = shoulderVec.clone().sub(up.clone().multiplyScalar(shoulderVec.dot(up)));
+  if (right.lengthSq() < 1e-8) {
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
+    return;
+  }
+  // Negated deliberately. Landmark y points DOWN, so the spine vector is very
+  // near -Y, and setFromUnitVectors(+Y, -Y) is the degenerate antiparallel case
+  // that three.js resolves to a 180-degree flip -- which is the convention the
+  // torso mesh has always been drawn with. Taking +right here instead would
+  // silently spin the chest around to face backwards. Matching the old
+  // convention keeps a square pose pixel-identical and adds ONLY the twist.
+  right.normalize().negate();
+  const forward = new THREE.Vector3().crossVectors(right, up).normalize();
+  mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, forward));
+}
+
 function statusColor(joint, jointStatus) {
   if (!joint) return BODY_COLOR;
   return STATUS_COLOR[jointStatus?.[joint] || "green"];
@@ -1890,8 +1921,9 @@ function createFigure(scene) {
           const color = status === "green" ? KRUNK_BODY_COLOR : STATUS_COLOR[status];
           applyStatusMaterial(bone.mesh.material, color, status);
         }
+        const shoulderVec = toVec3(points[12]).sub(toVec3(points[11]));
         for (const part of krunk.torsoParts) {
-          orientKrunkPart(part.mesh, hipMid, shoulderMid);
+          orientKrunkTorso(part.mesh, hipMid, shoulderMid, shoulderVec);
         }
         for (const limb of krunk.handLimbs) {
           orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
