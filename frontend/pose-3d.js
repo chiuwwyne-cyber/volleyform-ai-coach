@@ -1922,8 +1922,19 @@ function createFigure(scene) {
           applyStatusMaterial(bone.mesh.material, color, status);
         }
         const shoulderVec = toVec3(points[12]).sub(toVec3(points[11]));
+        const hipVec = toVec3(points[24]).sub(toVec3(points[23]));
+        // krunk-parts.json ships no separate hips part: "torso" is ONE rigid
+        // mesh spanning pelvis to shoulders. A twisted trunk has a different
+        // yaw at each end, and one rigid mesh cannot honour both -- driving it
+        // purely from the shoulders would swing the rendered pelvis with them
+        // and visually cancel the hip-shoulder separation the choreography just
+        // created (40 degrees of it at spike load). The bisector splits the
+        // error, leaving each end off by half instead of the pelvis off by all.
+        const midTrunkVec = shoulderVec.clone().normalize().add(hipVec.clone().normalize());
         for (const part of krunk.torsoParts) {
-          orientKrunkTorso(part.mesh, hipMid, shoulderMid, shoulderVec);
+          // The head sits above the shoulders, so it follows them directly.
+          const facing = part.name === "head" ? shoulderVec : midTrunkVec;
+          orientKrunkTorso(part.mesh, hipMid, shoulderMid, facing);
         }
         for (const limb of krunk.handLimbs) {
           orientCapsule(limb.mesh, points[limb.part.a], points[limb.part.b]);
