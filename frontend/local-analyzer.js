@@ -577,7 +577,7 @@ function checkAction(action, angles, positions, hands) {
 
 const REFERENCE_STANDARDS = {
   "version": 1,
-  "generated": "2026-08-14",
+  "generated": "2026-08-16",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -779,64 +779,64 @@ const REFERENCE_STANDARDS = {
       }
     },
     "receive": {
-      "clips": 16,
+      "clips": 24,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 14,
-            "raw_count": 16,
+            "count": 22,
+            "raw_count": 24,
             "outliers": 2,
             "min": 96.5,
-            "p10": 145.4,
-            "p25": 148.1,
-            "p50": 159.4,
-            "p75": 171.0,
-            "p90": 173.0,
+            "p10": 145.9,
+            "p25": 156.5,
+            "p50": 161.9,
+            "p75": 169.7,
+            "p90": 171.5,
             "max": 174.2,
-            "tolerance": 17.6,
+            "tolerance": 14.8,
             "accepted_range": [
-              127.8,
+              131.1,
               180.0
             ],
-            "convergence": 0.75,
+            "convergence": 0.89,
             "convergence_state": "stable"
           },
           "knee": {
-            "count": 16,
-            "raw_count": 16,
+            "count": 24,
+            "raw_count": 24,
             "outliers": 0,
-            "min": 84.0,
-            "p10": 93.5,
-            "p25": 109.5,
+            "min": 66.8,
+            "p10": 90.7,
+            "p25": 100.9,
             "p50": 129.2,
             "p75": 145.5,
-            "p90": 149.7,
+            "p90": 149.9,
             "max": 160.1,
-            "tolerance": 22.6,
+            "tolerance": 21.4,
             "accepted_range": [
-              70.9,
-              172.3
+              69.3,
+              171.3
             ],
-            "convergence": 0.71,
+            "convergence": 0.78,
             "convergence_state": "stable"
           },
           "shoulder": {
-            "count": 15,
-            "raw_count": 16,
+            "count": 23,
+            "raw_count": 24,
             "outliers": 1,
             "min": 16.8,
-            "p10": 25.1,
-            "p25": 33.8,
-            "p50": 49.0,
-            "p75": 74.7,
-            "p90": 79.5,
+            "p10": 24.4,
+            "p25": 36.0,
+            "p50": 58.7,
+            "p75": 76.4,
+            "p90": 100.3,
             "max": 147.8,
-            "tolerance": 20.1,
+            "tolerance": 19.0,
             "accepted_range": [
-              5.0,
-              99.6
+              5.4,
+              119.3
             ],
-            "convergence": 0.69,
+            "convergence": 0.78,
             "convergence_state": "stable"
           }
         }

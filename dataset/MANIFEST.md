@@ -64,7 +64,35 @@ by this expansion. All 11 backend + 1 frontend tests pass.
 | pexels_12169479.mp4 | https://www.pexels.com/video/12169479/ |
 | usertut_serve_01..05.mp4 | user-provided single-player serve tutorial (overhand reps only, trimmed) |
 
-## receive (16 clips)
+## receive (24 clips)
+
+Expanded 16->24 on 2026-08-16 with 8 clips (usertut_dig_05..12) trimmed from
+three user-provided single-player passing videos (not committed): a "dig to
+yourself" drill, a platform tutorial captioned STRAIGHT ARMS / CONTACT ON
+FOREARMS / STEP TO TARGET, and a low-defence drill. Windows were pose-located on
+"wrists together + below the shoulders + elbows > 140 + knee < 155", then every
+candidate was reviewed in a montage.
+
+Six candidates were rejected there, both for reasons that have burnt this
+dataset before:
+  * four were close-ups of the hands and forearms with the legs out of frame
+    entirely, so their 34-44 degree "knee" readings were artefacts
+  * two showed nearly straight legs (153, 154), the exact fault that forced the
+    2026-08-07 receive expansion to be reverted -- an upright demonstrator
+    widens the knee band until "knee too straight" stops being flagged
+
+The eight kept measure 88-129 degrees at the knee. Convergence rose 0.72 -> 0.82
+(elbow 0.89, knee 0.78, shoulder 0.78) and the knee band held: p10 90.7, p90
+149.9, accepted upper 171.3, so a straight-legged 180 is still flagged. All 11
+backend + 2 frontend tests pass.
+
+| File | Source |
+|---|---|
+| usertut_dig_05..08.mp4 | user-provided "dig to yourself" drill (trimmed) |
+| usertut_dig_09..10.mp4 | user-provided platform tutorial (trimmed) |
+| usertut_dig_11..12.mp4 | user-provided low-defence drill (trimmed) |
+
+### Earlier receive set (16 clips)
 
 12 Pexels candidates + 4 clips (usertut_dig_01..04) trimmed on 2026-08-07 from a
 user-provided single-player defensive drill (`videoplayback (9).mp4`, not
