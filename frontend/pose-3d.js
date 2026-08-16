@@ -663,23 +663,46 @@ const AIM_AT_BALL_PHASES = {
   spike: new Set(["plant", "load", "jump"]),
 };
 
+// Measured off the 17 real spike clips, at the frame where the non-hitting arm
+// is highest during the wind-up:
+//     wrist height vs head   median -0.1 torso-lengths (i.e. about head height)
+//     elbow angle            median 130 degrees (clearly bent)
+//     elevation off level    median 34 degrees
+// So a real player sights the ball with a BENT arm held around head height and
+// angled up and forward -- not a straight arm stabbed at the sky, which is what
+// pointing the whole limb directly at the ball produced. Only the AZIMUTH now
+// comes from the ball; the elevation and the bend are held at the measured
+// shape.
+const AIM_UPPER_ARM_ELEVATION = 12; // degrees above level
+const AIM_FOREARM_ELEVATION = 62; // 50 degrees more than the upper arm => elbow ~130
+
 function aimNonHittingArm(points, action, frame) {
   const phase = frame.spikePhase || frame.actionPhase;
   if (!AIM_AT_BALL_PHASES[action]?.has(phase)) return;
   const ball = frame.ball;
   const shoulder = points[11]; // left = non-hitting for a right-hander
   if (!isFiniteTriple(ball) || !isFiniteTriple(shoulder)) return;
-  const dir = [ball[0] - shoulder[0], ball[1] - shoulder[1], ball[2] - shoulder[2]];
-  const length = Math.hypot(dir[0], dir[1], dir[2]);
-  if (length < 1e-6) return;
-  const unit = [dir[0] / length, dir[1] / length, dir[2] / length];
-  const upper = Math.min(0.32, length * 0.45);
-  const fore = Math.min(0.3, length * 0.4);
-  setPoint(points, 13, shoulder[0] + unit[0] * upper, shoulder[1] + unit[1] * upper,
-           shoulder[2] + unit[2] * upper);
+
+  // Horizontal bearing to the ball: the arm still points at it in plan view.
+  let hx = ball[0] - shoulder[0];
+  let hz = ball[2] - shoulder[2];
+  const flat = Math.hypot(hx, hz);
+  if (flat < 1e-6) return;
+  hx /= flat;
+  hz /= flat;
+
+  // Landmark y points DOWN, so rising means subtracting.
+  const at = (elevationDeg, len) => {
+    const r = (elevationDeg * Math.PI) / 180;
+    return [hx * Math.cos(r) * len, -Math.sin(r) * len, hz * Math.cos(r) * len];
+  };
+  const upperLen = 0.26;
+  const foreLen = 0.24;
+  const upper = at(AIM_UPPER_ARM_ELEVATION, upperLen);
+  setPoint(points, 13, shoulder[0] + upper[0], shoulder[1] + upper[1], shoulder[2] + upper[2]);
   const elbow = points[13];
-  setPoint(points, 15, elbow[0] + unit[0] * fore, elbow[1] + unit[1] * fore,
-           elbow[2] + unit[2] * fore);
+  const fore = at(AIM_FOREARM_ELEVATION, foreLen);
+  setPoint(points, 15, elbow[0] + fore[0], elbow[1] + fore[1], elbow[2] + fore[2]);
   setOpenSpikeHand(points, "L", points[15], 0.7, 0);
 }
 
