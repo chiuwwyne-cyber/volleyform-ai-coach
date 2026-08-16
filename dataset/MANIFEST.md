@@ -6,7 +6,19 @@ Videos are NOT committed to the repository; only the derived angle statistics
 (`backend/reference_standards.json`) are. To rebuild or extend, drop additional
 clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 
-## spike (17 clips)
+## spike (20 clips)
+
+Expanded 17->20 on 2026-08-16 with three clean single-player net spikes
+(usertut_spike_01..03) trimmed from a user-provided video. Convergence 0.75 ->
+0.80. Rejected from the same batch: a clip whose only "spike" window was a
+close-up of the shoes -- its reach of 6.58 torso-lengths was an artefact of a
+cropped body, not an extraordinary jump.
+
+| File | Source |
+|---|---|
+| usertut_spike_01..03.mp4 | user-provided single-player spike video (trimmed) |
+
+### Earlier spike set (17 clips)
 
 | File | Source |
 |---|---|
@@ -28,7 +40,32 @@ clips into `dataset/<action>/` and rerun `tools/build_reference.py`.
 | pexels_6217269.mp4 | https://www.pexels.com/video/6217269/ |
 | pexels_6217338.mp4 | https://www.pexels.com/video/6217338/ |
 
-## serve (19 clips)
+## serve (27 clips)
+
+Expanded 19->27 on 2026-08-16 with eight ON-COURT reps (usertut_serve_06..13)
+from a user-provided serve tutorial. The video offered 41 candidate windows and
+most were deliberately left out:
+
+  * #11..#27 are arm-swing drills against a white wall with the ball still HELD
+    in the hand -- a teaching position, not a struck contact
+  * all 41 come from ONE demonstrator, and taking them all would leave serve at
+    60 clips with two thirds from a single person; a homogeneous sample narrows
+    the band, which is how a demo starts flagging correct technique
+
+Convergence 0.80 -> 0.85.
+
+> NOTE, and it is a real limitation: crouch.knee tightened from an accepted floor
+> of 80.4 to 108.3 degrees, because these eight are STANDING serves with little
+> knee bend. A jump serve, which loads to roughly 90-105, would now be flagged.
+> The suite cannot catch this -- phase_reference_test still has no fixed serve
+> case, and angle_acceptance derives its fixtures from the band itself. So the
+> serve standard should be read as calibrated for STANDING serves.
+
+| File | Source |
+|---|---|
+| usertut_serve_06..13.mp4 | user-provided serve tutorial, on-court reps only (trimmed) |
+
+### Earlier serve set (19 clips)
 
 14 Pexels clips + 5 clips (usertut_serve_01..05) trimmed on 2026-08-14 from a
 user-provided single-player serve tutorial (`videoplayback (1).mp4`, Sikana,

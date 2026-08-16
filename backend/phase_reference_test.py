@@ -6,7 +6,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-from backend.reference_evaluation import _band_for, evaluate_with_reference
+from backend.reference_evaluation import _band_for, evaluate_with_reference, reference_for
 
 
 def _point(x=0.5, y=0.5, z=0.0):
@@ -115,13 +115,71 @@ def test_block_uses_max_reach_phase():
     assert "hands_not_high" in result["issues"]
 
 
+def _serve_frames(contact_angles, crouch_angles=None):
+    """A serve: crouch, then reach, with the highest wrist as the contact."""
+    crouch = crouch_angles or _base_angles(knee=150)
+    return [
+        _frame(0.46, 0.20, 0.58, _base_angles()),
+        _frame(0.50, 0.18, 0.84, crouch),          # loaded, hips lowest
+        _frame(0.34, 0.14, 0.60, _base_angles()),
+        _frame(0.16, 0.10, 0.56, contact_angles),  # highest wrist = contact
+        _frame(0.30, 0.14, 0.58, _base_angles()),
+        _frame(0.44, 0.18, 0.60, _base_angles()),
+    ]
+
+
+def test_serve_flags_a_low_arm():
+    """A serve struck with the arm dropped must still be caught.
+
+    Serve had NO fixed case here for a long time, which mattered because the
+    other serve test derives its angles from the band itself and therefore
+    cannot notice the band moving. These angles are hard-coded on purpose: if a
+    future dataset shifts the standard far enough that a clearly bad serve stops
+    being flagged, this fails, which is the whole point.
+    """
+    result = evaluate_with_reference("serve", _serve_frames(_base_angles(elbow=95, shoulder=40)))
+
+    assert result["report"]["mode"] == "reference"
+    assert result["contact_index"] == 3
+    assert "elbow_bad" in result["issues"], result["issues"]
+    assert "shoulder_low" in result["issues"], result["issues"]
+
+
+def test_serve_accepts_a_sound_standing_serve():
+    """And a textbook standing serve must NOT be nagged at.
+
+    This is the false-positive guard. The 2026-08-16 expansion tightened the
+    serve crouch knee floor from 80.4 to 108.3 degrees because the clips added
+    were standing serves, so a band that drifts further could start calling a
+    normal serve wrong.
+    """
+    result = evaluate_with_reference("serve", _serve_frames(_base_angles(elbow=165, shoulder=140)))
+
+    assert result["report"]["mode"] == "reference"
+    assert "elbow_bad" not in result["issues"], result["issues"]
+    assert "shoulder_low" not in result["issues"], result["issues"]
+
+    # And guard the band directly, because the assertions above only bite once a
+    # drift is severe. The 2026-08-16 expansion moved the crouch knee floor from
+    # 80.4 to 108.3 degrees; at 130 a server bending the knees normally would be
+    # told they are wrong, so that is where the line is drawn.
+    band, tolerance, _source = _band_for("serve", reference_for("serve"), "crouch", "knee")
+    floor = max(0.0, band["p10"] - tolerance)
+    assert floor <= 130.0, (
+        f"serve crouch knee floor has drifted to {floor:.1f}; a normally bent "
+        "knee would now be flagged"
+    )
+
+
 def main():
     test_receive_uses_platform_phase()
     test_set_uses_release_phase()
     test_reference_band_uses_dynamic_tolerance()
     test_block_uses_max_reach_phase()
+    test_serve_flags_a_low_arm()
+    test_serve_accepts_a_sound_standing_serve()
     print("phase reference ok")
-    print("checked actions: receive, set, block")
+    print("checked actions: receive, set, block, serve")
 
 
 if __name__ == "__main__":
