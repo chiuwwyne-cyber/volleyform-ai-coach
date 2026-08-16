@@ -537,14 +537,22 @@ const ACTION_TORSO_YAW = {
   // then unwinds into a contact made square to the net. The hips lead and the
   // shoulders trail, so the separation peaks just before take-off -- that
   // stretch across the trunk is what powers the arm.
+  // Magnitudes matter as much as the shape here: at 48 degrees the shoulder line
+  // still projects to 67% of its width from the front, which reads as "slightly
+  // narrower" rather than "side-on" and left the demo looking front-facing. A
+  // hitter planting off an angled approach turns much further than that -- the
+  // shoulder line comes close to perpendicular to the net at maximum cocking --
+  // so the wind-up runs to 66, projecting to ~41% and reading unmistakably.
+  // The hips are turned further too: the last step plants across the approach,
+  // it does not land square. Separation still peaks at a realistic 44 degrees.
   spike: {
-    approach: { hips: 0, shoulders: -6 },
-    left_step: { hips: -5, shoulders: -16 },
-    right_step: { hips: -12, shoulders: -32 },
-    plant: { hips: -18, shoulders: -44 }, // most side-on
-    load: { hips: -8, shoulders: -48 }, // hips already turning back: max separation
-    jump: { hips: 2, shoulders: -30 }, // shoulders start to unwind
-    contact: { hips: 6, shoulders: -4 }, // squared up to the net
+    approach: { hips: 0, shoulders: -8 },
+    left_step: { hips: -8, shoulders: -20 },
+    right_step: { hips: -20, shoulders: -40 },
+    plant: { hips: -32, shoulders: -60 }, // planted across, clearly side-on
+    load: { hips: -22, shoulders: -66 }, // hips releasing first: 44 of separation
+    jump: { hips: -8, shoulders: -42 }, // shoulders start to unwind
+    contact: { hips: 4, shoulders: -6 }, // squared up to the net
     landing: { hips: 4, shoulders: 8 }, // follow-through carries past square
     recover: { hips: 0, shoulders: 0 },
   },
@@ -552,11 +560,11 @@ const ACTION_TORSO_YAW = {
   // to turn -- the coil has to come from the stance. The coaching cue already
   // said 身體側身; this is what makes the figure actually stand side-on.
   serve: {
-    serve_ready: { hips: -20, shoulders: -34 },
-    serve_toss: { hips: -18, shoulders: -36 },
-    serve_load: { hips: -8, shoulders: -44 }, // drawn back, hips releasing first
-    serve_contact: { hips: 4, shoulders: -5 }, // chest square, hit out front
-    serve_follow: { hips: 2, shoulders: 10 },
+    serve_ready: { hips: -28, shoulders: -46 }, // stance is already side-on
+    serve_toss: { hips: -26, shoulders: -48 },
+    serve_load: { hips: -16, shoulders: -60 }, // drawn back, hips releasing first
+    serve_contact: { hips: 4, shoulders: -6 }, // chest square, hit out front
+    serve_follow: { hips: 2, shoulders: 12 },
   },
   // Receive: the ball goes where the PLATFORM faces, so here the turn IS the
   // technique rather than decoration. Square to the incoming ball, then turn
