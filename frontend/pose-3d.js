@@ -550,26 +550,34 @@ const ACTION_TORSO_YAW = {
   // so the wind-up runs to 66, projecting to ~41% and reading unmistakably.
   // The hips are turned further too: the last step plants across the approach,
   // it does not land square. Separation still peaks at a realistic 44 degrees.
+  // A real trunk twists continuously along the spine, so 40+ degrees between the
+  // hips and the shoulders looks powerful on a person. This figure cannot do
+  // that: the torso is ONE rigid mesh whose lower end is the shorts, and the
+  // thighs are separate meshes driven by the hip landmarks. Open a big gap
+  // between them and the shorts visibly shear away from the legs -- the figure
+  // reads as broken at the waist rather than coiled. So the separation is kept
+  // to roughly 18 degrees, enough to show the hips leading, and the legs follow
+  // the pelvis closely so the whole body turns as one piece.
   spike: {
-    approach: { hips: 0, shoulders: 8 },
-    left_step: { hips: 8, shoulders: 20 },
-    right_step: { hips: 20, shoulders: 40 },
-    plant: { hips: 32, shoulders: 60 }, // planted across, clearly side-on
-    load: { hips: 22, shoulders: 66 }, // hips releasing first: 44 of separation
-    jump: { hips: 8, shoulders: 42 }, // shoulders start to unwind
-    contact: { hips: -4, shoulders: 6 }, // squared up to the net
-    landing: { hips: -4, shoulders: -8 }, // follow-through carries past square
+    approach: { hips: 4, shoulders: 8 },
+    left_step: { hips: 14, shoulders: 20 },
+    right_step: { hips: 28, shoulders: 40 },
+    plant: { hips: 44, shoulders: 60 }, // planted across, clearly side-on
+    load: { hips: 48, shoulders: 66 }, // hips leading by ~18
+    jump: { hips: 30, shoulders: 42 }, // shoulders unwind, hips follow
+    contact: { hips: 2, shoulders: 6 }, // squared up to the net
+    landing: { hips: -6, shoulders: -8 },
     recover: { hips: 0, shoulders: 0 },
   },
   // Serve: the same chain as the spike but smaller, because there is no run-up
   // to turn -- the coil has to come from the stance. The coaching cue already
   // said 身體側身; this is what makes the figure actually stand side-on.
   serve: {
-    serve_ready: { hips: 28, shoulders: 46 }, // stance is already side-on
-    serve_toss: { hips: 26, shoulders: 48 },
-    serve_load: { hips: 16, shoulders: 60 }, // drawn back, hips releasing first
-    serve_contact: { hips: -4, shoulders: 6 }, // chest square, hit out front
-    serve_follow: { hips: -2, shoulders: -12 },
+    serve_ready: { hips: 34, shoulders: 46 }, // stance is already side-on
+    serve_toss: { hips: 34, shoulders: 48 },
+    serve_load: { hips: 42, shoulders: 60 }, // drawn back, hips leading by ~18
+    serve_contact: { hips: 2, shoulders: 6 }, // chest square, hit out front
+    serve_follow: { hips: -6, shoulders: -12 },
   },
   // Receive: the ball goes where the PLATFORM faces, so here the turn IS the
   // technique rather than decoration. Square to the incoming ball, then turn
@@ -620,11 +628,15 @@ function applyTorsoTurn(points, action, phase) {
   const pivot = poseCenter(points, [23, 24]);
   // Upper body as one unit, so the armswing rotates with the chest.
   rotateIndicesYaw(points, UPPER_BODY_INDICES, pivot, yaw.shoulders);
-  // The lower body turns less the closer it gets to the floor: the pelvis
-  // coils against planted feet rather than swivelling the whole leg.
+  // The legs follow the pelvis closely. They used to lag badly (knees at half
+  // the hip yaw, ankles at 15%), which left the thighs pointing at the camera
+  // while the shorts -- part of the torso mesh -- had already turned, so the
+  // figure looked severed at the waist. Only the feet trail slightly now, which
+  // reads as the shoe staying planted rather than the leg being detached.
   rotateIndicesYaw(points, [23, 24], pivot, yaw.hips);
-  rotateIndicesYaw(points, [25, 26], pivot, yaw.hips * 0.5);
-  rotateIndicesYaw(points, [27, 28, 29, 30, 31, 32], pivot, yaw.hips * 0.15);
+  rotateIndicesYaw(points, [25, 26], pivot, yaw.hips * 0.9);
+  rotateIndicesYaw(points, [27, 28], pivot, yaw.hips * 0.8);
+  rotateIndicesYaw(points, [29, 30, 31, 32], pivot, yaw.hips * 0.7);
 }
 
 function shapeSpikeBiomechanics(points, variant, frame) {
