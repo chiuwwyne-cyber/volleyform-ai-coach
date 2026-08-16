@@ -610,7 +610,7 @@ const ACTION_TORSO_YAW = {
     left_step: { hips: -14, shoulders: -20 },
     right_step: { hips: -28, shoulders: -40 },
     plant: { hips: -44, shoulders: -60 }, // planted across, clearly side-on
-    load: { hips: -48, shoulders: -66 }, // hips leading by ~18
+    load: { hips: -48, shoulders: -66 }, // hips leading by 18; separation capped by the rigid mesh
     jump: { hips: -30, shoulders: -42 }, // shoulders unwind, hips follow
     contact: { hips: -2, shoulders: -6 }, // squared up to the net
     landing: { hips: 6, shoulders: 8 },

@@ -103,6 +103,7 @@ C:\Users\test\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\
 
 ```powershell
 C:\Users\test\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe frontend\app_behavior_test.mjs
+C:\Users\test\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe frontend\pose_geometry_test.mjs
 ```
 
 ```powershell
