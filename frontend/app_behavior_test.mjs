@@ -351,6 +351,25 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
   assert.equal(typeof context.document.querySelector("#stopRecordBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#clearRecordBtn").events.click, "function");
   assert.equal(typeof context.document.querySelector("#poseViewToggle").events.click, "function");
+  // app.js is loaded as an ES MODULE, where a duplicate top-level declaration is
+  // a SyntaxError rather than a silent override. Catch it here so a bad edit
+  // fails the suite instead of blanking the app in a user's browser.
+  //
+  // Not hypothetical: app.js once carried TWENTY shadowed declarations
+  // (renderIssues four times, renderPoseCompare four), and the only call to
+  // renderErrorSkeleton sat in one of the dead copies -- so the error-frame
+  // skeleton shipped, was recorded as verified, and never ran for anyone.
+  for (const [label, text] of [["app.js", source], ["pose-3d.js", poseSource]]) {
+    const seen = new Map();
+    for (const line of text.split(/\r?\n/)) {
+      const found = /^(?:async\s+)?function\s+(\w+)/.exec(line);
+      if (found) seen.set(found[1], (seen.get(found[1]) || 0) + 1);
+    }
+    const dupes = [...seen].filter(([, n]) => n > 1).map(([name, n]) => name + " x" + n);
+    assert.equal(dupes.length, 0,
+      label + " has duplicate top-level declarations that shadow each other silently: " + dupes.join(", "));
+  }
+
   assert.match(source, /maxRecordingMs = 12000/);
   assert.match(source, /recordingVideoBitsPerSecond = 1600000/);
   assert.match(source, /process_width: "480"/);

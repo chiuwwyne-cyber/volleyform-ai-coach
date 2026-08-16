@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20260816-frontend-sync-v84";
+        const currentFrontendBuild = "20260816-frontend-sync-v85";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -284,10 +284,17 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260816-frontend-sync-v84";
+        const build = window.VOLLEYFORM_BUILD || "20260816-frontend-sync-v85";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
-        document.write('<script src="./app.js?v=' + version + '"><\/script>');
+        // app.js is a MODULE. In module scope a duplicate top-level declaration
+        // is a SyntaxError, whereas a classic script silently lets the later one
+        // win -- which is how twenty shadowed copies accumulated here, one of
+        // them holding the only call to the error-frame skeleton. Loading it as
+        // a module makes that failure loud instead of invisible.
+        // Safe to defer: nothing assigns to window, the HTML has no inline
+        // handlers, and config.js is a classic script so it still runs first.
+        document.write('<script type="module" src="./app.js?v=' + version + '"><\/script>');
       })();
     </script>
   </body>
