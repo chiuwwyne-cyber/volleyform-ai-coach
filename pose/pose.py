@@ -8,12 +8,6 @@ mp_drawing = solutions.drawing_utils
 mp_styles = solutions.drawing_styles
 
 
-def _configure_wide_camera(cap, width=1280, height=720, fps=30):
-    """Ask the camera for a wide 16:9 frame so full-body motion stays visible."""
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cap.set(cv2.CAP_PROP_FPS, fps)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
 
 def _resize_for_processing(frame, process_width):
@@ -113,24 +107,6 @@ def _pose_stream(
                 yield image_landmarks, world_landmarks, output_image, hand_landmarks
 
 
-def get_pose(camera_index=0, process_width=720, frame_stride=1):
-    cap = cv2.VideoCapture(camera_index)
-    _configure_wide_camera(cap)
-
-    if not cap.isOpened():
-        print("Cannot open camera.")
-        return
-
-    try:
-        yield from _pose_stream(
-            cap,
-            process_width=process_width,
-            frame_stride=frame_stride,
-            draw_landmarks=True,
-            include_image=True,
-        )
-    finally:
-        cap.release()
 
 
 def get_pose_from_video(video_path, process_width=720, frame_stride=2, include_image=True):

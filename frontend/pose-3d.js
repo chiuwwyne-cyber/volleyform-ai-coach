@@ -1566,11 +1566,6 @@ function retargetActualTargets(targets, action, frameStatus, guide) {
   return points;
 }
 
-function retargetActualPose(raw, action, jointStatus) {
-  const guide = sampleActionGuide(action, ACTUAL_SINGLE_PROGRESS[action] ?? ACTUAL_SINGLE_PROGRESS.default);
-  return retargetActualTargets(actualFrameTargets(raw, action), action, jointStatus, guide);
-}
-
 function normalizePosePoints(raw, center, scale) {
   return raw.map((point) => [
     (point[0] - center[0]) * scale,
@@ -1585,75 +1580,12 @@ function applyMinimumDisplayWidths(points) {
   }
 }
 
-function medianNumber(values, fallback = 0) {
-  const finite = values.filter(Number.isFinite).sort((a, b) => a - b);
-  if (!finite.length) return fallback;
-  const middle = Math.floor(finite.length / 2);
-  return finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
-}
-
-function medianTriple(values, fallback = [0, 0, 0]) {
-  return [0, 1, 2].map((axis) => medianNumber(values.map((point) => point?.[axis]), fallback[axis]));
-}
-
-function sequenceAxisBounds(frames, axis) {
-  let min = Infinity;
-  let max = -Infinity;
-  for (const frame of frames) {
-    for (const point of frame.points) {
-      if (!isFiniteTriple(point)) continue;
-      min = Math.min(min, point[axis]);
-      max = Math.max(max, point[axis]);
-    }
-  }
-  if (!Number.isFinite(min)) return { min: 0, max: 0, size: 0 };
-  return { min, max, size: max - min };
-}
-
-function compressDepthAcrossFrames(frames, maxDepth) {
-  const depth = sequenceAxisBounds(frames, 2);
-  if (depth.size <= maxDepth) return frames;
-  const centerZ = (depth.min + depth.max) / 2;
-  const scale = maxDepth / depth.size;
-  return frames.map((frame) => ({
-    ...frame,
-    points: frame.points.map((point) => [point[0], point[1], centerZ + (point[2] - centerZ) * scale]),
-  }));
-}
-
-function addFallbackDepthAcrossFrames(frames) {
-  const depth = sequenceAxisBounds(frames, 2);
-  if (depth.size >= 0.18) return frames;
-  return frames.map((frame) => {
-    const points = frame.points.map((point) => [...point]);
-    for (const [key, offset] of Object.entries(FALLBACK_DEPTH_OFFSETS)) {
-      const index = Number(key);
-      if (isFiniteTriple(points[index])) points[index][2] += offset;
-    }
-    return { ...frame, points };
-  });
-}
-
-function shiftPose(points, delta) {
-  return points.map((point) => [point[0] + delta[0], point[1] + delta[1], point[2] + delta[2]]);
-}
-
 function smoothTriple(previous, current, follow) {
   return [
     previous[0] + (current[0] - previous[0]) * follow,
     previous[1] + (current[1] - previous[1]) * follow,
     previous[2] + (current[2] - previous[2]) * follow,
   ];
-}
-
-function stabilizeSequenceRoots(frames) {
-  if (frames.length < 2) return frames;
-  let stableRoot = poseDisplayCenter(frames[0].points);
-  return frames.map((frame, index) => {
-    const root = poseDisplayCenter(frame.points);
-    if (index > 0) stableRoot = smoothTriple(stableRoot, root, SEQUENCE_ROOT_FOLLOW);
-    return { ...frame, points: shiftPose(frame.points, vecSub(stableRoot, root)) };
-  });
 }
 
 function smoothSequencePoints(frames) {

@@ -44,8 +44,6 @@ def calculate_angle_3d(a, b, c):
     return round(math.degrees(math.acos(cosine)), 2)
 
 
-def calculate_angle(a, b, c):
-    return calculate_angle_3d(a, b, c)
 
 
 def _best_landmarks(image_landmarks, world_landmarks=None):

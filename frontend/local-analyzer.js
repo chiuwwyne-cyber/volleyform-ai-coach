@@ -1381,12 +1381,6 @@ function jointStatusForIssues(issueCodes) {
   return status;
 }
 
-function issueCaption(issueCodes) {
-  const issue = (issueCodes || []).map((code) => FEEDBACK[code]).find(Boolean);
-  if (!issue) return "影片分析到的姿勢時間點";
-  return `影片錯誤：${issue.title}。${issue.instant_cue}`;
-}
-
 function issueCaptionAtTime(issueCodes, timeSeconds = null) {
   const issue = (issueCodes || []).map((code) => FEEDBACK[code]).find(Boolean);
   const prefix = tenthSecondWindowLabel(timeSeconds);

@@ -220,6 +220,8 @@ function makeContext() {
     "poseCompareActual",
     "poseCompareCorrected",
     "poseCompareNote",
+    "poseErrorSkeleton",
+    "poseErrorSkeletonCanvas",
     "dropZone",
     "modalityList",
     "recordPreview",
@@ -466,6 +468,11 @@ globalThis.__appTestApi = { apiUrl, checkHealth, renderResult, selectedModalitie
     },
   });
 
+  // The 2D error-frame skeleton must actually be revealed. Its only caller used
+  // to sit in a shadowed copy of renderPoseCompare, so the feature shipped,
+  // was documented as verified, and never ran for a single user.
+  assert.equal(context.document.querySelector("#poseErrorSkeleton").hidden, false,
+    "error-frame skeleton must be shown when a pose comparison is available");
   assert.match(context.document.querySelector("#poseCompareNote").textContent, /紅色是高風險/);
   assert.match(context.document.querySelector("#poseCompareNote").textContent, /正確慢動作/);
   assert.match(context.document.querySelector("#coachPlan").innerHTML, /Forearm platform/);
