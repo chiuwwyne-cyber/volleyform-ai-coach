@@ -487,7 +487,6 @@ function shapeServeBiomechanics(points, variant, frame = {}) {
 
 function shapeSpikeLoad(points) {
   const head = points[HEAD_INDEX];
-  twistSpikeTorso(points, 1);
   shapeLeftFootInward(points, 1);
   shapeRightFootBrace(points, 0.65);
 
@@ -502,7 +501,6 @@ function shapeSpikeLoad(points) {
 
 function shapeSpikeJump(points) {
   const head = points[HEAD_INDEX];
-  twistSpikeTorso(points, 1.12);
   shapeLeftFootInward(points, 0.85);
   setPoint(points, 13, -0.36, head[1] - 0.06, -0.2);
   setPoint(points, 15, -0.48, head[1] - 0.24, -0.24);
@@ -515,7 +513,6 @@ function shapeSpikeJump(points) {
 function shapeSpikeContact(points, variant) {
   if (variant !== "correct") return;
   const head = points[HEAD_INDEX];
-  twistSpikeTorso(points, 0.62);
   shapeLeftFootInward(points, 0.55);
   setPoint(points, 13, -0.34, head[1] + 0.18, -0.04);
   setPoint(points, 15, -0.48, head[1] + 0.42, -0.12);
@@ -533,17 +530,63 @@ function shapeSpikeLanding(points) {
   setOpenSpikeHand(points, "R", points[16], 0.72, 0);
 }
 
+// A spike is not a square-on jump. Through the last steps the hitter turns
+// SIDE-ON to the net so the hitting shoulder is cocked behind the body, then
+// unwinds that rotation into the ball. The hips lead and the shoulders trail,
+// so the separation between the two peaks just before take-off; that stretch
+// across the trunk is what actually powers the arm ("X-factor"). Contact then
+// happens with the chest squared to the net again.
+//
+// Yaw about the vertical axis through the hips. NEGATIVE turns the right
+// (hitting) shoulder backwards, i.e. into the cocked position.
+const SPIKE_TORSO_YAW = {
+  approach: { hips: 0, shoulders: -6 },
+  left_step: { hips: -5, shoulders: -16 },
+  right_step: { hips: -12, shoulders: -32 },
+  plant: { hips: -18, shoulders: -44 }, // most side-on
+  load: { hips: -8, shoulders: -48 }, // hips already turning back: max separation
+  jump: { hips: 2, shoulders: -30 }, // shoulders start to unwind
+  contact: { hips: 6, shoulders: -4 }, // squared up to the net
+  landing: { hips: 4, shoulders: 8 }, // follow-through carries past square
+  recover: { hips: 0, shoulders: 0 },
+};
+
+function rotateIndicesYaw(points, indices, pivot, angleDeg) {
+  if (!angleDeg) return;
+  for (const index of indices) {
+    if (!isFiniteTriple(points[index])) continue;
+    points[index] = rotatePoint(points[index], pivot, [0, 1, 0], angleDeg);
+  }
+}
+
+function applySpikeTorsoTurn(points, phase) {
+  const yaw = SPIKE_TORSO_YAW[phase];
+  if (!yaw) return;
+  const pivot = poseCenter(points, [23, 24]);
+  // The whole upper body turns -- shoulders, arms, hands and head together.
+  // The old code only nudged the shoulder/hip points, and the phase shapers
+  // then wrote the elbows and wrists at absolute coordinates, so the arms
+  // stayed put and nothing read as a turn.
+  rotateIndicesYaw(points, UPPER_BODY_INDICES, pivot, yaw.shoulders);
+  // The lower body turns less the closer it gets to the floor: the pelvis
+  // coils against planted feet rather than swivelling the whole leg.
+  rotateIndicesYaw(points, [23, 24], pivot, yaw.hips);
+  rotateIndicesYaw(points, [25, 26], pivot, yaw.hips * 0.5);
+  rotateIndicesYaw(points, [27, 28, 29, 30, 31, 32], pivot, yaw.hips * 0.15);
+}
+
 function shapeSpikeBiomechanics(points, variant, frame) {
   if (variant !== "correct") return;
   if (frame.spikePhase === "plant") {
     shapeLeftFootInward(points, 1);
     shapeRightFootBrace(points, 0.7);
-    twistSpikeTorso(points, 0.35);
   }
   if (frame.spikePhase === "load") shapeSpikeLoad(points);
   if (frame.spikePhase === "jump") shapeSpikeJump(points);
   if (frame.spikePhase === "contact") shapeSpikeContact(points, variant);
   if (frame.spikePhase === "landing") shapeSpikeLanding(points);
+  // Applied last, so the arms the shapers just placed rotate with the torso.
+  applySpikeTorsoTurn(points, frame.spikePhase);
 }
 
 function applyActionShape(points, action, variant, frame) {

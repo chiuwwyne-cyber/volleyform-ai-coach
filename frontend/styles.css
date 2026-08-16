@@ -311,6 +311,14 @@ h3 {
   padding: 22px;
 }
 
+/* A class rule with `display` beats the UA stylesheet's [hidden] rule (same
+   specificity, author sheet wins), so hiding these panels needs an explicit
+   higher-specificity rule -- otherwise the `hidden` attribute does nothing. */
+.connection-panel[hidden],
+.modality-panel[hidden] {
+  display: none;
+}
+
 .connection-summary p,
 .modality-panel p,
 .record-tools p {

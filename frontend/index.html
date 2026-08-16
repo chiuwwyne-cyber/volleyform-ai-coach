@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20260815-frontend-sync-v67";
+        const currentFrontendBuild = "20260816-frontend-sync-v68";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -57,7 +57,9 @@
         </div>
       </section>
 
-      <section class="connection-panel" aria-label="固定網站與後端連線">
+      <!-- 隱藏：這是開發/連線用的技術面板（會顯示 tunnel 網址），一般使用者與 demo
+           不需要看到。功能保留：後端網址仍可用 ?backend= 參數或 localStorage 設定。 -->
+      <section class="connection-panel" aria-label="固定網站與後端連線" hidden>
         <div class="connection-summary">
           <span class="section-kicker">SESSION ENGINE</span>
           <h2>手機本地 AI</h2>
@@ -179,7 +181,9 @@
         </div>
       </section>
 
-      <section class="modality-panel">
+      <!-- 隱藏：分析通道（身體骨架＋手部關節）預設全開，其餘為預留項目，攤開來只會
+           讓畫面看起來像未完成。功能保留：selectedModalities() 仍讀這裡的預設值。 -->
+      <section class="modality-panel" hidden>
         <div>
           <span class="step-label">03 / SIGNALS</span>
           <h2>分析通道</h2>
@@ -280,7 +284,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260815-frontend-sync-v67";
+        const build = window.VOLLEYFORM_BUILD || "20260816-frontend-sync-v68";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         document.write('<script src="./app.js?v=' + version + '"><\/script>');
