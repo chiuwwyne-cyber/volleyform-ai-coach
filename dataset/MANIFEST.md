@@ -226,3 +226,49 @@ clean single-player 舉球 clip is provided. See the decision doc above.
 | pexels_6179963.mp4 | https://www.pexels.com/video/6179963/ |
 | pexels_6217273.mp4 | https://www.pexels.com/video/6217273/ |
 | pexels_6217175.mp4 | https://www.pexels.com/video/6217175/ |
+
+## Rejected whole: jump-serve tutorial (2026-08-16)
+
+A user-provided jump-serve tutorial (`videoplayback (3).mp4`, 374s, 640x360, not
+committed) was scanned specifically to close the standing-serve limitation noted
+under `serve` above. **Zero clips were taken.** The video is a teaching
+BREAKDOWN, and a breakdown is structurally the wrong shape for this dataset: it
+demonstrates the three-step approach, the toss, and the hand shape as separate
+drills, and never shows one complete rep of all three.
+
+Measured, not eyeballed — 5600 frames sampled, 5108 with a pose:
+
+  * 1485 frames have the whole body usably in frame; only 13 moments in those
+    have the wrist well above the nose with a straight arm
+  * of the 13, two are professional broadcast rallies (multi-player, already a
+    standing rejection reason), and the rest are toss drills, footwork drills
+    with the ball still held, or hand close-ups
+
+**The new failure mode this exposes:** a toss at full extension is
+indistinguishable from a contact frame by the rule `serve` actually uses —
+`_segment_overhead` takes the highest wrist, and a good toss arm is higher and
+straighter than the hitting arm at contact. Feeding a toss drill into `serve`
+would not merely add noise, it would teach the contact band the wrong pose. This
+is the same trap as the underhand-serve rule recorded above, one step sharper.
+
+So the standing-serve limitation stands. What would close it is footage of
+complete jump-serve REPS (approach, toss, strike, land, one player, legs in
+frame) — match or drill footage, not instruction.
+
+> Scanner note, found the hard way on this video: ranking candidates by
+> `above_nose / torso` is unsafe on its own. On a hand close-up the torso
+> collapses to the clamp and the ratio explodes — 5.03 and 7.00 here were both
+> wrist-and-ball close-ups, so the WORST frames ranked first.
+>
+> A landmark-visibility gate does not fix it by itself: MediaPipe happily
+> hallucinates off-frame legs and reports them as visible. What works is an
+> anatomical upper bound. A whole arm is about one torso length and the nose sits
+> about 0.25 torso above the shoulders, so the wrist can clear the nose by at most
+> ~0.7 torso; real full-body serves in this video measured 0.5–0.95. Capping at
+> 1.5 leaves double the headroom and still removes every collapsed-torso frame.
+> `tools/dataset_clips/serve_scan_events.py` now applies both gates (candidates
+> 342 → 100, and no runaway ratios), and also reports the crouch knee angle so
+> "standing or jump serve?" is answered before trimming rather than after.
+>
+> This is a ranking guard, not a classifier — close-ups still reach the montage,
+> just no longer at the top. The human gate is still the thing that decides.
