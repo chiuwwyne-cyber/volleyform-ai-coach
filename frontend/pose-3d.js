@@ -383,15 +383,6 @@ function shapeRightFootBrace(points, amount = 1) {
   setPoint(points, 32, ankle[0] - 0.075 * amount, ankle[1] + 0.085, ankle[2] + 0.07 * amount);
 }
 
-function twistSpikeTorso(points, amount = 1) {
-  // y is down in landmark space; negative z is the hitting side moving forward.
-  offsetPoint(points, 11, -0.025 * amount, -0.015 * amount, -0.18 * amount);
-  offsetPoint(points, 12, 0.055 * amount, 0.02 * amount, 0.2 * amount);
-  offsetPoint(points, 23, 0.02 * amount, 0, 0.06 * amount);
-  offsetPoint(points, 24, -0.02 * amount, 0, -0.06 * amount);
-  offsetPoint(points, 0, 0.015 * amount, -0.015 * amount, -0.06 * amount);
-}
-
 function setOpenSpikeHand(points, side, wrist, spread = 1, palmTilt = 0) {
   const isRight = side === "R";
   const pinky = isRight ? 18 : 17;
@@ -443,7 +434,8 @@ function shapeServeBiomechanics(points, variant, frame = {}) {
   if (variant !== "correct") return;
   const head = points[HEAD_INDEX];
   const phase = frame.actionPhase;
-  twistSpikeTorso(points, phase === "serve_contact" ? 0.42 : 0.72);
+  // The trunk turn now comes from ACTION_TORSO_YAW; the old point-nudge would
+  // compound with it (on the spike it left contact 33 degrees off square).
   shapeLeftFootInward(points, 0.35);
   shapeRightFootBrace(points, 0.45);
 
@@ -530,25 +522,75 @@ function shapeSpikeLanding(points) {
   setOpenSpikeHand(points, "R", points[16], 0.72, 0);
 }
 
-// A spike is not a square-on jump. Through the last steps the hitter turns
-// SIDE-ON to the net so the hitting shoulder is cocked behind the body, then
-// unwinds that rotation into the ball. The hips lead and the shoulders trail,
-// so the separation between the two peaks just before take-off; that stretch
-// across the trunk is what actually powers the arm ("X-factor"). Contact then
-// happens with the chest squared to the net again.
+// How much each action turns its trunk, per phase.
 //
-// Yaw about the vertical axis through the hips. NEGATIVE turns the right
-// (hitting) shoulder backwards, i.e. into the cocked position.
-const SPIKE_TORSO_YAW = {
-  approach: { hips: 0, shoulders: -6 },
-  left_step: { hips: -5, shoulders: -16 },
-  right_step: { hips: -12, shoulders: -32 },
-  plant: { hips: -18, shoulders: -44 }, // most side-on
-  load: { hips: -8, shoulders: -48 }, // hips already turning back: max separation
-  jump: { hips: 2, shoulders: -30 }, // shoulders start to unwind
-  contact: { hips: 6, shoulders: -4 }, // squared up to the net
-  landing: { hips: 4, shoulders: 8 }, // follow-through carries past square
-  recover: { hips: 0, shoulders: 0 },
+// One mechanism for all five actions: rotate whole segments -- shoulders, arms,
+// hands and head as one body -- AFTER the shapers have placed the limbs, so the
+// arms travel with the torso. The code used to nudge a handful of points by a
+// fraction of a unit instead, which left the arms wherever the shapers had
+// written them and read as no turn at all.
+//
+// Yaw about the vertical axis through the hips, in degrees. NEGATIVE turns the
+// right (dominant) shoulder backwards, into the cocked position.
+const ACTION_TORSO_YAW = {
+  // Spike: turns side-on so the hitting shoulder is cocked behind the body,
+  // then unwinds into a contact made square to the net. The hips lead and the
+  // shoulders trail, so the separation peaks just before take-off -- that
+  // stretch across the trunk is what powers the arm.
+  spike: {
+    approach: { hips: 0, shoulders: -6 },
+    left_step: { hips: -5, shoulders: -16 },
+    right_step: { hips: -12, shoulders: -32 },
+    plant: { hips: -18, shoulders: -44 }, // most side-on
+    load: { hips: -8, shoulders: -48 }, // hips already turning back: max separation
+    jump: { hips: 2, shoulders: -30 }, // shoulders start to unwind
+    contact: { hips: 6, shoulders: -4 }, // squared up to the net
+    landing: { hips: 4, shoulders: 8 }, // follow-through carries past square
+    recover: { hips: 0, shoulders: 0 },
+  },
+  // Serve: the same chain as the spike but smaller, because there is no run-up
+  // to turn -- the coil has to come from the stance. The coaching cue already
+  // said 身體側身; this is what makes the figure actually stand side-on.
+  serve: {
+    serve_ready: { hips: -20, shoulders: -34 },
+    serve_toss: { hips: -18, shoulders: -36 },
+    serve_load: { hips: -8, shoulders: -44 }, // drawn back, hips releasing first
+    serve_contact: { hips: 4, shoulders: -5 }, // chest square, hit out front
+    serve_follow: { hips: 2, shoulders: 10 },
+  },
+  // Receive: the ball goes where the PLATFORM faces, so here the turn IS the
+  // technique rather than decoration. Square to the incoming ball, then turn
+  // the platform toward the setter to redirect it -- which is exactly what the
+  // cue 用身體角度送球 is describing.
+  receive: {
+    receive_ready: { hips: 0, shoulders: 0 },
+    receive_step: { hips: 6, shoulders: 12 },
+    receive_platform: { hips: 5, shoulders: 8 }, // stay behind the ball
+    receive_redirect: { hips: 14, shoulders: 26 }, // angle it to the target
+    receive_recover: { hips: 4, shoulders: 6 },
+  },
+  // Block: deliberately near zero. A blocker keeps the shoulders PARALLEL to
+  // the net -- turning them opens a seam and deflects the ball out of bounds,
+  // so adding a swivel here would be teaching the error. The one real turn is
+  // after landing, when the blocker turns to follow the ball back into play.
+  block: {
+    block_ready: { hips: 0, shoulders: 0 },
+    block_load: { hips: 0, shoulders: 0 },
+    block_rise: { hips: 0, shoulders: 0 },
+    block_press: { hips: 0, shoulders: 0 },
+    block_landing: { hips: 6, shoulders: 12 },
+  },
+  // Set: the ball goes where the shoulders point, so the setter squares up to
+  // the target through the release. This is the movement ON TOP of the fixed
+  // presentation angle the whole figure already carries (turnWholePoseSideways),
+  // which exists so the hand shape stays visible.
+  set: {
+    set_ready: { hips: -6, shoulders: -12 },
+    set_catch: { hips: -5, shoulders: -10 },
+    set_cushion: { hips: -3, shoulders: -6 },
+    set_release: { hips: 2, shoulders: 5 }, // squared to where the ball is going
+    set_recover: { hips: 0, shoulders: 0 },
+  },
 };
 
 function rotateIndicesYaw(points, indices, pivot, angleDeg) {
@@ -559,14 +601,11 @@ function rotateIndicesYaw(points, indices, pivot, angleDeg) {
   }
 }
 
-function applySpikeTorsoTurn(points, phase) {
-  const yaw = SPIKE_TORSO_YAW[phase];
+function applyTorsoTurn(points, action, phase) {
+  const yaw = ACTION_TORSO_YAW[action]?.[phase];
   if (!yaw) return;
   const pivot = poseCenter(points, [23, 24]);
-  // The whole upper body turns -- shoulders, arms, hands and head together.
-  // The old code only nudged the shoulder/hip points, and the phase shapers
-  // then wrote the elbows and wrists at absolute coordinates, so the arms
-  // stayed put and nothing read as a turn.
+  // Upper body as one unit, so the armswing rotates with the chest.
   rotateIndicesYaw(points, UPPER_BODY_INDICES, pivot, yaw.shoulders);
   // The lower body turns less the closer it gets to the floor: the pelvis
   // coils against planted feet rather than swivelling the whole leg.
@@ -585,8 +624,6 @@ function shapeSpikeBiomechanics(points, variant, frame) {
   if (frame.spikePhase === "jump") shapeSpikeJump(points);
   if (frame.spikePhase === "contact") shapeSpikeContact(points, variant);
   if (frame.spikePhase === "landing") shapeSpikeLanding(points);
-  // Applied last, so the arms the shapers just placed rotate with the torso.
-  applySpikeTorsoTurn(points, frame.spikePhase);
 }
 
 function applyActionShape(points, action, variant, frame) {
@@ -595,6 +632,11 @@ function applyActionShape(points, action, variant, frame) {
   if (action === "block") shapeBlockBiomechanics(points, variant, frame);
   if (action === "serve") shapeServeBiomechanics(points, variant, frame);
   if (action === "spike") shapeSpikeBiomechanics(points, variant, frame);
+  // Last, so the limbs the shapers just placed rotate together with the trunk.
+  // The demo poses only: a "mistake" pose is deliberately un-coached.
+  if (variant === "correct") {
+    applyTorsoTurn(points, action, frame.spikePhase || frame.actionPhase);
+  }
   constrainHumanProportions(points);
 }
 
