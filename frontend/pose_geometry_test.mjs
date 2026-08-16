@@ -26,7 +26,7 @@ const source = fs.readFileSync(path.join(root, "frontend", "pose-3d.js"), "utf8"
 const stubbed =
   "const THREE = globalThis.__THREE;\n" +
   source.replace(/^import[^\n]*\n/gm, "").replace(/^export function createPoseViewport[\s\S]*$/m, "") +
-  "\nexport { buildSequence, SPIKE_SEQUENCES, CORRECT_CYCLES, orientKrunkPart, orientKrunkTorso, toVec3, midVec3 };\n";
+  "\nexport { buildSequence, SPIKE_SEQUENCES, CORRECT_CYCLES, orientKrunkPart, orientKrunkTorso, toVec3, midVec3, preparePoseSequenceForDisplay };\n";
 const tmp = path.join(process.env.TEMP || root, `pose_geom_${Date.now()}.mjs`);
 fs.writeFileSync(tmp, stubbed, "utf8");
 globalThis.__THREE = THREE;
@@ -106,6 +106,32 @@ assert.ok(Math.max(...torsoSpread) - Math.min(...torsoSpread) > 30,
     `receive platform elbows ${left.toFixed(0)}/${right.toFixed(0)} are bent; the app coaches straight arms`);
 }
 
+// ---- the replay must not pulse in size -----------------------------------
+// The left-hand "your pose" panel was reported for weeks as wandering. The real
+// symptom was not translation: the old code prepared EVERY frame on its own
+// centre and scale, so a noisy height estimate made the figure swell and shrink
+// by 130% of its own size while the limbs swung. Measured on a real analysed
+// Pexels spike, the current sequence-aware path holds it to about 22%, which is
+// genuine posture change (a crouch shortens shoulder-to-ankle).
+{
+  const fixture = JSON.parse(
+    fs.readFileSync(path.join(root, "frontend", "testdata", "replay_sequence.json"), "utf8"),
+  );
+  const sequence = fixture.frames.map((f) => ({
+    landmarks: f.landmarks, joint_status: f.joint_status,
+    time_seconds: f.time_seconds, hold: 720,
+  }));
+  const prepared = mod.preparePoseSequenceForDisplay(sequence, { caption: "t", action: "spike" });
+  assert.ok(prepared.length > 5, "fixture should prepare into a real sequence");
+  const midY = (p, a, b) => (p[a][1] + p[b][1]) / 2;
+  const heights = prepared.map((f) => Math.abs(midY(f.points, 27, 28) - midY(f.points, 11, 12)));
+  const mean = heights.reduce((s, v) => s + v, 0) / heights.length;
+  const variation = (Math.max(...heights) - Math.min(...heights)) / mean;
+  assert.ok(variation < 0.55,
+    `replay figure changes size by ${(variation * 100).toFixed(0)}% of its own height; ` +
+    "per-frame rescaling is back and the figure will pulse");
+}
+
 // ---- nothing may go non-finite ------------------------------------------
 for (const action of ["spike", "serve", "receive", "block", "set"]) {
   for (const f of framesOf(action)) {
@@ -114,4 +140,4 @@ for (const action of ["spike", "serve", "receive", "block", "set"]) {
 }
 
 console.log("pose geometry ok");
-console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform");
+console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability");
