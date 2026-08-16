@@ -653,6 +653,36 @@ function shapeSpikeBiomechanics(points, variant, frame) {
   if (frame.spikePhase === "landing") shapeSpikeLanding(points);
 }
 
+// A spiker hits with one hand and AIMS with the other: the non-hitting arm goes
+// up and points at the ball through the plant and the jump, both to sight the
+// contact and to pull the shoulders round. Without it the figure runs in with
+// both arms hanging, which is the single most obvious thing missing from a
+// spike. Run after the trunk rotation so the arm ends up pointing at the ball
+// in the rotated pose rather than being swung off target afterwards.
+const AIM_AT_BALL_PHASES = {
+  spike: new Set(["plant", "load", "jump"]),
+};
+
+function aimNonHittingArm(points, action, frame) {
+  const phase = frame.spikePhase || frame.actionPhase;
+  if (!AIM_AT_BALL_PHASES[action]?.has(phase)) return;
+  const ball = frame.ball;
+  const shoulder = points[11]; // left = non-hitting for a right-hander
+  if (!isFiniteTriple(ball) || !isFiniteTriple(shoulder)) return;
+  const dir = [ball[0] - shoulder[0], ball[1] - shoulder[1], ball[2] - shoulder[2]];
+  const length = Math.hypot(dir[0], dir[1], dir[2]);
+  if (length < 1e-6) return;
+  const unit = [dir[0] / length, dir[1] / length, dir[2] / length];
+  const upper = Math.min(0.32, length * 0.45);
+  const fore = Math.min(0.3, length * 0.4);
+  setPoint(points, 13, shoulder[0] + unit[0] * upper, shoulder[1] + unit[1] * upper,
+           shoulder[2] + unit[2] * upper);
+  const elbow = points[13];
+  setPoint(points, 15, elbow[0] + unit[0] * fore, elbow[1] + unit[1] * fore,
+           elbow[2] + unit[2] * fore);
+  setOpenSpikeHand(points, "L", points[15], 0.7, 0);
+}
+
 function applyActionShape(points, action, variant, frame) {
   if (action === "set") shapeSetBiomechanics(points, variant, frame);
   if (action === "receive") shapeReceiveBiomechanics(points, variant, frame);
@@ -663,6 +693,7 @@ function applyActionShape(points, action, variant, frame) {
   // The demo poses only: a "mistake" pose is deliberately un-coached.
   if (variant === "correct") {
     applyTorsoTurn(points, action, frame.spikePhase || frame.actionPhase);
+    aimNonHittingArm(points, action, frame);
   }
   constrainHumanProportions(points);
 }
@@ -897,6 +928,10 @@ const CHEST_RADIUS = 0.14;
 const PELVIS_RADIUS = 0.13;
 const HEAD_INDEX = 0;
 const HEAD_RADIUS = 0.145;
+// Front/back markers. Dark visor = the face, small dim patch = the back of the
+// head, so which way the figure is facing is readable at a glance.
+const FACE_COLOR = 0x2b2f36;
+const BACK_COLOR = 0x9aa0a8;
 const SET_SIDE_ANGLE_DEG = -58;
 
 const NEUTRAL_COLOR = 0xf1e6d3;
@@ -1839,6 +1874,19 @@ function createFigure(scene) {
   const headMesh = makeSphere(HEAD_RADIUS, BODY_COLOR, 24, 18);
   group.add(headMesh);
 
+  // A featureless mannequin has no readable facing: rotate it any amount and it
+  // still looks like the same blank shape, which is why the trunk rotation kept
+  // being reported as "not turning" even once the geometry was provably moving.
+  // These two markers give the figure a front and a back. They are drawn for
+  // the Krunk mesh as well as the capsule fallback, since the Krunk head is a
+  // plain sphere too.
+  const faceMesh = makeSphere(HEAD_RADIUS * 0.42, FACE_COLOR, 18, 14);
+  faceMesh.scale.set(1, 0.78, 0.42);
+  group.add(faceMesh);
+  const backMesh = makeSphere(HEAD_RADIUS * 0.24, BACK_COLOR, 14, 10);
+  backMesh.scale.set(1, 0.5, 0.32);
+  group.add(backMesh);
+
   const handDetails = ["L", "R"].map(createHandDetail);
   for (const hand of handDetails) {
     group.add(hand.palm);
@@ -1982,6 +2030,27 @@ function createFigure(scene) {
       const torsoTop = shoulderMid.clone().lerp(hipMid, 0.12);
       const torsoBottom = shoulderMid.clone().lerp(hipMid, 0.9);
       const chestPos = shoulderMid.clone().lerp(hipMid, 0.2);
+
+      // Face and back-of-head, placed along the body's own forward direction so
+      // they swing round with the trunk. Forward = shoulder line crossed with
+      // the spine: for a square figure that is +z, i.e. toward the camera.
+      {
+        const spine = shoulderMid.clone().sub(hipMid);
+        const across = toVec3(points[12]).sub(toVec3(points[11]));
+        const forward = new THREE.Vector3().crossVectors(across, spine);
+        if (forward.lengthSq() > 1e-8) {
+          forward.normalize();
+          faceMesh.visible = true;
+          backMesh.visible = true;
+          faceMesh.position.copy(headPos).addScaledVector(forward, HEAD_RADIUS * 0.80);
+          faceMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
+          backMesh.position.copy(headPos).addScaledVector(forward, -HEAD_RADIUS * 0.88);
+          backMesh.quaternion.copy(faceMesh.quaternion);
+        } else {
+          faceMesh.visible = false;
+          backMesh.visible = false;
+        }
+      }
       if (!krunk.active) {
         orientCapsuleVec(torsoMesh, torsoTop, torsoBottom);
         chestMesh.position.copy(chestPos);
@@ -2028,6 +2097,10 @@ function createFigure(scene) {
       pelvisMesh.geometry.dispose();
       neckMesh.geometry.dispose();
       headMesh.geometry.dispose();
+      faceMesh.geometry.dispose();
+      faceMesh.material.dispose();
+      backMesh.geometry.dispose();
+      backMesh.material.dispose();
       for (const hand of handDetails) {
         hand.palm.geometry.dispose();
         hand.palm.material.dispose();
