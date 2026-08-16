@@ -1052,13 +1052,13 @@ function orientKrunkTorso(mesh, proximal, distal, shoulderVec) {
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
     return;
   }
-  // Negated deliberately. Landmark y points DOWN, so the spine vector is very
-  // near -Y, and setFromUnitVectors(+Y, -Y) is the degenerate antiparallel case
-  // that three.js resolves to a 180-degree flip -- which is the convention the
-  // torso mesh has always been drawn with. Taking +right here instead would
-  // silently spin the chest around to face backwards. Matching the old
-  // convention keeps a square pose pixel-identical and adds ONLY the twist.
-  right.normalize().negate();
+  // NOT negated. The vectors arriving here have already been through toVec3(),
+  // which flips the y-down landmark convention into three.js's y-up, so the
+  // spine is +Y and the old setFromUnitVectors(+Y, spine) was plain identity on
+  // a square pose. Building the basis from +right reproduces that identity
+  // exactly and adds only the twist; negating it would yaw the chest 180
+  // degrees and leave the figure facing backwards on every pose.
+  right.normalize();
   const forward = new THREE.Vector3().crossVectors(right, up).normalize();
   mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, forward));
 }
