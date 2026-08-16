@@ -8,13 +8,26 @@ above_nose——遠景的人在畫面裡比較小，raw 值會系統性偏低，
 30-decisions/2026-08-14-volleyform-tutorial-clip-montage-gate.md。
 
 但正規化本身有個陷阱（2026-08-16 掃跳發球教學片時踩到）：**手部特寫**沒有軀幹，
-`torso` 會塌到下限，`above_nose / torso` 就爆到 5～7，把最沒用的畫面排到最前面。
-所以正規化一定要**配腿部可見度 gate 一起用**（MIN_LEG_VIS / MAX_ANKLE_Y），
-沒有腿的畫面直接不進候選——反正 crouch 階段本來就需要腿。
+`torso` 會塌到下限，`above_nose / torso` 就爆到 5～7。所以正規化要**配腿部 gate
+一起用**（MIN_LEG_VIS / MAX_ANKLE_Y）再加上 MAX_NORM 上界。
 
-同時記錄 **crouch 膝角**（擊球前 CROUCH_LOOKBACK 秒內的最低膝角）。判斷一支片子
-是站姿還是跳發球全靠它，而這決定了片段能不能併進 `serve`：serve 目前的標準只描述
-站姿發球，跳發球蹲到 90-105° 會被誤判，混進去則會把 band 拉成雙峰。
+注意 MIN_LEG_VIS 這道 gate **會被騙**：畫面外的腿 MediaPipe 會直接幻覺出來還回報高
+可見度，所以通過它只代表「通過啟發式」，不等於全身真的完整入鏡。MAX_NORM 因此必要。
+
+同時記錄 **crouch 膝角**（擊球前 CROUCH_LOOKBACK 秒內的最低膝角）。這只是**分流提示**，
+不是判別器，也**不能拿去跟後端的 108.3° 比大小**——後端取的是「髖部最低那一格」的
+`calculate_angle_3d` 3D 角、範圍是 contact 之前整段，這裡取的是「膝角最小那一格」的
+影像平面 2D 角、固定回看 1.6 秒。三處都不同，而這些差異的誤差還沒量過，所以站姿
+（約 110-150）與跳發（約 90-105）之間那 5° 的邊界不能只靠這個值判定。值偏低時要另外
+確認（看畫面，或實際跑 build_reference 與評估流程）。
+
+為什麼要在意站姿 vs 跳發：serve 目前的標準只描述站姿發球，而 `build_reference` 把同一
+動作的所有片段**合成一條 band**（這點確定，code 就是這樣寫）。
+
+**但「跳發球會被誤判」到目前為止還沒被量過**——常引的 90-105° 是掃描器的 2D 數字，
+跟後端門檻 108.3° 不是同一個量。**如果**後端量出來的跳發球膝角確實明顯較低，混進去
+就會被 IQR 剔掉（等於沒補）或把站姿共用的下限拉低（等於放寬門檻），那時才需要子型
+感知的評估；**如果差距不大，這個顧慮可能根本不存在**。動手補素材之前先量一段。
 """
 
 import cv2, math, json, os, numpy as np
@@ -29,10 +42,11 @@ MIN_ELBOW = 145.0     # 擊球時手臂應接近伸直；拋球/準備通常明�
 MIN_VIS = 0.5
 MIN_LEG_VIS = 0.5     # 膝＋踝可見度；擋掉手部特寫（否則 norm 會爆到 5～7）
 MAX_ANKLE_Y = 0.99    # 腳踝低於畫面底端 = 腿被裁掉
-# norm 的解剖學上界。整條手臂大約就是一個軀幹長，鼻子又在肩膀上方約 0.25 個軀幹，
-# 所以手腕高過鼻子最多約 0.7 個軀幹（實測完整入鏡的發球是 0.5-0.95）。設 1.5 留了
-# 一倍以上餘裕，只會擋掉「torso 塌掉」的畫面。**這道界線是必要的**：可見度 gate 擋
-# 不住手部特寫——畫面外的腿 MediaPipe 會直接幻覺出來，還給高可見度。
+# norm 上界。這**不是**解剖學硬上界：純比例推算是 0.7，但實測完整入鏡的發球到 0.95
+# 就超過了（分母是影像投影的肩到髖距離，軀幹後仰或斜角取景會讓它縮短）。1.5 的理由是
+# 兩個 regime 差一個數量級——正常 0.5-0.95、軀幹塌掉的特寫 5-7——它擋的是「分母失效」
+# 這個故障模式。**這是硬過濾**：超標的影格在組 event 前就被丟掉，不會進 montage，
+# 所以設太低會靜默丟掉好片且沒有任何提示。
 MAX_NORM = 1.5
 GAP = 0.6             # 事件之間的最大間隔（秒）
 CROUCH_LOOKBACK = 1.6  # 秒；回頭在擊球前這段時間內找最低膝角
@@ -98,10 +112,11 @@ def main():
     ok = [r for r in rows if r.get("ok")]
     print(f"samples={len(rows)} with_pose={len(ok)}")
 
-    # 腿部 gate 要在 norm 之前擋掉：手部特寫的 torso 會塌，norm 會爆到 5～7，
-    # 沒擋的話排序會把最沒用的畫面放第一個。
+    # 腿部 gate 先擋一輪：手部特寫的 torso 會塌，norm 會爆到 5～7。
+    # 但這道 gate 擋不乾淨——畫面外的腿 MediaPipe 會幻覺出來還給高可見度——
+    # 所以下面還要靠 MAX_NORM。通過這裡只代表「通過啟發式」，不是全身確實入鏡。
     framed = [r for r in ok if r["leg_vis"] > MIN_LEG_VIS and r["ankle_y"] < MAX_ANKLE_Y]
-    print(f"whole body usably in frame={len(framed)}")
+    print(f"passed leg-landmark heuristic (NOT verified full-body)={len(framed)}")
 
     cand = [r for r in framed
             if MIN_NORM < r["norm"] < MAX_NORM
@@ -125,7 +140,8 @@ def main():
         events.append(cur)
 
     # 每個事件回頭找 crouch：擊球前 CROUCH_LOOKBACK 秒內、腿看得到的最低膝角。
-    # 這是判斷「站姿發球 vs 跳發球」的依據，決定片段能不能併進 serve。
+    # 分流提示而已，不是判別器——量法跟後端三處都不同（見檔案開頭），誤差未量測，
+    # 不能直接對照 108.3°，也不足以單獨判定站姿 vs 跳發。
     by_t = {r["t"]: r for r in framed}
     times = sorted(by_t)
     for e in events:

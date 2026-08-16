@@ -40,11 +40,13 @@ cropped body, not an extraordinary jump.
 | pexels_6217269.mp4 | https://www.pexels.com/video/6217269/ |
 | pexels_6217338.mp4 | https://www.pexels.com/video/6217338/ |
 
-## serve (27 clips)
+## serve (26 clips)
 
 Expanded 19->27 on 2026-08-16 with eight ON-COURT reps (usertut_serve_06..13)
-from a user-provided serve tutorial. The video offered 41 candidate windows and
-most were deliberately left out:
+from a user-provided serve tutorial, then reduced to 26 the same day when
+`usertut_serve_10` turned out to be a static reach demonstration rather than a
+serve (see the contact-selection audit at the end of this file). The video
+offered 41 candidate windows and most were deliberately left out:
 
   * #11..#27 are arm-swing drills against a white wall with the ball still HELD
     in the hand -- a teaching position, not a struck contact
@@ -56,16 +58,32 @@ Convergence 0.80 -> 0.85.
 
 > NOTE, and it is a real limitation: crouch.knee tightened from an accepted floor
 > of 80.4 to 108.3 degrees, because these eight are STANDING serves with little
-> knee bend. A jump serve, which loads to roughly 90-105, would now be flagged.
-> The suite cannot catch this -- phase_reference_test still has no fixed serve
-> case, and angle_acceptance derives its fixtures from the band itself. So the
-> serve standard should be read as calibrated for STANDING serves.
+> knee bend. So the serve standard should be read as calibrated for STANDING
+> serves, and a deeper jump-serve load is liable to be flagged.
+>
+> Two corrections to how this was originally written (2026-08-16):
+>
+>   * The old text said "a jump serve, which loads to roughly 90-105, would now
+>     be flagged." That compares incompatible numbers. 90-105 is the SCANNER's
+>     figure (2D image-plane angle at the minimum-knee frame over a 1.6s
+>     lookback); 108.3 comes from the backend (3D `calculate_angle_3d` at the
+>     lowest-hip frame over everything before contact). No complete jump-serve rep
+>     has ever been measured through the backend path, so the false positive is a
+>     well-motivated EXPECTATION, not a demonstrated fact. Measuring one rep
+>     end-to-end is the cheapest way to settle it.
+>   * The old text said "phase_reference_test still has no fixed serve case."
+>     That is out of date: it now has `test_serve_flags_a_low_arm`,
+>     `test_serve_accepts_a_sound_standing_serve`, and a direct guard asserting
+>     the crouch-knee floor stays at or below 130. The remaining gap is narrower —
+>     there is no JUMP-serve acceptance case, and there cannot be one until a real
+>     jump-serve measurement exists to build the fixture from.
 
 | File | Source |
 |---|---|
-| usertut_serve_06..13.mp4 | user-provided serve tutorial, on-court reps only (trimmed) |
+| usertut_serve_06..09, 11..13.mp4 | user-provided serve tutorial, on-court reps only (trimmed) |
+| ~~usertut_serve_10.mp4~~ | QUARANTINED to `dataset/_rejected/` — static reach demo, not a serve |
 
-### Earlier serve set (19 clips)
+### Earlier serve set (19 clips, 5 tutorial + 14 Pexels; all still active)
 
 14 Pexels clips + 5 clips (usertut_serve_01..05) trimmed on 2026-08-14 from a
 user-provided single-player serve tutorial (`videoplayback (1).mp4`, Sikana,
@@ -238,8 +256,11 @@ drills, and never shows one complete rep of all three.
 
 Measured, not eyeballed — 5600 frames sampled, 5108 with a pose:
 
-  * 1485 frames have the whole body usably in frame; only 13 moments in those
-    have the wrist well above the nose with a straight arm
+  * 1485 frames PASS THE LEG-LANDMARK HEURISTIC (knee+ankle visibility > 0.5,
+    ankle inside frame). Read that as an upper bound, not "whole body in frame":
+    the heuristic is fooled by hallucinated off-frame legs, as noted below
+  * only 13 moments among those have the wrist well above the nose with a
+    straight arm
   * of the 13, two are professional broadcast rallies (multi-player, already a
     standing rejection reason), and the rest are toss drills, footwork drills
     with the ball still held, or hand close-ups
@@ -251,9 +272,90 @@ straighter than the hitting arm at contact. Feeding a toss drill into `serve`
 would not merely add noise, it would teach the contact band the wrong pose. This
 is the same trap as the underhand-serve rule recorded above, one step sharper.
 
-So the standing-serve limitation stands. What would close it is footage of
-complete jump-serve REPS (approach, toss, strike, land, one player, legs in
-frame) — match or drill footage, not instruction.
+So the standing-serve calibration is unchanged by this video. Before hunting for
+more footage, note that the limitation itself is not yet established:
+`build_reference.py` pools every clip of an action into ONE band (`_trim_outliers`
+with 1.5*IQR fences, then p10/p90) — that part is certain, it is what the code does.
+IF jump-serve knee angles measured through the BACKEND turn out clearly lower than
+the existing standing samples, they would either fall outside the fences and be
+discarded as outliers, or survive and drag down the same floor standing serves are
+judged against — the loosening this project already refused — and closing the gap
+would then need subtype-aware evaluation (a separate action, a multi-modal band, or
+classify-then-select).
+
+That IF is not yet settled: no jump serve has been measured through the backend
+path, and the familiar 90-105 figure is the scanner's incomparable 2D metric. So
+the cheapest next step is not hunting footage — it is running ONE real jump serve
+end to end and seeing where its crouch knee actually lands.
+
+What the footage must look like: complete jump-serve REPS (approach, toss, strike,
+land, one player, legs in frame), TRIMMED to one rep each. Not "match footage
+rather than tutorials" — 13 serve clips originally came from tutorials (12 still
+active after the quarantine below), so the
+source medium is not the criterion. The rule is complete reps, whatever the source.
+(No claim is made here about which source is cleaner: the audit below measures
+candidate uniqueness, which says nothing about correctness.)
+
+> Contact-selection audit (2026-08-16), prompted by the toss finding above, since
+> `_segment_overhead` takes the GLOBAL highest wrist and a clip holding both a toss
+> and a strike could be segmented on the wrong one. Ran the real `segment_action`
+> over all 27 serve clips and looked for a second wrist peak >=8 frames from the
+> chosen contact:
+>
+> The audit MUST use the smoothed signal. `_segment_overhead` minimises a 3-frame
+> `_smooth()`ed series, not the raw per-frame wrist height. A first pass measured
+> gaps on the raw series and produced a completely different — wrong — list of
+> ties: it reported `pexels_6216964` at 0.000 when the smoothed gap is 0.0972.
+> Reproduce with `tools/dataset_clips/audit_contact_selection.py`.
+>
+> Smoothed result: 3 of 27 have a second candidate within 0.01 —
+> `pexels_6216953` (0.0012), `usertut_serve_10` (0.0052), `pexels_6217332`
+> (0.0067). The other 24 range 0.014-0.126.
+>
+> What this does NOT show:
+>
+>   * that the other 24 are correct. A clip containing only a toss also has one
+>     unique peak — the original failure mode — so a large gap only means "no
+>     second candidate", never "the chosen frame is ball contact". Settling that
+>     needs frame-by-frame viewing, which has not been done.
+>   * that trimming to a single rep prevents ties. `usertut_serve_10` IS a trimmed
+>     single-rep tutorial clip and is one of the three.
+>   * any ranking of sources by cleanliness. Gap size measures candidate
+>     uniqueness, not correctness, so it cannot order tutorial vs match footage.
+>
+> What it does show: in 3 clips the contact frame is decided by a difference at
+> noise level. Those 3 were then viewed frame by frame:
+>
+>   * `pexels_6216953` — the chosen frame is a full overhead reach; the rival has
+>     the ball still on the floor. Correct as chosen.
+>   * `pexels_6217332` — the full 16.3s clip is ONE foreground player performing
+>     TWO overhand serves (~t=5.4s and ~t=8.1s, ball visible leaving each time);
+>     the background figures are others drilling separately, not a rally. The two
+>     candidates are exactly those two serves, so either choice samples a genuine
+>     serve contact. (An earlier note here called it "a rally with several
+>     attacks" — that was a misread of a low-resolution frame pair, now withdrawn.
+>     Its appearance in the rejected SET table is not a conflict: rejected as a
+>     set, used as a serve.)
+>   * `usertut_serve_10` — NOT A SERVE AT ALL. All 31 frames are a player standing
+>     with one arm held up: a static reach demonstration. Wrist height varies by
+>     0.023 across the whole clip where every other clip spans 0.10-0.96, and
+>     `segment_action` returns `crouch: None` because there is no load phase. Its
+>     contact sample was an arbitrary frame of a held pose. **Moved to
+>     `dataset/_rejected/`, reference rebuilt, all 13 tests pass; serve is 26.**
+>     Band impact was near zero: contact.elbow p10 141.9->141.5 (accepted low
+>     126.7->126.2), contact.shoulder p10 122.5->122.3 (105.7->105.2), crouch.knee
+>     UNCHANGED (it contributed no crouch sample), mean convergence 0.85 either
+>     way. A pure correctness fix at essentially no cost.
+>
+> Note the audit did NOT catch that one — a 0.0052 gap only says "two candidates
+> exist". Viewing the frames caught it. That is the concrete demonstration that
+> candidate uniqueness cannot substitute for looking.
+
+> Sample-base note, measured the same day across the then-13 usertut clips: 8 return
+> `crouch: None`, so the crouch.knee band rests on 19 clips, not 27
+> (`raw_count: 19` in reference_standards.json agrees). The "standing serve floor
+> of 108.3" therefore has a much smaller sample base than the clip count suggests.
+> Not an error, but worth knowing when quoting it.
 
 > Scanner note, found the hard way on this video: ranking candidates by
 > `above_nose / torso` is unsafe on its own. On a hand close-up the torso
@@ -261,14 +363,29 @@ frame) — match or drill footage, not instruction.
 > wrist-and-ball close-ups, so the WORST frames ranked first.
 >
 > A landmark-visibility gate does not fix it by itself: MediaPipe happily
-> hallucinates off-frame legs and reports them as visible. What works is an
-> anatomical upper bound. A whole arm is about one torso length and the nose sits
-> about 0.25 torso above the shoulders, so the wrist can clear the nose by at most
-> ~0.7 torso; real full-body serves in this video measured 0.5–0.95. Capping at
-> 1.5 leaves double the headroom and still removes every collapsed-torso frame.
-> `tools/dataset_clips/serve_scan_events.py` now applies both gates (candidates
-> 342 → 100, and no runaway ratios), and also reports the crouch knee angle so
-> "standing or jump serve?" is answered before trimming rather than after.
+> hallucinates off-frame legs and reports them as visible. What works alongside it
+> is a cap on the ratio, `MAX_NORM = 1.5`.
 >
-> This is a ranking guard, not a classifier — close-ups still reach the montage,
-> just no longer at the top. The human gate is still the thing that decides.
+> That 1.5 is NOT an anatomical bound, and calling it one would be wrong. Pure
+> proportion gives ~0.7 (an arm is about one torso, the nose about 0.25 torso above
+> the shoulders) — but real full-body serves here measured 0.5–0.95, already past
+> it, because the denominator is a PROJECTED shoulder-hip distance that shortens
+> when the trunk arches back or the camera is off-axis. The actual justification is
+> that the two regimes are an order of magnitude apart (0.5–0.95 normal vs 5–7 with
+> a collapsed torso) and 1.5 sits in the gap. It rejects a FAILED DENOMINATOR, not
+> a bad pose.
+>
+> And it is a HARD FILTER, not a ranking guard: frames at or above the cap are
+> dropped before events are assembled, so they never reach the montage and no human
+> ever sees them. Setting it too low silently discards good clips with no warning —
+> if a video with real reps ever scans empty, suspect this first.
+> `tools/dataset_clips/serve_scan_events.py` applies both gates (candidates
+> 342 → 100, no runaway ratios) and also reports a crouch knee angle.
+>
+> Treat that crouch number as a TRIAGE HINT only. It is not the quantity the
+> backend thresholds: the scanner takes a 2D image-plane angle at the minimum-knee
+> frame over a fixed 1.6s lookback, while `_crouch_before` takes the lowest-hip
+> frame and `calculate_angle_3d` over everything before contact. Those differences
+> have never been error-measured, and the standing (~110–150) and jump (~90–105)
+> ranges are only 5 degrees apart at the nearest edge — so a low value is a reason
+> to look, not a classification.
