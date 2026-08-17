@@ -6,6 +6,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
+from backend.phase_segmentation import segment_action
 from backend.reference_evaluation import _band_for, evaluate_with_reference, reference_for
 
 
@@ -116,16 +117,36 @@ def test_block_uses_max_reach_phase():
 
 
 def _serve_frames(contact_angles, crouch_angles=None):
-    """A serve: crouch, then reach, with the highest wrist as the contact."""
+    """A serve: crouch, then reach, with the highest wrist as the contact.
+
+    The crouch angles go on EVERY pre-contact frame, not just the visually
+    "loaded" one. `_crouch_before` picks the lowest hip after a 3-frame smooth,
+    and that smoothing moved the winner off the frame this fixture used to mark:
+    setting crouch knee to 11 landed the evaluator on frame 0, which carried the
+    default 130, so the parameter silently did nothing and any crouch test
+    written with it would have passed unconditionally. Spreading the angles
+    removes the dependence on which frame wins, which is what
+    `angle_acceptance_test._frames_for` already does.
+    """
     crouch = crouch_angles or _base_angles(knee=150)
-    return [
-        _frame(0.46, 0.20, 0.58, _base_angles()),
+    frames = [
+        _frame(0.46, 0.20, 0.58, crouch),
         _frame(0.50, 0.18, 0.84, crouch),          # loaded, hips lowest
-        _frame(0.34, 0.14, 0.60, _base_angles()),
+        _frame(0.34, 0.14, 0.60, crouch),
         _frame(0.16, 0.10, 0.56, contact_angles),  # highest wrist = contact
         _frame(0.30, 0.14, 0.58, _base_angles()),
         _frame(0.44, 0.18, 0.60, _base_angles()),
     ]
+    # Fail loudly rather than vacuously if segmentation ever drifts again.
+    segments = segment_action("serve", [frame["landmarks"] for frame in frames])
+    assert segments["contact"] == 3, (
+        f"fixture no longer segments as intended: contact={segments['contact']}"
+    )
+    assert frames[segments["crouch"]]["angles"] == crouch, (
+        f"crouch angles never reach the evaluator: it picked frame "
+        f"{segments['crouch']}, which does not carry them"
+    )
+    return frames
 
 
 def test_serve_flags_a_low_arm():
