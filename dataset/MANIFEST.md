@@ -374,12 +374,45 @@ rejection reason — compare the pose to the phase being sampled.
 (Mild circularity: this clip is one of the 24 that built the band. At n=24 a
 single clip barely moves p50, so the comparison is still informative.)
 
-**Five untriaged near-ties in spike and block.** Contact candidates within 0.01
-of each other, never inspected: spike `pexels_6217269` (0.0027) and
-`pexels_6217335` (0.0026); block `usertut_block_01` (0.0011),
-`usertut_block_02` (0.0019), `usertut_block_05` (0.0053). As established above a
-tie is not evidence of a wrong pick, and these are recorded as unreviewed rather
-than as defects.
+**The five near-ties in spike and block were then inspected frame by frame.**
+Nothing was removed, but two of them exposed something about the standards
+themselves.
+
+  * `usertut_block_01` (0.0011), `usertut_block_02` (0.0019) — both competing
+    frames are the same two-arm block position. Either choice is a block.
+  * `pexels_6217335` (0.0026) — both candidates are airborne attacks with the
+    ball at the hand. Either is a real contact.
+  * `pexels_6217269` (0.0027, in dataset/spike) — the chosen frame is an airborne
+    TWO-HANDED overhead play, a jump set posture, not a one-armed spike swing.
+    The clip is a whole rally: overhead plays at the back court, a run-in, then
+    the jump at the net.
+  * `usertut_block_05` (0.0053, in dataset/block) — NOT a block. 74 frames of a
+    player holding ONE arm straight up at the net, then lowering it and walking
+    off. No jump, no two-arm block, `crouch: None`.
+
+Both odd ones were then measured rather than argued about, and both land inside
+their bands, near the median:
+
+| clip | joint | value | band p10 / p50 / p90 |
+|---|---|---:|---|
+| pexels_6217269 | crouch.knee | 137.2 | 104.7 / **137.8** / 147.8 |
+| pexels_6217269 | contact.elbow | 166.2 | 141.0 / 156.9 / 167.0 |
+| pexels_6217269 | contact.shoulder | 147.9 | 111.2 / **148.3** / 163.0 |
+| usertut_block_05 | contact.elbow | 154.1 | 141.4 / **155.9** / 165.7 |
+| usertut_block_05 | contact.shoulder | 148.6 | 126.3 / 141.8 / 165.9 |
+
+So neither is pulling its band and neither is being removed. But the REASON they
+are harmless is itself the finding: **these standards measure elbow, shoulder and
+knee, and several different overhead actions share those angles.** A single raised
+arm gives almost the same elbow and shoulder as a two-arm block; a two-handed jump
+set gives almost the same values as a spike reach. The block standard cannot tell
+a one-arm reach from a block, and the spike standard cannot tell a jump set from a
+spike — not because the clips are bad, but because the measured quantities do not
+carry that distinction.
+
+That is acceptable as long as the USER picks the action, which the app requires.
+It does mean the dataset tolerates clips whose label looks wrong on screen, and
+that "it sits inside the band" is evidence of harmlessness, never of correctness.
 
 **The thin crouch sample base is not serve-specific.** Clips whose segmentation
 finds no load phase contribute no crouch sample at all:
