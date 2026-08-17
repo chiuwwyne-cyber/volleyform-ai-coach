@@ -351,6 +351,70 @@ candidate uniqueness, which says nothing about correctness.)
 > exist". Viewing the frames caught it. That is the concrete demonstration that
 > candidate uniqueness cannot substitute for looking.
 
+## Visibility gate on calibration samples (2026-08-17)
+
+`build_reference.py` never checked landmark visibility. MediaPipe emits
+coordinates for body parts it cannot see, so those invented angles went straight
+into the bands. The tell was `block`'s crouch.knee `min` of **23.6 degrees** —
+anatomically impossible for a crouch. At that clip's crouch frame both ankles sat
+below the image bottom (y = 1.36 / 1.42) with visibility 0.07 / 0.12: MediaPipe
+itself reported it could not see them.
+
+Swept every calibration sample across all five actions. The pollution was
+widespread, not a block quirk: 13/16 of block's crouch.knee samples, 15/24 of
+receive's contact.knee, 7/15 of spike's crouch.knee, 8/19 of serve's.
+
+**The first fix attempt was wrong and was discarded after measuring it.** Dropping
+any sample whose joint had visibility < 0.5 OR was off-frame would have cut block's
+crouch.knee from 16 samples to 3 — destroying the dataset rather than repairing it.
+Measuring separated two cases that had been conflated:
+
+  * **occlusion** — joint inside the frame but hidden by the body (elbow at
+    y = 0.45, visibility 0.41). MediaPipe has a kinematic prior; the estimate is
+    usually usable. Dropping these is what gutted the bands.
+  * **extrapolation** — joint far outside the frame with near-zero confidence
+    (ankle at y = 1.36, visibility 0.07). Pure invention.
+
+So the gate requires **both** conditions: `y > 1.10` (or < -0.10) **AND**
+`visibility < 0.5`. It touches only 5 of 14 bands. `_joint_is_offscreen_guess()`
+checks every landmark the joint's angle depends on, both sides, because
+`get_angles` takes `knee = min(left, right)` and `elbow/shoulder = max(...)` — one
+hallucinated side can be the one selected.
+
+Result (13/13 tests pass):
+
+| band | samples | min | accepted floor | state |
+|---|---|---|---|---|
+| block.crouch.knee | 15 → 6 | **23.6 → 120.1** | 85.5 → 97.5 | stable → usable |
+| serve.crouch.knee | 17 → 14 | 97.7 (same) | 108.3 → 126.4 | stable |
+| spike.crouch.knee | 14 → 11 | 68.0 (same) | 83.2 → 89.9 | stable → usable |
+| receive.contact.knee | 24 → 23 | same | 69.3 → 69.0 | stable |
+| set.contact.shoulder | 24 → 22 | same | 65.1 → 64.6 | stable |
+
+Nine bands unchanged. Dropped samples are printed by the build and recorded per
+band as `dropped_offscreen` / `clips_available` — silence is precisely how the
+23.6 survived for weeks.
+
+> **Two costs, shipped deliberately (option A, user's call after both were put to
+> them).** Recorded here so neither gets rediscovered as a surprise:
+>
+> 1. **block.crouch.knee now rests on 6 samples.** Combined with its accepted
+>    ceiling of 178.2 degrees — a straight leg is 180, so `knee_bad` can barely
+>    fire — block's crouch check now has a weakly-grounded floor and a ceiling
+>    that almost never triggers. Disabling it until real jump footage exists was
+>    offered and declined; it stays live.
+> 2. **serve's floor tightened 108.3 → 126.4, and that is NOT a correction.** The
+>    genuinely low values (97.7, 99.4) are clean and were kept; removing two
+>    mid-range samples moved p10 by 18 degrees, which shows the band is fragile at
+>    n ≈ 18 rather than that anything was fixed. Three of serve's own 17 clean
+>    reference clips now fall below their own floor. That count was 3 of 19 before
+>    the gate, so it is not a regression the gate introduced — but users crouching
+>    deeper than p10 will be flagged more often than before.
+
+Audit tool: `tools/audit_sample_visibility.py` (add `--dump=<path>` to save every
+sample's landmark stats, so alternative thresholds can be tested in seconds
+instead of re-running a 35-minute pose pass).
+
 ## All-action sweep (2026-08-16)
 
 After `usertut_serve_10` was found by eye rather than by the audit, the same two

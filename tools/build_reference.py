@@ -103,6 +103,41 @@ def _trim_outliers(values):
     return ordered, trimmed, outliers
 
 
+# 每個關節實際用到的 landmark。左右兩側都列,因為 get_angles 取
+# knee=min(左,右)、elbow/shoulder=max(左,右)——只要**一側**是幻覺就可能正好被選中。
+JOINT_LANDMARKS = {
+    "knee": (23, 24, 25, 26, 27, 28),
+    "elbow": (11, 12, 13, 14, 15, 16),
+    "shoulder": (11, 12, 13, 14, 23, 24),
+}
+# 「大幅出畫面」而不是「剛好切到邊」。腳踝落在 y=1.02、可見度 0.82 是被裁到,
+# 那個角度還可信;y=1.36、可見度 0.07 是 MediaPipe 自己說看不到卻仍生出座標。
+OFFSCREEN_Y = 1.10
+OFFSCREEN_VISIBILITY = 0.5
+
+
+def _joint_is_offscreen_guess(landmarks, joint):
+    """這個關節的角度是不是算在「畫面外硬猜」的 landmark 上?
+
+    2026-08-17 加。`block` 的 crouch.knee 最小值曾是 **23.6°**——解剖學上不可能——
+    因為那一格兩隻腳踝都在畫面下方外面(y=1.36/1.42)、可見度只有 0.07/0.12。
+    MediaPipe 對看不見的部位仍會輸出座標,校準流程卻從不檢查,所以幻覺出來的角度
+    直接進了 band。全資料集掃過後,block 的 crouch.knee 有 13/16 個樣本是這樣來的。
+
+    **兩個條件要同時成立才丟**,這點是量出來的、不是猜的:
+      * 只看可見度會誤殺**遮擋**(手肘在畫面正中央被身體擋住,vis 0.41,估計仍可用)
+      * 只看出畫面會誤殺**剛好被裁到邊**(腳踝 y=1.02 但 vis 0.82,角度合理)
+    先前試過「vis<0.5 或出畫面就丟」的嚴格版,會把 block 膝角從 16 個砍到 3 個,
+    那不是修正是把資料集毀掉。目前這組門檻只動到 14 個 band 裡的 5 個。
+    """
+    for index in JOINT_LANDMARKS[joint]:
+        landmark = landmarks[index]
+        outside = landmark.y > OFFSCREEN_Y or landmark.y < -0.10
+        if outside and landmark.visibility < OFFSCREEN_VISIBILITY:
+            return True
+    return False
+
+
 def _adaptive_tolerance(ordered, joint):
     count = len(ordered)
     p25 = _percentile(ordered, 0.25)
@@ -212,6 +247,7 @@ def main():
             phase: {joint: [] for joint in joints}
             for phase, joints in phase_joints.items()
         }
+        dropped = {}
         used_clips = 0
 
         for clip_name in clips:
@@ -225,12 +261,16 @@ def main():
 
             contact = segments["contact"]
             crouch = segments["crouch"]
-            if "contact" in samples:
-                for joint in phase_joints["contact"]:
-                    samples["contact"][joint].append(frames[contact]["angles"][joint])
-            if crouch is not None and "crouch" in samples:
-                for joint in phase_joints["crouch"]:
-                    samples["crouch"][joint].append(frames[crouch]["angles"][joint])
+            for phase, index in (("contact", contact), ("crouch", crouch)):
+                if index is None or phase not in samples:
+                    continue
+                landmarks = frames[index]["landmarks"]
+                for joint in phase_joints[phase]:
+                    if _joint_is_offscreen_guess(landmarks, joint):
+                        dropped.setdefault(f"{phase}.{joint}", []).append(
+                            (clip_name, round(frames[index]["angles"][joint], 1)))
+                        continue
+                    samples[phase][joint].append(frames[index]["angles"][joint])
             used_clips += 1
 
         if used_clips == 0:
@@ -238,16 +278,34 @@ def main():
 
         phases = {}
         for phase, joints in phase_joints.items():
-            phase_stats = {
-                joint: _band(values, joint)
-                for joint, values in samples[phase].items()
-                if values
-            }
+            phase_stats = {}
+            for joint, values in samples[phase].items():
+                if not values:
+                    continue
+                band = _band(values, joint)
+                skipped = dropped.get(f"{phase}.{joint}", [])
+                if skipped:
+                    # Recorded in the output, not just printed: a band quietly built
+                    # from fewer samples than the clip count suggests is exactly how
+                    # the 23.6-degree knee survived unnoticed for weeks.
+                    band["dropped_offscreen"] = len(skipped)
+                    band["clips_available"] = len(values) + len(skipped)
+                phase_stats[joint] = band
             if phase_stats:
                 phases[phase] = phase_stats
 
         result["actions"][action] = {"clips": used_clips, "phases": phases}
         print(f"[{action}] calibrated from {used_clips}/{len(clips)} clips")
+        for key, skipped in sorted(dropped.items()):
+            phase, joint = key.split(".", 1)
+            kept = len(samples[phase][joint])
+            listed = ", ".join(f"{name} {angle}"
+                               for name, angle in sorted(skipped, key=lambda s: s[1])[:4])
+            print(f"  DROPPED {len(skipped)} {key} sample(s) — joint off-screen and "
+                  f"unconfident: {listed}{' ...' if len(skipped) > 4 else ''}")
+            if kept < 10:
+                print(f"  ^ WARNING: {key} now rests on {kept} samples — treat that "
+                      f"threshold as weakly grounded")
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as file:
         json.dump(result, file, ensure_ascii=False, indent=2)
