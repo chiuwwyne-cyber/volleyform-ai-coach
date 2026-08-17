@@ -351,6 +351,48 @@ candidate uniqueness, which says nothing about correctness.)
 > exist". Viewing the frames caught it. That is the concrete demonstration that
 > candidate uniqueness cannot substitute for looking.
 
+## All-action sweep (2026-08-16)
+
+After `usertut_serve_10` was found by eye rather than by the audit, the same two
+checks were run over all five actions instead of serve alone — spike and block
+share serve's "global highest wrist" contact rule, so the same failures were
+possible there and had never been looked for.
+
+**A second static clip exists, and it is NOT being removed.** `usertut_set_01` is
+100 frames of a player holding the setting hand position overhead, never
+releasing a ball; wrist height moves 0.037 and `contact` lands on frame 2 of 100.
+Structurally identical to `usertut_serve_10` — but measuring what it actually
+contributes gives the opposite answer: elbow 119.4 against a band whose p50 is
+121.7, shoulder 117.2 against a p50 of 106.1. Both sit near the middle of the
+distribution, so the sample is benign and removing it would be churn.
+
+The useful generalisation: **a held pose is only harmful when the held pose
+differs from the action's key moment.** A held overhead reach is nothing like a
+serve strike, so `usertut_serve_10` was poison. A held setting position is close
+to the actual release, so `usertut_set_01` is harmless. "Static" alone is not a
+rejection reason — compare the pose to the phase being sampled.
+(Mild circularity: this clip is one of the 24 that built the band. At n=24 a
+single clip barely moves p50, so the comparison is still informative.)
+
+**Five untriaged near-ties in spike and block.** Contact candidates within 0.01
+of each other, never inspected: spike `pexels_6217269` (0.0027) and
+`pexels_6217335` (0.0026); block `usertut_block_01` (0.0011),
+`usertut_block_02` (0.0019), `usertut_block_05` (0.0053). As established above a
+tie is not evidence of a wrong pick, and these are recorded as unreviewed rather
+than as defects.
+
+**The thin crouch sample base is not serve-specific.** Clips whose segmentation
+finds no load phase contribute no crouch sample at all:
+
+| action | crouch.knee samples | clips |
+|---|---:|---:|
+| spike | 15 | 20 |
+| serve | 19 | 26 |
+| block | 16 | 18 |
+
+Quote those floors against the sample count, not the clip count.
+
+
 > Sample-base note, measured the same day across the then-13 usertut clips: 8 return
 > `crouch: None`, so the crouch.knee band rests on 19 clips, not 27
 > (`raw_count: 19` in reference_standards.json agrees). The "standing serve floor
