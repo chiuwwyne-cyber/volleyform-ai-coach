@@ -116,6 +116,41 @@ OFFSCREEN_Y = 1.10
 OFFSCREEN_VISIBILITY = 0.5
 
 
+PHASE_SCOPE_PATH = os.path.join(DATASET_DIR, "clip_phase_scope.json")
+
+
+def _load_phase_scope():
+    """Which phases each clip is allowed to contribute, keyed "<action>/<clip>".
+
+    Added 2026-08-17. A clip can be good evidence for one phase and bad for
+    another: live-play block footage carries the deep crouch this dataset lacks
+    (measured 80.9 and 105.4 degrees where the whole band's minimum was 120.1),
+    while its contact elbows measure 123-139 against a p10 of 141.4, because
+    players in a rally do not fully extend. Taking those clips whole would fix
+    the knee band and loosen the elbow floor -- the same trade that forced the
+    2026-08-05 set revert.
+
+    This is the per-JOINT visibility gate's idea moved up to the phase level.
+    Clips not listed contribute every phase, so the file is additive and the
+    default behaviour is unchanged.
+    """
+    if not os.path.exists(PHASE_SCOPE_PATH):
+        return {}
+    with open(PHASE_SCOPE_PATH, encoding="utf-8") as handle:
+        raw = json.load(handle)
+    scope = {}
+    for key, entry in raw.get("clips", {}).items():
+        phases = entry.get("phases")
+        if not phases:
+            raise ValueError(f"{PHASE_SCOPE_PATH}: {key} lists no phases")
+        if not entry.get("reason"):
+            # An unexplained scope is indistinguishable from trimming the data
+            # until the numbers look right, so refuse to run without one.
+            raise ValueError(f"{PHASE_SCOPE_PATH}: {key} has no reason")
+        scope[key] = set(phases)
+    return scope
+
+
 def _joint_is_offscreen_guess(landmarks, joint):
     """這個關節的角度是不是算在「畫面外硬猜」的 landmark 上?
 
@@ -232,6 +267,10 @@ def main():
         "actions": {},
     }
 
+    phase_scope = _load_phase_scope()
+    if phase_scope:
+        print(f"phase scope: {len(phase_scope)} clip(s) limited to specific phases")
+
     for action in ACTIONS:
         action_dir = os.path.join(DATASET_DIR, action)
         if not os.path.isdir(action_dir):
@@ -248,6 +287,7 @@ def main():
             for phase, joints in phase_joints.items()
         }
         dropped = {}
+        scoped_out = {}
         used_clips = 0
 
         for clip_name in clips:
@@ -261,8 +301,12 @@ def main():
 
             contact = segments["contact"]
             crouch = segments["crouch"]
+            allowed = phase_scope.get(f"{action}/{clip_name}")
             for phase, index in (("contact", contact), ("crouch", crouch)):
                 if index is None or phase not in samples:
+                    continue
+                if allowed is not None and phase not in allowed:
+                    scoped_out.setdefault(phase, []).append(clip_name)
                     continue
                 landmarks = frames[index]["landmarks"]
                 for joint in phase_joints[phase]:
@@ -296,6 +340,9 @@ def main():
 
         result["actions"][action] = {"clips": used_clips, "phases": phases}
         print(f"[{action}] calibrated from {used_clips}/{len(clips)} clips")
+        for phase, names in sorted(scoped_out.items()):
+            print(f"  SCOPED OUT {len(names)} clip(s) from {phase} by "
+                  f"dataset/clip_phase_scope.json: {', '.join(sorted(names))}")
         for key, skipped in sorted(dropped.items()):
             phase, joint = key.split(".", 1)
             kept = len(samples[phase][joint])

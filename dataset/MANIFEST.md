@@ -203,7 +203,7 @@ pushed p10 down to ~45. All 11 backend + 1 frontend tests pass.
 | usertut_set_01..08.mp4 | user-provided single-player set tutorial (trimmed) |
 | usertut_set_09..18.mp4 | 2nd user set tutorial (videoplayback (10), trimmed) |
 
-## block (18 clips, candidate-calibrated, robust outlier-trimmed)
+## block (21 clips; 3 are crouch-only, see clip_phase_scope.json)
 
 Expanded 6->12 (2026-08-05, Pexels) then 12->18 (2026-08-07) with 6 clips
 (usertut_block_01..06) trimmed from a user-provided single-player over-net
@@ -350,6 +350,77 @@ candidate uniqueness, which says nothing about correctness.)
 > Note the audit did NOT catch that one — a 0.0052 gap only says "two candidates
 > exist". Viewing the frames caught it. That is the concrete demonstration that
 > candidate uniqueness cannot substitute for looking.
+
+## block 18 -> 21, crouch only (2026-08-17)
+
+The visibility gate above left block's crouch.knee resting on 6 samples whose
+minimum was 120.1 degrees. That meant the band contained **no genuinely deep block
+load at all** — every remaining sample was a standing demonstration — so the
+standard would have flagged any correctly-deep block as "knee too bent". The
+strictness came from ignorance, not rigour.
+
+Two videos were supplied to fix exactly this. Both were scanned with a new
+`tools/dataset_clips/block_scan_events.py`, written because the serve scanner
+looks for "one wrist highest with a straight elbow" while a block is "BOTH wrists
+overhead", and because here the binding constraint is legs-in-frame rather than
+reach.
+
+**Video 6 — rejected whole.** A block tutorial framed from the thigh up. Of 1670
+frames with a pose, **zero** had knees and ankles usable. Not a threshold artefact:
+ankle y ran a median of 1.44 (1.0 is the frame edge) with a maximum leg visibility
+of 0.53 across the entire video, and relaxing the gate to y < 1.0 with visibility
+> 0.5 still left only 3 frames. It cannot produce a knee sample at all.
+
+**Video 5 — 3 of 11 candidates taken, crouch only.** A block training video. The
+single-player sections are standing hand-position drills: hip rise 0.02-0.04 and
+crouch knees of 133-151, i.e. more straight-legged samples, which is the fault that
+forced the 2026-08-07 receive revert. Rejected. The genuine jumps (hip rise
+0.13-0.25) are all in live "GAME OF BLOCKING" play.
+
+> A correction worth recording, because it nearly cost the only usable footage.
+> Those live-play windows were first judged "MediaPipe switches subject mid-window"
+> from rendered skeletons. That was wrong — the render used
+> `static_image_mode=True`, which re-detects independently per frame and can pick a
+> different person, while the real pipeline (`pose/pose.py`) tracks continuously.
+> Measured under the real setting, the tracked hip moves at most 0.046 of frame
+> width per step with zero jumps above 0.08. **Verify with the configuration the
+> pipeline actually uses.**
+
+The three taken measure, through the real pipeline and passing the visibility gate
+(so the legs really are in frame):
+
+| clip | crouch.knee | contact.elbow | contact.shoulder |
+|---|---|---|---|
+| usertut_blockgame_08 | 105.4 | 124.4 (p10 141.4) | 149.4 |
+| usertut_blockgame_09 | **80.9** | 138.9 (p10 141.4) | 131.3 |
+| usertut_blockgame_10 | 151.1 | 123.2 | 89.7 (p10 126.3) |
+
+Their crouches are what the dataset needs; their contacts are below the floor,
+because players in a rally do not fully extend. Taking them whole would fix the
+knee band and loosen the elbow floor — the 2026-08-05 set trade again.
+
+So they are registered in the new **`dataset/clip_phase_scope.json`** as
+crouch-only. A clip can be good evidence for one phase and bad for another; this
+is the per-JOINT visibility gate's idea raised to the phase level. Clips not listed
+contribute everything, so the default is unchanged, and an entry without a
+`reason` makes the build refuse to run — an unexplained scope is
+indistinguishable from trimming data until the numbers look right.
+
+Result — one band moved, nothing else, which is the check that the scoping worked:
+
+| block.crouch.knee | before | after |
+|---|---|---|
+| samples | 6 | 9 |
+| min | 120.1 | **80.9** |
+| p10 | 120.8 | 100.5 |
+| accepted floor | 97.5 | 76.8 |
+| convergence | 0.53 | 0.57 (still `usable`) |
+
+The floor loosening is a correction, not a relaxation: it now covers real deep
+loading that the band previously had no evidence of. Still open: 9 samples is short
+of the 14 needed for `stable`, and the accepted ceiling of 177.0 against a
+180-degree straight leg means `knee_bad` still cannot realistically fire. That is a
+threshold-structure problem, not a data one. All 13 tests pass.
 
 ## Visibility gate on calibration samples (2026-08-17)
 

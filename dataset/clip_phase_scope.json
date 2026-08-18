@@ -1,0 +1,31 @@
+{
+  "_about": [
+    "Per-clip phase scope. A clip listed here contributes ONLY the phases named,",
+    "and its other phases are skipped. Default (not listed) = every phase the",
+    "action defines, which is how the whole dataset behaved before 2026-08-17.",
+    "",
+    "Why this exists: a clip can be good evidence for one phase and bad for",
+    "another. Live-play block footage shows genuine deep loading (the crouch the",
+    "dataset lacks) while its contact elbows sit below the band because players in",
+    "a rally do not fully extend. Taking such a clip whole fixes one band and",
+    "loosens another -- the failure that forced the 2026-08-05 set revert.",
+    "",
+    "This is the same idea the visibility gate already applies per JOINT, moved up",
+    "to the phase level. Every entry needs a reason: an unexplained scope is",
+    "indistinguishable from cherry-picking data until the numbers look good."
+  ],
+  "clips": {
+    "block/usertut_blockgame_08.mp4": {
+      "phases": ["crouch"],
+      "reason": "Crouch only. Measured before adding: crouch.knee 105.4 (band p10 was 120.8, min 120.1 -- this dataset had no genuinely deep block load at all), but contact.elbow 124.4 against a p10 of 141.4. Live rally blocks are not fully extended, so its contact would lower the elbow floor and make 'arms not extended' harder to flag."
+    },
+    "block/usertut_blockgame_09.mp4": {
+      "phases": ["crouch"],
+      "reason": "Crouch only, same trade. crouch.knee 80.9 -- the deepest genuine block load in the dataset, and it passes the visibility gate, so the legs really are in frame. contact.elbow 138.9 is still under the 141.4 floor."
+    },
+    "block/usertut_blockgame_10.mp4": {
+      "phases": ["crouch"],
+      "reason": "Crouch only. crouch.knee 151.1 sits inside the band and adds spread at the upper end. Excluded from contact for a stronger reason than the other two: contact.elbow 123.2 AND contact.shoulder 89.7 are both below p10 (141.4 / 126.3)."
+    }
+  }
+}

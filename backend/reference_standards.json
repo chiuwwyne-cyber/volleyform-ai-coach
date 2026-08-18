@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-08-17",
+  "generated": "2026-08-18",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -140,7 +140,7 @@
       }
     },
     "block": {
-      "clips": 18,
+      "clips": 21,
       "phases": {
         "contact": {
           "elbow": {
@@ -184,25 +184,25 @@
         },
         "crouch": {
           "knee": {
-            "count": 6,
-            "raw_count": 6,
+            "count": 9,
+            "raw_count": 9,
             "outliers": 0,
-            "min": 120.1,
-            "p10": 120.8,
-            "p25": 122.5,
-            "p50": 127.0,
-            "p75": 146.0,
-            "p90": 155.4,
+            "min": 80.9,
+            "p10": 100.5,
+            "p25": 120.1,
+            "p50": 125.6,
+            "p75": 151.1,
+            "p90": 153.3,
             "max": 158.9,
-            "tolerance": 23.3,
+            "tolerance": 23.7,
             "accepted_range": [
-              97.5,
-              178.7
+              76.8,
+              177.0
             ],
-            "convergence": 0.53,
+            "convergence": 0.57,
             "convergence_state": "usable",
             "dropped_offscreen": 10,
-            "clips_available": 16
+            "clips_available": 19
           }
         }
       }
