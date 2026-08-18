@@ -595,6 +595,7 @@ const REFERENCE_STANDARDS = {
             "p75": 165.4,
             "p90": 167.0,
             "max": 172.5,
+            "max_kept": 172.5,
             "tolerance": 15.3,
             "accepted_range": [
               125.7,
@@ -614,6 +615,7 @@ const REFERENCE_STANDARDS = {
             "p75": 159.7,
             "p90": 163.0,
             "max": 173.7,
+            "max_kept": 173.7,
             "tolerance": 19.5,
             "accepted_range": [
               91.7,
@@ -625,24 +627,25 @@ const REFERENCE_STANDARDS = {
         },
         "crouch": {
           "knee": {
-            "count": 11,
-            "raw_count": 12,
+            "count": 10,
+            "raw_count": 11,
             "outliers": 1,
             "min": 68.0,
-            "p10": 111.6,
-            "p25": 121.0,
-            "p50": 138.4,
-            "p75": 143.8,
-            "p90": 148.6,
+            "p10": 115.5,
+            "p25": 128.1,
+            "p50": 139.1,
+            "p75": 144.0,
+            "p90": 148.7,
             "max": 149.2,
-            "tolerance": 21.7,
+            "max_kept": 149.2,
+            "tolerance": 20.7,
             "accepted_range": [
-              89.9,
-              170.3
+              94.8,
+              169.4
             ],
-            "convergence": 0.66,
+            "convergence": 0.67,
             "convergence_state": "usable",
-            "dropped_offscreen": 3,
+            "dropped_offscreen": 4,
             "clips_available": 15
           }
         }
@@ -663,6 +666,7 @@ const REFERENCE_STANDARDS = {
             "p75": 165.0,
             "p90": 168.7,
             "max": 177.4,
+            "max_kept": 177.4,
             "tolerance": 15.3,
             "accepted_range": [
               126.2,
@@ -682,6 +686,7 @@ const REFERENCE_STANDARDS = {
             "p75": 150.9,
             "p90": 155.7,
             "max": 157.0,
+            "max_kept": 157.0,
             "tolerance": 17.1,
             "accepted_range": [
               105.2,
@@ -694,23 +699,24 @@ const REFERENCE_STANDARDS = {
         "crouch": {
           "knee": {
             "count": 14,
-            "raw_count": 17,
-            "outliers": 3,
+            "raw_count": 16,
+            "outliers": 2,
             "min": 97.7,
-            "p10": 145.8,
-            "p25": 149.4,
+            "p10": 138.4,
+            "p25": 148.8,
             "p50": 152.8,
             "p75": 162.9,
             "p90": 167.7,
             "max": 170.9,
-            "tolerance": 19.4,
+            "max_kept": 170.9,
+            "tolerance": 19.5,
             "accepted_range": [
-              126.4,
+              118.9,
               180.0
             ],
-            "convergence": 0.81,
+            "convergence": 0.79,
             "convergence_state": "stable",
-            "dropped_offscreen": 2,
+            "dropped_offscreen": 3,
             "clips_available": 19
           }
         }
@@ -721,23 +727,26 @@ const REFERENCE_STANDARDS = {
       "phases": {
         "contact": {
           "elbow": {
-            "count": 17,
-            "raw_count": 18,
+            "count": 16,
+            "raw_count": 17,
             "outliers": 1,
             "min": 87.6,
-            "p10": 141.4,
+            "p10": 141.3,
             "p25": 150.1,
-            "p50": 155.9,
-            "p75": 162.0,
-            "p90": 165.7,
+            "p50": 156.9,
+            "p75": 162.5,
+            "p90": 166.1,
             "max": 173.9,
-            "tolerance": 15.2,
+            "max_kept": 173.9,
+            "tolerance": 15.4,
             "accepted_range": [
-              126.2,
+              125.9,
               180.0
             ],
-            "convergence": 0.86,
-            "convergence_state": "stable"
+            "convergence": 0.83,
+            "convergence_state": "stable",
+            "dropped_offscreen": 1,
+            "clips_available": 18
           },
           "shoulder": {
             "count": 17,
@@ -750,6 +759,7 @@ const REFERENCE_STANDARDS = {
             "p75": 151.4,
             "p90": 165.9,
             "max": 171.0,
+            "max_kept": 171.0,
             "tolerance": 16.7,
             "accepted_range": [
               109.6,
@@ -761,24 +771,25 @@ const REFERENCE_STANDARDS = {
         },
         "crouch": {
           "knee": {
-            "count": 9,
-            "raw_count": 9,
+            "count": 7,
+            "raw_count": 7,
             "outliers": 0,
             "min": 80.9,
-            "p10": 100.5,
-            "p25": 120.1,
+            "p10": 95.6,
+            "p25": 113.5,
             "p50": 125.6,
-            "p75": 151.1,
-            "p90": 153.3,
-            "max": 158.9,
-            "tolerance": 23.7,
+            "p75": 139.7,
+            "p90": 151.4,
+            "max": 151.9,
+            "max_kept": 151.9,
+            "tolerance": 23.4,
             "accepted_range": [
-              76.8,
-              177.0
+              72.2,
+              174.8
             ],
-            "convergence": 0.57,
+            "convergence": 0.54,
             "convergence_state": "usable",
-            "dropped_offscreen": 10,
+            "dropped_offscreen": 12,
             "clips_available": 19
           }
         }
@@ -799,6 +810,7 @@ const REFERENCE_STANDARDS = {
             "p75": 169.7,
             "p90": 171.5,
             "max": 174.2,
+            "max_kept": 174.2,
             "tolerance": 14.8,
             "accepted_range": [
               131.1,
@@ -808,44 +820,48 @@ const REFERENCE_STANDARDS = {
             "convergence_state": "stable"
           },
           "knee": {
-            "count": 23,
-            "raw_count": 23,
+            "count": 19,
+            "raw_count": 19,
             "outliers": 0,
             "min": 66.8,
-            "p10": 90.6,
-            "p25": 99.4,
-            "p50": 128.5,
-            "p75": 142.0,
-            "p90": 149.6,
+            "p10": 89.0,
+            "p25": 98.9,
+            "p50": 121.4,
+            "p75": 140.8,
+            "p90": 149.7,
             "max": 160.1,
-            "tolerance": 21.6,
+            "max_kept": 160.1,
+            "tolerance": 22.2,
             "accepted_range": [
-              69.0,
-              171.2
+              66.8,
+              171.9
             ],
-            "convergence": 0.78,
+            "convergence": 0.76,
             "convergence_state": "stable",
-            "dropped_offscreen": 1,
+            "dropped_offscreen": 5,
             "clips_available": 24
           },
           "shoulder": {
             "count": 23,
-            "raw_count": 24,
-            "outliers": 1,
+            "raw_count": 23,
+            "outliers": 0,
             "min": 16.8,
             "p10": 24.4,
             "p25": 36.0,
             "p50": 58.7,
             "p75": 76.4,
             "p90": 100.3,
-            "max": 147.8,
+            "max": 132.4,
+            "max_kept": 132.4,
             "tolerance": 19.0,
             "accepted_range": [
               5.4,
               119.3
             ],
-            "convergence": 0.78,
-            "convergence_state": "stable"
+            "convergence": 0.79,
+            "convergence_state": "stable",
+            "dropped_offscreen": 1,
+            "clips_available": 24
           }
         }
       }
@@ -855,43 +871,47 @@ const REFERENCE_STANDARDS = {
       "phases": {
         "contact": {
           "elbow": {
-            "count": 24,
-            "raw_count": 24,
-            "outliers": 0,
+            "count": 22,
+            "raw_count": 23,
+            "outliers": 1,
             "min": 98.0,
-            "p10": 104.5,
-            "p25": 112.6,
-            "p50": 121.7,
-            "p75": 139.7,
-            "p90": 154.0,
-            "max": 177.8,
-            "tolerance": 17.1,
+            "p10": 103.5,
+            "p25": 111.9,
+            "p50": 120.5,
+            "p75": 133.5,
+            "p90": 150.6,
+            "max": 172.8,
+            "max_kept": 154.4,
+            "tolerance": 16.3,
             "accepted_range": [
-              87.4,
-              171.1
+              87.2,
+              166.9
             ],
-            "convergence": 0.83,
-            "convergence_state": "stable"
+            "convergence": 0.85,
+            "convergence_state": "stable",
+            "dropped_offscreen": 1,
+            "clips_available": 24
           },
           "shoulder": {
-            "count": 22,
-            "raw_count": 22,
+            "count": 21,
+            "raw_count": 21,
             "outliers": 0,
             "min": 75.2,
-            "p10": 83.7,
-            "p25": 88.6,
-            "p50": 102.3,
-            "p75": 128.3,
-            "p90": 132.3,
+            "p10": 83.5,
+            "p25": 88.2,
+            "p50": 102.2,
+            "p75": 127.0,
+            "p90": 132.5,
             "max": 135.8,
-            "tolerance": 19.1,
+            "max_kept": 135.8,
+            "tolerance": 19.2,
             "accepted_range": [
-              64.6,
-              151.4
+              64.3,
+              151.7
             ],
             "convergence": 0.79,
             "convergence_state": "stable",
-            "dropped_offscreen": 2,
+            "dropped_offscreen": 3,
             "clips_available": 24
           }
         }
@@ -1102,6 +1122,10 @@ function bandFor(action, entry, phase, joint) {
   return null;
 }
 
+// Measured: a straight limb synthesised at realistic landmark noise reads a
+// mean of 176.4 and a minimum of 168.3 through this pipeline.
+const STRAIGHT_LIMB_FLOOR = 168;
+
 function referenceTolerance(band) {
   const tolerance = Number(band?.tolerance);
   if (!Number.isFinite(tolerance)) return DEFAULT_BAND_TOLERANCE;
@@ -1141,7 +1165,21 @@ function evaluatePhaseJoint(action, entry, frames, phase, frameIndex, joint, rul
   if (!Number.isFinite(value)) return null;
   const { band, tolerance, source } = bandInfo;
   const lo = Math.max(0, band.p10 - tolerance);
-  const hi = Math.min(180, band.p90 + tolerance);
+  // Mirrors _band_range in backend/reference_evaluation.py. When the high side
+  // carries an issue code, cap the ceiling at the most extreme value seen in
+  // correct technique plus a grace margin -- otherwise symmetric tolerance can
+  // push it to 180, where `value > hi` can never be true and the check is dead
+  // while still looking live.
+  let hi = Math.min(180, band.p90 + tolerance);
+  // max_kept, not max: max is computed before IQR trimming, so a sample the
+  // calibration excluded could otherwise raise the ceiling. Capped at the
+  // straight-limb floor only when that still clears the reference; when correct
+  // technique already reads above it (standing serves) no ceiling can separate
+  // right from wrong, so the check is left dead rather than faked.
+  const observedMax = Number(band.max_kept ?? band.max);
+  if (rule.high && Number.isFinite(observedMax) && observedMax < STRAIGHT_LIMB_FLOOR) {
+    hi = Math.min(hi, STRAIGHT_LIMB_FLOOR);
+  }
   let status = "green";
   let issueCode = null;
   let direction = "ok";

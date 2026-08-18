@@ -7,7 +7,12 @@ if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
 from backend.phase_segmentation import segment_action
-from backend.reference_evaluation import _band_for, evaluate_with_reference, reference_for
+from backend.reference_evaluation import (
+    _band_for,
+    _band_range,
+    evaluate_with_reference,
+    reference_for,
+)
 
 
 def _point(x=0.5, y=0.5, z=0.0):
@@ -192,6 +197,119 @@ def test_serve_accepts_a_sound_standing_serve():
     )
 
 
+# A straight limb synthesised at realistic landmark noise (sigma 0.01 on
+# normalised coordinates) reads a mean of 176.4 and a MINIMUM of 168.3 through
+# this pipeline. Guard against the minimum, not the mean: a ceiling at 174 would
+# still miss every straight leg that happens to read below it. Using the mean here
+# was the first version of this test and it let the bug back in under mutation --
+# it passed with block's ceiling at 174.8.
+STRAIGHT_LIMB_FLOOR = 168.0
+
+# Checks known to be unfireable, with the reason. serve's own reference contains a
+# 170.9-degree crouch knee: standing serves genuinely do not bend, so "you did not
+# load your legs" contradicts the data it would be judged against. Recording it
+# here beats pretending the check works.
+KNOWN_DEAD_HIGH_CHECKS = {
+    ("serve", "crouch", "knee"): (
+        "standing serves do not load the legs; the reference max is 170.9, so any "
+        "ceiling that keeps the reference clips green is above a straight leg"
+    ),
+}
+
+
+def test_high_side_checks_can_actually_fire():
+    """An issue code whose threshold is unreachable is decoration, not a check.
+
+    serve's crouch-knee ceiling was exactly 180.0 while the evaluator tests
+    `value > hi`, so `knee_bad` could never fire for any input at all. block sat
+    at 177.0, which a straight leg clears only about half the time. Both looked
+    healthy in reference_standards.json.
+    """
+    from backend.reference_evaluation import ACTION_RULES
+
+    dead = []
+    for action, phases in ACTION_RULES.items():
+        entry = reference_for(action)
+        for phase, joints in phases.items():
+            for joint, rule in joints.items():
+                if not rule.get("high"):
+                    continue
+                band, tolerance, _source = _band_for(action, entry, phase, joint)
+                if not band:
+                    continue
+                _lo, hi = _band_range(band, tolerance, has_high_rule=True)
+                if hi > STRAIGHT_LIMB_FLOOR:
+                    key = (action, phase, joint)
+                    if key not in KNOWN_DEAD_HIGH_CHECKS:
+                        dead.append(f"{action}.{phase}.{joint} ceiling {hi:.1f} "
+                                    f"sits above the straight-limb floor "
+                                    f"({STRAIGHT_LIMB_FLOOR}), so straight limbs "
+                                    f"reading below it are never reported")
+    assert not dead, (
+        "these high-side checks cannot fire; either bound the ceiling or record "
+        "them in KNOWN_DEAD_HIGH_CHECKS with a reason:\n  " + "\n  ".join(dead)
+    )
+
+
+def test_band_range_high_cap_uses_kept_maximum():
+    """Direct unit check, because the dataset cannot exercise this on its own.
+
+    Right now `max` and `max_kept` happen to be equal for every band that carries
+    a high-side code, so swapping one for the other changes nothing and a
+    data-driven test cannot see the difference. That is luck, not a property: `max`
+    is taken before IQR trimming, so one excluded outlier would silently raise the
+    ceiling. Synthetic bands pin the behaviour regardless of what the data does.
+    """
+    # An outlier at 178 was trimmed; the kept maximum is 150, so the cap applies.
+    band = {"p10": 100.0, "p90": 150.0, "max": 178.0, "max_kept": 150.0}
+    _lo, high = _band_range(band, 25.0, has_high_rule=True)
+    assert high == STRAIGHT_LIMB_FLOOR, (
+        f"expected the cap at {STRAIGHT_LIMB_FLOOR}, got {high} -- reading `max` "
+        "instead of `max_kept` would give 175.0 and skip the cap"
+    )
+
+    # Correct technique itself reaches past the floor: no ceiling can separate it
+    # from a straight limb, so leave the range alone rather than flag real form.
+    band = {"p10": 120.0, "p90": 167.0, "max": 171.0, "max_kept": 171.0}
+    _lo, high = _band_range(band, 19.0, has_high_rule=True)
+    assert high == 180.0, f"expected the range untouched, got {high}"
+
+    # No high-side code: nothing to keep live, so the cap must not apply.
+    band = {"p10": 100.0, "p90": 150.0, "max": 152.0, "max_kept": 152.0}
+    _lo, high = _band_range(band, 25.0, has_high_rule=False)
+    assert high == 175.0, f"cap applied without a high-side rule: {high}"
+
+
+def test_high_side_ceiling_never_flags_its_own_reference():
+    """The standard must not call the clips it KEPT wrong on the high side.
+
+    Compare against `max_kept`, not `max`. `max` is taken before IQR trimming, so
+    it can be a sample the calibration deliberately threw out -- set.contact.elbow
+    reports max 177.8 against a p90 of 154.0, and that outlier is *supposed* to sit
+    outside the accepted range. An earlier version of this test asserted against
+    `max` and failed on clean code for exactly that reason; the assertion was wrong,
+    not the product.
+    """
+    from backend.reference_evaluation import ACTION_RULES
+
+    for action, phases in ACTION_RULES.items():
+        entry = reference_for(action)
+        for phase, joints in phases.items():
+            for joint, rule in joints.items():
+                if not rule.get("high"):
+                    continue
+                band, tolerance, _source = _band_for(action, entry, phase, joint)
+                kept_max = band.get("max_kept")
+                if not band or kept_max is None:
+                    continue
+                _lo, hi = _band_range(band, tolerance, has_high_rule=True)
+                assert kept_max <= hi, (
+                    f"{action}.{phase}.{joint}: the largest KEPT sample {kept_max} "
+                    f"exceeds its own accepted ceiling {hi:.1f}, so a clip the "
+                    f"calibration accepted would be flagged by the standard it built"
+                )
+
+
 def main():
     test_receive_uses_platform_phase()
     test_set_uses_release_phase()
@@ -199,6 +317,9 @@ def main():
     test_block_uses_max_reach_phase()
     test_serve_flags_a_low_arm()
     test_serve_accepts_a_sound_standing_serve()
+    test_high_side_checks_can_actually_fire()
+    test_band_range_high_cap_uses_kept_maximum()
+    test_high_side_ceiling_never_flags_its_own_reference()
     print("phase reference ok")
     print("checked actions: receive, set, block, serve")
 

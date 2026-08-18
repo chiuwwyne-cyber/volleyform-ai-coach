@@ -110,10 +110,15 @@ JOINT_LANDMARKS = {
     "elbow": (11, 12, 13, 14, 15, 16),
     "shoulder": (11, 12, 13, 14, 23, 24),
 }
-# 「大幅出畫面」而不是「剛好切到邊」。腳踝落在 y=1.02、可見度 0.82 是被裁到,
-# 那個角度還可信;y=1.36、可見度 0.07 是 MediaPipe 自己說看不到卻仍生出座標。
-OFFSCREEN_Y = 1.10
-OFFSCREEN_VISIBILITY = 0.5
+# 兩層規則,兩層都是量出來的:
+#   * 明顯在畫面外(超過邊界 0.10 以上)—— **不管信心多高都丟**。
+#     `pexels_6217341` 是鏡頭在拍天花板追球、只有指尖在畫面下緣,MediaPipe 卻
+#     「有信心地」(vis 0.69-0.78)把整個上半身放在 y=1.01-1.14,算出 177.8° 的手肘。
+#     原本只看低信心的版本擋不掉它:**高信心的幻覺仍然是幻覺**。
+#   * 剛好切到邊(0 到 0.10)—— 只在低信心時丟。腳踝 y=1.02、可見度 0.82 是被裁到
+#     一點點,那個角度還可信,不該誤殺。
+OFFSCREEN_MARGIN = 0.10      # 超過畫面邊界多少算「明顯在外」
+OFFSCREEN_VISIBILITY = 0.5   # 邊緣地帶才用得到的信心門檻
 
 
 PHASE_SCOPE_PATH = os.path.join(DATASET_DIR, "clip_phase_scope.json")
@@ -167,9 +172,13 @@ def _joint_is_offscreen_guess(landmarks, joint):
     """
     for index in JOINT_LANDMARKS[joint]:
         landmark = landmarks[index]
-        outside = landmark.y > OFFSCREEN_Y or landmark.y < -0.10
-        if outside and landmark.visibility < OFFSCREEN_VISIBILITY:
-            return True
+        beyond = max(landmark.y - 1.0, -landmark.y)  # >0 表示在畫面外
+        if beyond <= 0.0:
+            continue
+        if beyond > OFFSCREEN_MARGIN:
+            return True   # 明顯在外:沒被觀測到就是沒被觀測到
+        if landmark.visibility < OFFSCREEN_VISIBILITY:
+            return True   # 只是擦邊,但模型自己也沒把握
     return False
 
 
@@ -232,6 +241,12 @@ def _band(values, joint):
         "p75": round(_percentile(trimmed, 0.75), 1),
         "p90": p90,
         "max": round(ordered[-1], 1),
+        # The largest sample the band actually KEPT. `max` above comes from the
+        # untrimmed list, so it can be an IQR outlier the calibration deliberately
+        # excluded -- anchoring anything to it would let a sample judged wrong
+        # widen the standard. set.contact.elbow shows the gap: max 177.8 against a
+        # p90 of 154.0.
+        "max_kept": round(trimmed[-1], 1),
         "tolerance": tolerance,
         "accepted_range": _accepted_range(p10, p90, tolerance),
         "convergence": convergence,

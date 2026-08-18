@@ -120,8 +120,38 @@ def reference_for(action_type):
     return entry
 
 
-def _band_range(band, tolerance):
-    return max(0.0, band["p10"] - tolerance), min(180.0, band["p90"] + tolerance)
+# A high-side issue code needs the ceiling to sit where the error can actually
+# land. Two requirements pull against each other, and the data says where they
+# meet:
+#
+#   * don't flag correct technique -> ceiling must clear the largest KEPT sample
+#   * catch a limb that never bent  -> ceiling must sit below what a straight limb
+#     reads, measured by synthesising one at realistic landmark noise (sigma 0.01):
+#     mean 176.4, minimum 168.3
+#
+# So the ceiling is capped at STRAIGHT_LIMB_FLOOR when that still clears the
+# reference. Without this, symmetric tolerance drove serve's crouch knee to
+# exactly 180.0 while the evaluator tests `value > hi` -- a check that looks live
+# in the UI and is arithmetically dead -- and block sat at 174.8, which a straight
+# leg clears only sometimes.
+#
+# When the largest kept sample is ALREADY above the floor, correct technique and
+# the error read the same, and no ceiling can separate them. serve is that case:
+# a standing serve genuinely does not bend the knees (max kept 170.9), so the
+# check is left alone and recorded as knowingly dead rather than faked.
+STRAIGHT_LIMB_FLOOR = 168.0
+
+
+def _band_range(band, tolerance, has_high_rule=False):
+    low = max(0.0, band["p10"] - tolerance)
+    high = min(180.0, band["p90"] + tolerance)
+    if has_high_rule:
+        # max_kept, not max: max is computed before IQR trimming, so a sample the
+        # calibration excluded could otherwise raise the ceiling.
+        observed_max = band.get("max_kept", band.get("max"))
+        if observed_max is not None and float(observed_max) < STRAIGHT_LIMB_FLOOR:
+            high = min(high, STRAIGHT_LIMB_FLOOR)
+    return low, high
 
 
 def _reference_tolerance(band):
@@ -199,7 +229,7 @@ def _evaluate_joint(
     if value is None:
         return None
 
-    lo, hi = _band_range(band, tolerance)
+    lo, hi = _band_range(band, tolerance, has_high_rule=bool(rule.get("high")))
     status = "green"
     issue_code = None
     direction = "ok"

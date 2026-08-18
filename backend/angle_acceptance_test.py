@@ -8,6 +8,7 @@ if ROOT_DIR not in sys.path:
 
 from backend.reference_evaluation import (  # noqa: E402
     ACTION_RULES,
+    _band_range,
     _reference_tolerance,
     evaluate_with_reference,
     reference_for,
@@ -84,8 +85,27 @@ def _slight_low_angle(action, phase, joint):
 
 
 def _slight_high_angle(action, phase, joint):
+    """A value a real user might reach that must still be judged fine.
+
+    Derived from the ACCEPTED range, not from p90 + tolerance directly. Those
+    differ once a joint's high side carries an error code: `_band_range` then caps
+    the ceiling at the straight-limb floor, because a check whose threshold sits
+    where no reading can reach is decoration.
+
+    Computing the "inside tolerance" value from the raw band ignored that cap and
+    produced a value OUTSIDE the accepted range, which the evaluator is supposed
+    to flag. block was the case that exposed it: p90 151.4 + 0.8 * 23.4 = 170.1,
+    against an accepted ceiling of 168.0, while a straight leg reads from 168.3.
+    Asserting 170.1 must pass is asserting that "you never bent your knees" can
+    never be reported for a block.
+    """
     band, tolerance = _band(action, phase, joint)
-    return min(180.0, band["p90"] + max(1.0, tolerance * 0.8))
+    rule = ACTION_RULES.get(action, {}).get(phase, {}).get(joint, {})
+    _low, high = _band_range(band, tolerance, has_high_rule=bool(rule.get("high")))
+    naive = min(180.0, band["p90"] + max(1.0, tolerance * 0.8))
+    # Stay a degree inside the ceiling so the test asserts "accepted", not "exactly
+    # on the boundary".
+    return min(naive, high - 1.0)
 
 
 def _wrong_low_angle(action, phase, joint):
