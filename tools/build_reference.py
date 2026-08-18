@@ -22,6 +22,7 @@ if ROOT_DIR not in sys.path:
 from angle.angle import get_angles
 from backend.phase_segmentation import segment_action
 from pose.pose import get_pose_from_video
+from backend.reference_evaluation import ACTION_RULES, _band_range
 from tools.sync_frontend import sync_frontend
 
 DATASET_DIR = os.path.join(ROOT_DIR, "dataset")
@@ -172,7 +173,10 @@ def _joint_is_offscreen_guess(landmarks, joint):
     """
     for index in JOINT_LANDMARKS[joint]:
         landmark = landmarks[index]
-        beyond = max(landmark.y - 1.0, -landmark.y)  # >0 表示在畫面外
+        # x 跟 y 都要看。只檢查 y 的話,跑出畫面左右邊界的 landmark 仍會被採用,
+        # 而那同樣是沒被觀測到的位置。
+        beyond = max(landmark.y - 1.0, -landmark.y,
+                     getattr(landmark, "x", 0.5) - 1.0, -getattr(landmark, "x", 0.5))
         if beyond <= 0.0:
             continue
         if beyond > OFFSCREEN_MARGIN:
@@ -223,7 +227,7 @@ def _accepted_range(p10, p90, tolerance):
     ]
 
 
-def _band(values, joint):
+def _band(values, joint, has_high_rule=False):
     ordered, trimmed, outliers = _trim_outliers(values)
     raw_count = len(values)
     p10 = round(_percentile(trimmed, 0.10), 1)
@@ -248,7 +252,20 @@ def _band(values, joint):
         # p90 of 154.0.
         "max_kept": round(trimmed[-1], 1),
         "tolerance": tolerance,
-        "accepted_range": _accepted_range(p10, p90, tolerance),
+        # Computed through the evaluator's own _band_range, not re-derived here.
+        # This field used to be `p10/p90 +/- tolerance` while the evaluator capped
+        # the high side, so the published artifact advertised 174.8 for block where
+        # the app actually enforced 168.0 -- a false contract for anyone reading
+        # the JSON, and it is exactly the "output-only field drifts from the code"
+        # trap that already bit this project once.
+        "accepted_range": [
+            round(value, 1)
+            for value in _band_range(
+                {"p10": p10, "p90": p90, "max_kept": round(trimmed[-1], 1)},
+                tolerance,
+                has_high_rule=has_high_rule,
+            )
+        ],
         "convergence": convergence,
         "convergence_state": _convergence_state(convergence, raw_count),
     }
@@ -341,7 +358,8 @@ def main():
             for joint, values in samples[phase].items():
                 if not values:
                     continue
-                band = _band(values, joint)
+                rule = ACTION_RULES.get(action, {}).get(phase, {}).get(joint, {})
+                band = _band(values, joint, has_high_rule=bool(rule.get("high")))
                 skipped = dropped.get(f"{phase}.{joint}", [])
                 if skipped:
                     # Recorded in the output, not just printed: a band quietly built

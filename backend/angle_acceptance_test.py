@@ -113,9 +113,20 @@ def _wrong_low_angle(action, phase, joint):
     return band["p10"] - tolerance - 8.0
 
 
+# A joint angle cannot exceed 180 degrees. Deriving the "clearly wrong" input as
+# `p90 + tolerance + 8` produced 195.2 for serve and 182.8 for block -- values the
+# pose pipeline can never emit, so the assertion that they get flagged was proving
+# nothing at all for those bands. Where 180 cannot clear the ceiling, the check
+# genuinely cannot fire, and the caller says so instead of asserting on a fiction.
+JOINT_PHYSICAL_MAX = 180.0
+
+
 def _wrong_high_angle(action, phase, joint):
     band, tolerance = _band(action, phase, joint)
-    return band["p90"] + tolerance + 8.0
+    rule = ACTION_RULES.get(action, {}).get(phase, {}).get(joint, {})
+    _low, high = _band_range(band, tolerance, has_high_rule=bool(rule.get("high")))
+    wrong = high + 8.0
+    return None if wrong > JOINT_PHYSICAL_MAX else wrong
 
 
 def _default_angles(action):
@@ -229,20 +240,29 @@ def test_clear_wrong_angles_are_reported():
                 result = evaluate_with_reference(action, frames)
                 assert issue in result["issues"], (action, phase, joint, result)
 
+    unreachable = []
     for action, phases in EXPECTED_HIGH_ISSUES.items():
         for phase, joints in phases.items():
             for joint, issue in joints.items():
+                wrong = _wrong_high_angle(action, phase, joint)
+                if wrong is None:
+                    # No angle a joint can physically reach clears this ceiling, so
+                    # there is nothing to assert. serve is the live case: correct
+                    # standing serves already read above the straight-limb floor.
+                    unreachable.append(f"{action}.{phase}.{joint}")
+                    continue
                 frames = _frames_for(
                     action,
-                    contact_angles={joint: _wrong_high_angle(action, phase, joint)}
-                    if phase == "contact"
-                    else {},
-                    crouch_angles={joint: _wrong_high_angle(action, phase, joint)}
-                    if phase == "crouch"
-                    else {},
+                    contact_angles={joint: wrong} if phase == "contact" else {},
+                    crouch_angles={joint: wrong} if phase == "crouch" else {},
                 )
                 result = evaluate_with_reference(action, frames)
                 assert issue in result["issues"], (action, phase, joint, result)
+
+    # Say it out loud rather than passing quietly: a skipped case is a check the
+    # app advertises and cannot perform.
+    if unreachable:
+        print(f"  note: high-side unreachable, not asserted: {', '.join(unreachable)}")
 
 
 def test_reference_data_is_converged_enough_for_public_beta():
