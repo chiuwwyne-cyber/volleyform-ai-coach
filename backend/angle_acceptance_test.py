@@ -279,9 +279,57 @@ def test_reference_data_is_converged_enough_for_public_beta():
                 assert band["tolerance"] <= 24.0
 
 
+def test_bent_knee_is_never_reported_as_unbent():
+    """A `min` threshold fires when the joint IS bent, so it must not say the opposite.
+
+    spike and serve emitted `knee_bad` at knee < 150 in both the realtime heuristic
+    and JOINT_SPECS. `knee_bad` renders as "knees did not bend along, not absorbing
+    enough", so a user who bent their knees was told they had not. block and receive
+    already used `knee_too_bent` for the same shape of test, which is what made this
+    a mistake rather than a choice -- and serve's own comment read "lower-body
+    stability (do not over-bend)", naming the meaning its label denied.
+
+    Checks the data rather than one call site, so a new action inherits the guard.
+    """
+    from angle.pose_correction import JOINT_SPECS
+
+    wrong = [
+        f"{action}.{joint} fires at angle < {spec['min']} but reports {spec['code']!r}"
+        for action, joints in JOINT_SPECS.items()
+        for joint, spec in joints.items()
+        if spec.get("min") is not None and spec.get("code") == "knee_bad"
+    ]
+    assert not wrong, (
+        "these thresholds fire on a BENT joint while reporting it never bent: "
+        + "; ".join(wrong)
+    )
+
+
+def test_realtime_and_reference_agree_on_knee_direction():
+    """The two paths must not disagree about which way `knee_bad` points.
+
+    The reference path uses knee_bad for the HIGH side (legs never bent), which is
+    what the user-facing wording says. Anything firing it on a low reading
+    contradicts that, and the app runs both paths.
+    """
+    from angle.pose_correction import JOINT_SPECS
+    from backend.reference_evaluation import ACTION_RULES
+
+    for action, phases in ACTION_RULES.items():
+        for phase, joints in phases.items():
+            rule = joints.get("knee") or {}
+            if rule.get("high") == "knee_bad":
+                spec = (JOINT_SPECS.get(action) or {}).get("knee") or {}
+                assert spec.get("code") != "knee_bad", (
+                    f"{action}: reference uses knee_bad for the HIGH side while the "
+                    f"heuristic fires it at a LOW reading"
+                )
+
 def main():
     test_professional_midline_angles_pass()
     test_slight_user_variation_inside_tolerance_passes()
+    test_bent_knee_is_never_reported_as_unbent()
+    test_realtime_and_reference_agree_on_knee_direction()
     test_clear_wrong_angles_are_reported()
     test_reference_data_is_converged_enough_for_public_beta()
     print("angle acceptance ok")

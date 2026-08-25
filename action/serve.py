@@ -15,7 +15,7 @@ def check_serve(angles):
 
     # 下半身穩定性（不要過度彎）
     if knee < 150:
-        problems.append("knee_bad")
+        problems.append("knee_too_bent")
 
     # 沒問題
     if not problems:

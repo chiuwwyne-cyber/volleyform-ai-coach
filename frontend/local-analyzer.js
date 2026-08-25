@@ -539,7 +539,10 @@ function checkAction(action, angles, positions, hands) {
   const issues = [];
   if (action === "spike") {
     if (angles.elbow < 150) issues.push("elbow_bad");
-    if (angles.knee < 150) issues.push("knee_bad");
+    // knee_too_bent, not knee_bad: this branch fires when the knee IS bent past
+    // the threshold, while knee_bad reads "knees did not bend along". block and
+    // receive below already used the right code for the same shape of test.
+    if (angles.knee < 150) issues.push("knee_too_bent");
   } else if (action === "block") {
     if (angles.elbow < 165) issues.push("elbow_not_straight");
     if (angles.shoulder < 150) issues.push("hands_not_high");
@@ -547,7 +550,7 @@ function checkAction(action, angles, positions, hands) {
   } else if (action === "serve") {
     if (angles.elbow < 150) issues.push("elbow_bad");
     if (angles.shoulder < 140) issues.push("shoulder_low");
-    if (angles.knee < 150) issues.push("knee_bad");
+    if (angles.knee < 150) issues.push("knee_too_bent");
   } else if (action === "receive") {
     if (angles.elbow < 160) issues.push("elbow_bad");
     if (angles.knee < 140) issues.push("knee_too_bent");
@@ -1349,7 +1352,7 @@ function issuePayload(code, count, timeSeconds = []) {
 }
 
 const JOINT_SPECS = {
-  spike: { elbow: { min: 150, code: "elbow_bad" }, knee: { min: 150, code: "knee_bad" } },
+  spike: { elbow: { min: 150, code: "elbow_bad" }, knee: { min: 150, code: "knee_too_bent" } },
   block: {
     elbow: { min: 165, code: "elbow_not_straight" },
     shoulder: { min: 150, code: "hands_not_high" },
@@ -1358,7 +1361,7 @@ const JOINT_SPECS = {
   serve: {
     elbow: { min: 150, code: "elbow_bad" },
     shoulder: { min: 140, code: "shoulder_low" },
-    knee: { min: 150, code: "knee_bad" },
+    knee: { min: 150, code: "knee_too_bent" },
   },
   receive: { elbow: { min: 160, code: "elbow_bad" }, knee: { min: 140, code: "knee_too_bent" } },
   set: {

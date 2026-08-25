@@ -17,7 +17,9 @@ RIGHT = {
 JOINT_SPECS = {
     "spike": {
         "elbow": {"min": 150, "code": "elbow_bad"},
-        "knee": {"min": 150, "code": "knee_bad"},
+        # knee_too_bent, not knee_bad: a `min` threshold fires when the joint is
+        # BENT past it, and knee_bad means the opposite ("knees did not bend").
+        "knee": {"min": 150, "code": "knee_too_bent"},
     },
     "block": {
         "elbow": {"min": 165, "code": "elbow_not_straight"},
@@ -27,7 +29,7 @@ JOINT_SPECS = {
     "serve": {
         "elbow": {"min": 150, "code": "elbow_bad"},
         "shoulder": {"min": 140, "code": "shoulder_low"},
-        "knee": {"min": 150, "code": "knee_bad"},
+        "knee": {"min": 150, "code": "knee_too_bent"},
     },
     "receive": {
         "elbow": {"min": 160, "code": "elbow_bad"},

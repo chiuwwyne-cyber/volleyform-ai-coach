@@ -10,7 +10,7 @@ def check_spike(angles):
 
     # 膝蓋判斷（防受傷🔥）
     if knee < 150:
-        problems.append("knee_bad")
+        problems.append("knee_too_bent")
 
     # 沒問題
     if not problems:
