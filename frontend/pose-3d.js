@@ -999,6 +999,12 @@ const HEAD_RADIUS = 0.145;
 // Front/back markers. Dark visor = the face, small dim patch = the back of the
 // head, so which way the figure is facing is readable at a glance.
 const FACE_COLOR = 0x2b2f36;
+// The trunk wears a dark shirt. It reads as clothing rather than as a stain,
+// which is what the old chest patch looked like, and it separates the trunk from
+// the shorts and limbs at a glance. Deliberately NOT applied to hips or limbs:
+// those carry the red/yellow joint-status colouring, and a dark base would fight
+// it. The torso parts are never status-coloured, so the shirt is free of that.
+const SHIRT_COLOR = 0x2b2f36;
 const BACK_COLOR = 0x9aa0a8;
 const SET_SIDE_ANGLE_DEG = -58;
 
@@ -1889,10 +1895,10 @@ function createFigure(scene) {
   }));
   for (const limb of limbs) group.add(limb.mesh);
 
-  const torsoMesh = makeUnitCapsule(TORSO_RADIUS, BODY_COLOR);
+  const torsoMesh = makeUnitCapsule(TORSO_RADIUS, SHIRT_COLOR);
   group.add(torsoMesh);
 
-  const chestMesh = makeSphere(CHEST_RADIUS, BODY_COLOR);
+  const chestMesh = makeSphere(CHEST_RADIUS, SHIRT_COLOR);
   group.add(chestMesh);
 
   const pelvisMesh = makeSphere(PELVIS_RADIUS, BODY_SHADOW_COLOR);
@@ -1928,8 +1934,13 @@ function createFigure(scene) {
   // square in cross-section, so yawing it barely changes its silhouette -- the
   // chest can be turned 60 degrees and still look like the same blank slab.
   // A patch on the front of the chest gives the torso itself a readable facing.
-  const chestFrontMesh = makeSphere(HEAD_RADIUS * 0.6, FACE_COLOR, 18, 14);
-  chestFrontMesh.scale.set(1, 1.25, 0.3);
+  // A light collar at the neckline. It replaces a dark patch that read as a stain
+  // on the chest, but it keeps that patch's actual job: this mannequin's torso is
+  // close to square in cross-section, so yawing it barely changes its silhouette,
+  // and a dark shirt alone would have the same problem. A collar sitting on the
+  // front of the shirt still tells you which way the trunk faces.
+  const chestFrontMesh = makeSphere(HEAD_RADIUS * 0.52, BODY_COLOR, 18, 14);
+  chestFrontMesh.scale.set(1.15, 0.55, 0.32);
   group.add(chestFrontMesh);
 
   const handDetails = ["L", "R"].map(createHandDetail);
@@ -1995,6 +2006,9 @@ function createFigure(scene) {
       const geometry = data.geometries[name];
       if (!geometry) continue;
       const mesh = new THREE.Mesh(geometry, material());
+      // Only the torso wears the shirt; hips stay light so the shorts read as a
+      // separate garment, and the head stays light so the face is legible on it.
+      if (name === "torso") mesh.material.color.setHex(SHIRT_COLOR);
       krunk.group.add(mesh);
       krunk.torsoParts.push({ mesh, name });
     }
@@ -2091,9 +2105,12 @@ function createFigure(scene) {
           faceMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
           backMesh.position.copy(headPos).addScaledVector(forward, -HEAD_RADIUS * 0.88);
           backMesh.quaternion.copy(faceMesh.quaternion);
-          // Chest patch: sits on the front of the upper torso and turns with it.
+          // Collar: sits at the neckline rather than mid-chest, which is what makes
+          // it read as clothing. Its job is still the facing cue, so it stays on
+          // the front and turns with the trunk.
+          const collarPos = shoulderMid.clone().lerp(hipMid, 0.08);
           chestFrontMesh.visible = true;
-          chestFrontMesh.position.copy(chestPos).addScaledVector(forward, HEAD_RADIUS * 0.62);
+          chestFrontMesh.position.copy(collarPos).addScaledVector(forward, HEAD_RADIUS * 0.58);
           chestFrontMesh.quaternion.copy(faceMesh.quaternion);
         } else {
           faceMesh.visible = false;
