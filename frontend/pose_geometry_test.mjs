@@ -26,7 +26,7 @@ const source = fs.readFileSync(path.join(root, "frontend", "pose-3d.js"), "utf8"
 const stubbed =
   "const THREE = globalThis.__THREE;\n" +
   source.replace(/^import[^\n]*\n/gm, "").replace(/^export function createPoseViewport[\s\S]*$/m, "") +
-  "\nexport { buildSequence, SPIKE_SEQUENCES, CORRECT_CYCLES, orientKrunkPart, orientKrunkTorso, toVec3, midVec3, preparePoseSequenceForDisplay };\n";
+  "\nexport { buildSequence, SPIKE_SEQUENCES, CORRECT_CYCLES, orientKrunkPart, orientKrunkTorso, toVec3, midVec3, preparePoseSequenceForDisplay, makeSmileyFace, HEAD_RADIUS };\n";
 const tmp = path.join(process.env.TEMP || root, `pose_geom_${Date.now()}.mjs`);
 fs.writeFileSync(tmp, stubbed, "utf8");
 globalThis.__THREE = THREE;
@@ -132,6 +132,52 @@ assert.ok(Math.max(...torsoSpread) - Math.min(...torsoSpread) > 30,
     "per-frame rescaling is back and the figure will pulse");
 }
 
+
+// ---- the facing marker is a face, and it faces forward -------------------
+// The figure has no readable front without this marker: the trunk rotation was
+// repeatedly reported as "not turning" while the geometry provably moved,
+// because a smooth head looks identical from any angle. A smiley says "front"
+// more directly than the dark patch it replaced, so the parts that make it read
+// as a face -- two eyes above a mouth that curves upward -- are load-bearing.
+{
+  const face = mod.makeSmileyFace(mod.HEAD_RADIUS);
+  const eyes = face.children.filter((c) => c.geometry.type === "SphereGeometry");
+  const mouth = face.children.find((c) => c.geometry.type === "TorusGeometry");
+  assert.strictEqual(eyes.length, 2, "the face needs two eyes");
+  assert.ok(mouth, "the face needs a mouth");
+  assert.ok(
+    Math.abs(eyes[0].position.x + eyes[1].position.x) < 1e-9,
+    "eyes must sit symmetrically about the centre line",
+  );
+  assert.ok(eyes[0].position.y > mouth.position.y, "eyes must sit above the mouth");
+  assert.ok(
+    face.children.every((c) => c.position.z >= 0),
+    "every feature must sit in front of the head, or it is buried inside it",
+  );
+
+  // Curvature, not just presence. A torus arc rotated the other way is a frown,
+  // and nothing else in the suite would notice.
+  mouth.updateMatrix();
+  const attr = mouth.geometry.attributes.position;
+  const pts = [];
+  for (let i = 0; i < attr.count; i += 1) {
+    pts.push(new THREE.Vector3().fromBufferAttribute(attr, i).applyMatrix4(mouth.matrix));
+  }
+  const xs = pts.map((v) => v.x);
+  const lo = Math.min(...xs);
+  const hi = Math.max(...xs);
+  const meanYNear = (target) => {
+    const near = pts.filter((v) => Math.abs(v.x - target) < (hi - lo) * 0.08);
+    return near.reduce((sum, v) => sum + v.y, 0) / near.length;
+  };
+  const centreY = meanYNear((lo + hi) / 2);
+  assert.ok(
+    centreY < meanYNear(lo) && centreY < meanYNear(hi),
+    `mouth curves the wrong way: centre ${centreY.toFixed(4)} should sit BELOW both ` +
+    "ends for a smile -- as drawn it is a frown",
+  );
+}
+
 // ---- nothing may go non-finite ------------------------------------------
 for (const action of ["spike", "serve", "receive", "block", "set"]) {
   for (const f of framesOf(action)) {
@@ -140,4 +186,4 @@ for (const action of ["spike", "serve", "receive", "block", "set"]) {
 }
 
 console.log("pose geometry ok");
-console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability");
+console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability, smiley facing marker");

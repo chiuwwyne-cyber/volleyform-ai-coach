@@ -1737,6 +1737,36 @@ function makeUnitCapsule(radius, color) {
   return new THREE.Mesh(geometry, material);
 }
 
+function makeSmileyFace(headRadius) {
+  const face = new THREE.Group();
+  const featureMaterial = () =>
+    new THREE.MeshStandardMaterial({ color: FACE_COLOR, roughness: 0.5, metalness: 0.03 });
+
+  // Eyes sit slightly proud of the head so they never z-fight with its surface.
+  const eyeRadius = headRadius * 0.11;
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(eyeRadius, 14, 10), featureMaterial());
+    eye.position.set(side * headRadius * 0.33, headRadius * 0.20, headRadius * 0.02);
+    eye.scale.set(1, 1.15, 0.6);
+    face.add(eye);
+  }
+
+  // A torus arc for the mouth. TorusGeometry sweeps from angle 0 (+x) counter-
+  // clockwise, so rotating by (270 degrees - arc/2) centres the visible span on
+  // the bottom of the circle, which is the curve that reads as a smile.
+  const arc = Math.PI * 0.7;
+  const mouth = new THREE.Mesh(
+    new THREE.TorusGeometry(headRadius * 0.30, headRadius * 0.045, 8, 28, arc),
+    featureMaterial(),
+  );
+  mouth.rotation.z = Math.PI * 1.5 - arc / 2;
+  mouth.position.set(0, headRadius * 0.06, headRadius * 0.02);
+  mouth.scale.set(1, 0.85, 0.6);
+  face.add(mouth);
+
+  return face;
+}
+
 function makeSphere(radius, color, widthSegments = 20, heightSegments = 16) {
   const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
   const material = new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0.035 });
@@ -1880,8 +1910,15 @@ function createFigure(scene) {
   // These two markers give the figure a front and a back. They are drawn for
   // the Krunk mesh as well as the capsule fallback, since the Krunk head is a
   // plain sphere too.
-  const faceMesh = makeSphere(HEAD_RADIUS * 0.42, FACE_COLOR, 18, 14);
-  faceMesh.scale.set(1, 0.78, 0.42);
+  // A smiley rather than a blank patch. The marker exists so the trunk's facing
+  // is readable at all -- eyes and a mouth say "this is the front" far more
+  // directly than a dark blob, and they stay legible when the figure is small.
+  //
+  // Built as a Group whose local +z is forward, because the placement code below
+  // orients it with setFromUnitVectors((0,0,1), forward) and copies its
+  // quaternion onto the back-of-head and chest markers. Keeping the name and the
+  // shape of that contract means none of the positioning code changes.
+  const faceMesh = makeSmileyFace(HEAD_RADIUS);
   group.add(faceMesh);
   const backMesh = makeSphere(HEAD_RADIUS * 0.24, BACK_COLOR, 14, 10);
   backMesh.scale.set(1, 0.5, 0.32);
