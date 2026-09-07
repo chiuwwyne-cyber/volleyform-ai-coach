@@ -79,6 +79,12 @@ ACTION_RULES = {
         "contact": {
             "elbow": {"low": "elbow_bad"},
             "knee": {"low": "knee_too_bent", "high": "knee_bad"},
+            # Deliberately empty, not an oversight. The receive shoulder IS judged --
+            # by lobster_receive_risk below, which fires on shoulder AND elbow
+            # together rather than on either band alone, because a low shoulder is
+            # only a fault when the arms are also bent. A standalone band here would
+            # flag correct low platforms. test_receive_shoulder_is_covered_elsewhere
+            # fails if that combined rule ever goes away and leaves this a real gap.
             "shoulder": {},
         },
     },

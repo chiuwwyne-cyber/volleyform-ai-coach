@@ -238,7 +238,13 @@ const SPIKE_SEQUENCES = {
       root: [0, 0, -0.28], hold: 560, cue: "最後左腳：腳尖微內扣，身體側身準備起跳", ball: [0.16, -1.26, -0.04], spikePhase: "plant",
     },
     {
-      elbow: 148, knee: 100, shoulder: 6, armSwingL: -32, armSwingR: -32,
+      // knee 118, not 100. At 100 the demo measured 99.1 degrees against a
+      // knee_too_bent threshold of 94.8 -- 4.3 degrees of margin, the tightest of
+      // any joint in any phase, and below the p10 of every reference clip. The app
+      // would tell a user "you bent your knees too much" for a crouch barely
+      // deeper than the form it demonstrates. 118 keeps a deep athletic load and
+      // clears the threshold by ~20 degrees.
+      elbow: 148, knee: 118, shoulder: 6, armSwingL: -32, armSwingR: -32,
       root: [0, 0, -0.02], hold: 620, cue: "拉弓蓄力：左肩往前，右肩往後拉", ball: [0.17, -1.2, 0.02], spikePhase: "load",
     },
     {
@@ -510,7 +516,13 @@ function shapeServeBiomechanics(points, variant, frame = {}) {
     setPoint(points, 15, -0.16, head[1] + 0.38, -0.04);
     setOpenSpikeHand(points, "L", points[15], 0.65, 0);
     setPoint(points, 16, 0.34, head[1] - 0.24, -0.46);
-    placeElbowOnLine(points, 12, 14, 16, 0.09, 0.09);
+    // Bow 0.04, not 0.09. The elbow is placed at the midpoint of shoulder->wrist
+    // plus this offset, so a bigger bow is a more bent arm. At 0.09 the hitting
+    // elbow measured 141.1 degrees against a reference median of 162.9 -- more
+    // bent than 90% of the clips the standard is built from, while the app's own
+    // message for this joint reads "elbow too bent, not opened up". Scanned the
+    // bow against the real buildSequence output to land on the median.
+    placeElbowOnLine(points, 12, 14, 16, 0.04, 0.04);
     setOpenSpikeHand(points, "R", points[16], 1, -0.01);
   } else {
     setPoint(points, 13, -0.18, head[1] + 0.28, -0.02);

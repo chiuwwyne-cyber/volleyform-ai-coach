@@ -178,6 +178,102 @@ assert.ok(Math.max(...torsoSpread) - Math.min(...torsoSpread) > 30,
   );
 }
 
+
+// ---- the demo must clear the standard it teaches ------------------------
+// The demo IS the app's statement of correct form, so anything it shows that the
+// evaluator would flag is the app contradicting itself. Two did: the spike load
+// crouched to 99.1 degrees against a knee_too_bent threshold of 94.8 -- 4.3
+// degrees of margin -- and the serve contact elbow sat at 141.1 against a
+// reference median of 162.9, more bent than 90% of the clips, while the message
+// for that joint reads "elbow too bent, not opened up".
+//
+// Margin, not a pass/fail on the boundary, because "technically inside" is how
+// the spike load survived. accepted_range is the enforced range: build_reference
+// derives it from the evaluator itself, and evaluation_parity_test pins that.
+{
+  const standards = JSON.parse(
+    fs.readFileSync(path.join(root, "backend", "reference_standards.json"), "utf8"),
+  ).actions;
+  // Demo phase -> the phase the evaluator judges.
+  const JUDGED = {
+    spike:   { contact: "contact", load: "crouch" },
+    serve:   { serve_contact: "contact", serve_load: "crouch" },
+    block:   { block_press: "contact", block_load: "crouch" },
+    receive: { receive_platform: "contact" },
+    set:     { set_release: "contact" },
+  };
+  // Backend aggregation: angle/angle.py takes knee = min(left, right) and
+  // elbow/shoulder = max(...). The bands were built with these semantics, so the
+  // comparison has to use them. (local-analyzer averages instead -- the known
+  // divergence evaluation_parity_test records.)
+  const AGG = { knee: Math.min, elbow: Math.max, shoulder: Math.max };
+  const TRIPLES = {
+    knee:     [[23, 25, 27], [24, 26, 28]],
+    elbow:    [[11, 13, 15], [12, 14, 16]],
+    shoulder: [[13, 11, 23], [14, 12, 24]],
+  };
+  // Which SIDE of each band actually carries an issue code, mirrored from
+  // ACTION_RULES. Measuring a bound that has no code is measuring something that
+  // can never fire: the first version of this check failed on
+  // spike.contact.shoulder for sitting 3.9 degrees from a 180 ceiling that no
+  // code watches. Explicit here so a backend change surfaces as a failure.
+  const SIDES = {
+    "spike.contact.elbow": ["low"], "spike.contact.shoulder": ["low"],
+    "spike.crouch.knee": ["low", "high"],
+    "serve.contact.elbow": ["low"], "serve.contact.shoulder": ["low"],
+    "serve.crouch.knee": ["low", "high"],
+    "block.contact.elbow": ["low"], "block.contact.shoulder": ["low"],
+    "block.crouch.knee": ["low", "high"],
+    "receive.contact.elbow": ["low"], "receive.contact.knee": ["low", "high"],
+    "receive.contact.shoulder": [],
+    "set.contact.elbow": ["low", "high"], "set.contact.shoulder": ["low"],
+  };
+  const MIN_MARGIN = 10;
+  const tight = [];
+  for (const [action, phases] of Object.entries(JUDGED)) {
+    for (const [demoPhase, judged] of Object.entries(phases)) {
+      const points = at(action, demoPhase);
+      const bands = standards[action]?.phases?.[judged] || {};
+      for (const [joint, band] of Object.entries(bands)) {
+        const key = `${action}.${judged}.${joint}`;
+        const sides = SIDES[key];
+        assert.ok(sides !== undefined, `${key} is not listed in SIDES; add it`);
+        if (!sides.length) continue;
+        const both = TRIPLES[joint].map(([a, b, c]) =>
+          jointAngle(points[a], points[b], points[c]));
+        const value = AGG[joint](...both);
+        const [lo, hi] = band.accepted_range;
+        const margins = [];
+        if (sides.includes("low")) margins.push(value - lo);
+        if (sides.includes("high")) margins.push(hi - value);
+        const margin = Math.min(...margins);
+        // Margin is not the only way a demo goes wrong. The serve contact elbow
+        // sat at 141.1 with a comfortable 14.9 degrees of margin, yet it was below
+        // the p10 of every reference clip -- a more bent arm than 90% of correct
+        // form, for a joint whose message reads "elbow too bent, not opened up".
+        // So the demo also has to sit INSIDE the distribution on any side that
+        // reports an issue, not merely inside the tolerance.
+        if (sides.includes("low") && value < band.p10) {
+          tight.push(`${key}: demo ${value.toFixed(1)} is below p10 ${band.p10} -- ` +
+            "more extreme than 90% of the clips the standard is built from, on the " +
+            "side the coaching pushes against");
+        }
+        if (sides.includes("high") && value > band.p90) {
+          tight.push(`${key}: demo ${value.toFixed(1)} is above p90 ${band.p90} -- ` +
+            "more extreme than 90% of the reference clips");
+        }
+        if (margin < MIN_MARGIN) {
+          tight.push(`${key}: demo ${value.toFixed(1)} sits ${margin.toFixed(1)} ` +
+            `deg from [${lo}, ${hi}] on a side that reports an issue`);
+        }
+      }
+    }
+  }
+  assert.ok(tight.length === 0,
+    "demo poses too close to being flagged by the app own standard: " +
+      tight.join("; "));
+}
+
 // ---- nothing may go non-finite ------------------------------------------
 for (const action of ["spike", "serve", "receive", "block", "set"]) {
   for (const f of framesOf(action)) {
@@ -186,4 +282,4 @@ for (const action of ["spike", "serve", "receive", "block", "set"]) {
 }
 
 console.log("pose geometry ok");
-console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability, smiley facing marker");
+console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability, smiley facing marker, demo clears its own standard");

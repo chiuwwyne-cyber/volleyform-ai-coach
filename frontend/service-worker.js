@@ -1,4 +1,4 @@
-const CACHE_NAME = "volleyform-shell-v95-5b5b7480";
+const CACHE_NAME = "volleyform-shell-v96-2547ff46";
 const APP_SHELL = [
   "./",
   "./index.html",

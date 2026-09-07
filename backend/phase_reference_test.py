@@ -310,6 +310,50 @@ def test_high_side_ceiling_never_flags_its_own_reference():
                 )
 
 
+def test_receive_shoulder_is_covered_elsewhere():
+    """The empty receive shoulder rule is safe only while the lobster rule reads shoulder.
+
+    ACTION_RULES["receive"]["contact"]["shoulder"] is {} on purpose: a standalone
+    band there would flag correct low platforms, because a receive shoulder is
+    only a fault when the arms are bent too. lobster_receive_risk carries that
+    judgement instead. If someone ever simplifies that rule down to the elbow
+    alone -- or removes it -- the empty table stops being a deliberate choice and
+    becomes a real hole where the shoulder is never judged at all.
+    """
+    from backend.reference_evaluation import ACTION_RULES
+
+    assert ACTION_RULES["receive"]["contact"]["shoulder"] == {}, (
+        "this test exists to justify an EMPTY receive shoulder rule; a real band "
+        "now exists, so re-read the reasoning before deleting either one"
+    )
+
+    def _receive(shoulder):
+        return [
+            _frame(0.52, 0.26, 0.60, _base_angles()),
+            _frame(0.50, 0.22, 0.62, _base_angles()),
+            _frame(0.55, 0.18, 0.64, _base_angles()),
+            _frame(0.54, 0.14, 0.66, _base_angles()),
+            _frame(0.54, 0.02, 0.68, _base_angles(elbow=95, shoulder=shoulder)),
+            _frame(0.57, 0.20, 0.65, _base_angles()),
+        ]
+
+    dropped = evaluate_with_reference("receive", _receive(shoulder=35))
+    assert "lobster_receive_risk" in dropped["issues"], (
+        "a receive with bent arms AND dropped shoulders reports nothing about the "
+        "shoulder, and the rule table has no band to fall back on: {0}".format(dropped["issues"])
+    )
+
+    # The half that mutation testing needs. Same bent elbow, shoulders held up:
+    # if the rule ever stops reading shoulder, this still says lobster and the
+    # assertion above passes for the wrong reason.
+    lifted = evaluate_with_reference("receive", _receive(shoulder=140))
+    assert "lobster_receive_risk" not in lifted["issues"], (
+        "lobster_receive_risk fired on a receive whose shoulders were at 140 "
+        "degrees, so it is no longer reading the shoulder -- the empty rule "
+        "table is now a genuine gap: {0}".format(lifted["issues"])
+    )
+
+
 def main():
     test_receive_uses_platform_phase()
     test_set_uses_release_phase()
@@ -320,6 +364,7 @@ def main():
     test_high_side_checks_can_actually_fire()
     test_band_range_high_cap_uses_kept_maximum()
     test_high_side_ceiling_never_flags_its_own_reference()
+    test_receive_shoulder_is_covered_elsewhere()
     print("phase reference ok")
     print("checked actions: receive, set, block, serve")
 
