@@ -1,3 +1,5 @@
+import json
+import math
 import os
 import sys
 from types import SimpleNamespace
@@ -13,6 +15,12 @@ from backend.reference_evaluation import (
     evaluate_with_reference,
     reference_for,
 )
+
+
+def _standards():
+    path = os.path.join(ROOT_DIR, "backend", "reference_standards.json")
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 def _point(x=0.5, y=0.5, z=0.0):
@@ -354,6 +362,141 @@ def test_receive_shoulder_is_covered_elsewhere():
     )
 
 
+def test_joint_model_catches_what_the_bands_cannot():
+    """Elbow 130 with shoulder 175 is inside BOTH block bands and still wrong.
+
+    The bands judge each joint alone, which assumes they move independently. In a
+    real block they do not -- elbow and shoulder correlate at r=0.87 -- so the pair
+    of bands accepts a rectangle that no reference clip occupies the corners of.
+    A bent elbow with the shoulder driven to its limit is one of those corners:
+    both numbers pass, the combination never happens.
+
+    Hard-coded angles on purpose. Deriving them from the fitted model would make
+    the test agree with whatever the model says, including after the model breaks.
+    """
+    frames = [
+        _frame(0.42, 0.20, 0.60, _base_angles()),
+        _frame(0.36, 0.18, 0.65, _base_angles(knee=170)),
+        _frame(0.30, 0.14, 0.61, _base_angles()),
+        _frame(0.20, 0.10, 0.55, _base_angles(elbow=130, shoulder=175)),
+        _frame(0.28, 0.14, 0.58, _base_angles()),
+        _frame(0.40, 0.18, 0.60, _base_angles()),
+    ]
+
+    result = evaluate_with_reference("block", frames)
+
+    assert result["contact_index"] == 3
+    assert "elbow_not_straight" not in result["issues"], (
+        "130 should be inside the block elbow band; if it is not, this test is no "
+        f"longer testing the joint model: {result['issues']}"
+    )
+    assert "hands_not_high" not in result["issues"], result["issues"]
+    assert "elbow_shoulder_mismatch" in result["issues"], (
+        "the joint model let through a pose that is inside both bands and outside "
+        f"every reference clip: {result['issues']}"
+    )
+
+
+def test_joint_model_leaves_sound_form_alone():
+    """And the middle of the reference distribution must stay silent.
+
+    This is the false-positive half. An extra check can only ADD flags, so it is
+    the one kind of change that can make the app worse for players who are already
+    doing it right -- the exact failure this project weights heaviest.
+    """
+    frames = [
+        _frame(0.42, 0.20, 0.60, _base_angles()),
+        _frame(0.36, 0.18, 0.65, _base_angles(knee=170)),
+        _frame(0.30, 0.14, 0.61, _base_angles()),
+        _frame(0.20, 0.10, 0.55, _base_angles(elbow=152, shoulder=139)),
+        _frame(0.28, 0.14, 0.58, _base_angles()),
+        _frame(0.40, 0.18, 0.60, _base_angles()),
+    ]
+
+    result = evaluate_with_reference("block", frames)
+
+    assert "elbow_shoulder_mismatch" not in result["issues"], result["issues"]
+    model = result["report"]["phases"]["contact"].get("joint_model")
+    assert model is not None, "the joint model should report even when it passes"
+    assert model["status"] == "green", model
+    assert model["distance"] < model["threshold"], model
+
+
+def test_joint_model_does_not_pile_on():
+    """When a band already flagged the joint, the joint model stays quiet.
+
+    Elbow 100 with shoulder 175 is 8.25 away from the reference centre, so the
+    model would happily fire -- but the elbow band already said "arm not straight",
+    and saying it twice in different words reads as two problems. Every extra
+    message spends the trust that makes the others worth reading.
+    """
+    frames = [
+        _frame(0.42, 0.20, 0.60, _base_angles()),
+        _frame(0.36, 0.18, 0.65, _base_angles(knee=170)),
+        _frame(0.30, 0.14, 0.61, _base_angles()),
+        _frame(0.20, 0.10, 0.55, _base_angles(elbow=100, shoulder=175)),
+        _frame(0.28, 0.14, 0.58, _base_angles()),
+        _frame(0.40, 0.18, 0.60, _base_angles()),
+    ]
+
+    result = evaluate_with_reference("block", frames)
+
+    assert "elbow_not_straight" in result["issues"], result["issues"]
+    assert "elbow_shoulder_mismatch" not in result["issues"], (
+        "the joint model piled onto a fault the band already reported: "
+        f"{result['issues']}"
+    )
+
+
+def test_joint_model_threshold_still_clears_its_own_reference():
+    """The cutoff itself needs a guard, because no behaviour test covers it.
+
+    Dropping the block threshold from 3.3 to 0.5 -- which would flag very nearly
+    every block a user ever films -- passed all three behaviour tests above. They
+    check a pose the model should catch and a pose it should not, and a pose at the
+    centre of the distribution stays inside even an absurd cutoff. So the tests can
+    all be green while the check has become a false-positive machine.
+
+    These are the two rules build_reference applies when it picks the number, read
+    back off the published file:
+      * above max_accepted_md -- clears every clip the bands already accept, so the
+        new check invents no flag on footage the calibration called correct
+      * at least sqrt(chi2(0.99, df=2)) -- never rejects more than ~1% of its own
+        fitted distribution
+    and the third rule, that the model still rejects enough of the accepted box to
+    be worth its risk.
+    """
+    # Mirrored from tools/build_reference.py rather than imported: that module pulls
+    # in mediapipe, and a several-second import in a fast unit test gets skipped.
+    MAHALANOBIS_FLOOR = 3.03
+    JOINT_MODEL_MIN_GAIN = 0.05
+
+    standards = _standards()["actions"]
+    checked = 0
+    for action, entry in sorted(standards.items()):
+        model = entry.get("joint_model")
+        if not model:
+            continue
+        checked += 1
+        key = f"{action}.{model['phase']}"
+        assert model["threshold"] > model["max_accepted_md"], (
+            f"{key}: cutoff {model['threshold']} does not clear {model['max_accepted_md']}, "
+            "the worst clip the bands already accept -- the joint check would flag a "
+            "clip the calibration itself treats as correct form"
+        )
+        assert model["threshold"] >= MAHALANOBIS_FLOOR, (
+            f"{key}: cutoff {model['threshold']} rejects "
+            f"{100 * math.exp(-model['threshold'] ** 2 / 2):.0f}% of the model's own "
+            "distribution; anything under 3.03 is a false-positive storm"
+        )
+        assert model["newly_rejected"] >= JOINT_MODEL_MIN_GAIN, (
+            f"{key}: this model now rejects only {model['newly_rejected']:.1%} of what "
+            "the independent bands accept, so it agrees with them and only adds a way "
+            "to be wrong -- drop it from JOINT_MODEL_PHASES rather than keep it"
+        )
+    assert checked, "no joint model found in reference_standards.json"
+
+
 def main():
     test_receive_uses_platform_phase()
     test_set_uses_release_phase()
@@ -365,6 +508,10 @@ def main():
     test_band_range_high_cap_uses_kept_maximum()
     test_high_side_ceiling_never_flags_its_own_reference()
     test_receive_shoulder_is_covered_elsewhere()
+    test_joint_model_catches_what_the_bands_cannot()
+    test_joint_model_leaves_sound_form_alone()
+    test_joint_model_does_not_pile_on()
+    test_joint_model_threshold_still_clears_its_own_reference()
     print("phase reference ok")
     print("checked actions: receive, set, block, serve")
 

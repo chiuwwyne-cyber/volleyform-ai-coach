@@ -53,6 +53,41 @@ assert.ok(/const knee = average\(\[/.test(source),
   "local-analyzer's knee aggregation changed -- if it now matches the backend's " +
   "min(left, right), delete this assertion and the note in the ADR");
 
+// --- 4. the joint model is deliberately backend-only, and here is the number ---
+// block and set carry a joint elbow/shoulder model (reference_standards.json
+// -> joint_model). The backend evaluator runs it. local-analyzer.js does NOT, and
+// that is a measured decision rather than an oversight.
+//
+// The model is fitted on backend-aggregated angles: elbow and shoulder as
+// max(left, right). The browser averages the two sides instead -- the divergence
+// assertion above. Re-measuring all 38 block and set clips with both aggregations
+// (tools/dump_per_side_angles.py) showed what that costs a JOINT model, which is
+// much more than it costs a single band:
+//
+//   set    0 / 21 clips newly flagged, mean Mahalanobis shift +0.01  -> safe
+//   block  3 / 17 clips newly flagged, mean Mahalanobis shift +0.37  -> NOT safe
+//
+// Three assumed-correct block clips would be told their elbow and shoulder do not
+// go together, purely because the browser measures the pair differently from the
+// model that judges it. Shipping that to the on-device path -- the path real users
+// are on -- would be the exact false positive this project weights heaviest.
+//
+// The root cause is the aggregation divergence, not the model. Fix that first; then
+// delete this assertion and run the model in both places.
+// The embedded REFERENCE_STANDARDS literal carries joint_model as DATA -- sync_frontend
+// copies the whole file across -- so the check has to look at the code around it, not
+// at the file as a whole. Stripping the literal first is what makes this assertion
+// mean "no code reads it" instead of "the string does not appear".
+const dataStart = source.indexOf("const REFERENCE_STANDARDS = {");
+const dataEnd = dataStart < 0 ? -1 : source.indexOf("\n};", dataStart);
+assert.ok(dataEnd > dataStart, "could not locate the embedded REFERENCE_STANDARDS literal");
+const code = source.slice(0, dataStart) + source.slice(dataEnd + 3);
+assert.ok(!/joint_model/.test(code),
+  "local-analyzer.js now reads joint_model. Before shipping it to the browser, " +
+  "re-run tools/dump_per_side_angles.py: with averaged aggregation the block model " +
+  "flagged 3 of 17 assumed-correct clips. Either the aggregation now matches the " +
+  "backend, or this needs a model fitted on averaged angles.");
+
 console.log("evaluation parity ok");
 console.log("checked: straight-limb floor, max_kept anchor, published ceilings, " +
-  "known aggregation divergence");
+  "known aggregation divergence, joint model kept backend-only");

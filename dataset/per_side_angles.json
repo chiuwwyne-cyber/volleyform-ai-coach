@@ -1,0 +1,498 @@
+{
+ "rows": [
+  {
+   "action": "block",
+   "clip": "pexels_10350518.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 164.09,
+    "shoulder": 148.4
+   },
+   "elbow_left": 164.09,
+   "elbow_right": 144.65,
+   "shoulder_left": 148.4,
+   "shoulder_right": 147.83
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350520.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 155.07,
+    "shoulder": 151.36
+   },
+   "elbow_left": 155.07,
+   "elbow_right": 145.96,
+   "shoulder_left": 151.36,
+   "shoulder_right": 141.75
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179826.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 135.2,
+    "shoulder": 138.78
+   },
+   "elbow_left": 135.2,
+   "elbow_right": 67.7,
+   "shoulder_left": 138.78,
+   "shoulder_right": 77.25
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179961.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 168.06,
+    "shoulder": 132.42
+   },
+   "elbow_left": 168.06,
+   "elbow_right": 164.84,
+   "shoulder_left": 112.71,
+   "shoulder_right": 132.42
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6216855.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 158.69,
+    "shoulder": 146.07
+   },
+   "elbow_left": 157.11,
+   "elbow_right": 158.69,
+   "shoulder_left": 143.16,
+   "shoulder_right": 146.07
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217064.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 140.62,
+    "shoulder": 139.63
+   },
+   "elbow_left": 140.62,
+   "elbow_right": 139.96,
+   "shoulder_left": 113.67,
+   "shoulder_right": 139.63
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217113.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 149.89,
+    "shoulder": 135.29
+   },
+   "elbow_left": 149.89,
+   "elbow_right": 148.05,
+   "shoulder_left": 130.09,
+   "shoulder_right": 135.29
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217180.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 87.6,
+    "shoulder": 63.64
+   },
+   "elbow_left": 87.6,
+   "elbow_right": 24.21,
+   "shoulder_left": 15.33,
+   "shoulder_right": 63.64
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217270.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 152.47,
+    "shoulder": 126.14
+   },
+   "elbow_left": 143.95,
+   "elbow_right": 152.47,
+   "shoulder_left": 122.82,
+   "shoulder_right": 126.14
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217333.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 161.75,
+    "shoulder": 141.84
+   },
+   "elbow_left": 161.75,
+   "elbow_right": 145.04,
+   "shoulder_left": 141.84,
+   "shoulder_right": 130.47
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217349.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 164.06,
+    "shoulder": 170.97
+   },
+   "elbow_left": 164.06,
+   "elbow_right": 158.1,
+   "shoulder_left": 34.32,
+   "shoulder_right": 170.97
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_01.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 161.85,
+    "shoulder": 157.39
+   },
+   "elbow_left": 157.55,
+   "elbow_right": 161.85,
+   "shoulder_left": 151.39,
+   "shoulder_right": 157.39
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_02.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 141.91,
+    "shoulder": 124.19
+   },
+   "elbow_left": 140.86,
+   "elbow_right": 141.91,
+   "shoulder_left": 124.19,
+   "shoulder_right": 121.23
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_03.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 162.03,
+    "shoulder": 138.57
+   },
+   "elbow_left": 162.03,
+   "elbow_right": 138.43,
+   "shoulder_left": 138.57,
+   "shoulder_right": 130.48
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_04.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 150.14,
+    "shoulder": 126.48
+   },
+   "elbow_left": 142.41,
+   "elbow_right": 150.14,
+   "shoulder_left": 126.48,
+   "shoulder_right": 54.35
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_05.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 154.06,
+    "shoulder": 148.55
+   },
+   "elbow_left": 154.06,
+   "elbow_right": 149.05,
+   "shoulder_left": 148.55,
+   "shoulder_right": 148.26
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_06.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 173.86,
+    "shoulder": 165.09
+   },
+   "elbow_left": 161.23,
+   "elbow_right": 173.86,
+   "shoulder_left": 148.26,
+   "shoulder_right": 165.09
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217116.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 111.57,
+    "shoulder": 102.15
+   },
+   "elbow_left": 98.79,
+   "elbow_right": 111.57,
+   "shoulder_left": 102.15,
+   "shoulder_right": 93.9
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217125.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 98.03,
+    "shoulder": 84.6
+   },
+   "elbow_left": 98.03,
+   "elbow_right": 80.73,
+   "shoulder_left": 65.65,
+   "shoulder_right": 84.6
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217182.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 172.79,
+    "shoulder": 133.29
+   },
+   "elbow_left": 154.66,
+   "elbow_right": 172.79,
+   "shoulder_left": 133.29,
+   "shoulder_right": 130.41
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_01.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 119.42,
+    "shoulder": 117.17
+   },
+   "elbow_left": 114.75,
+   "elbow_right": 119.42,
+   "shoulder_left": 106.45,
+   "shoulder_right": 117.17
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_02.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 121.88,
+    "shoulder": 109.6
+   },
+   "elbow_left": 102.85,
+   "elbow_right": 121.88,
+   "shoulder_left": 105.07,
+   "shoulder_right": 109.6
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_03.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 99.17,
+    "shoulder": 102.52
+   },
+   "elbow_left": 99.17,
+   "elbow_right": 97.91,
+   "shoulder_left": 89.01,
+   "shoulder_right": 102.52
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_04.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 108.0,
+    "shoulder": 83.55
+   },
+   "elbow_left": 101.29,
+   "elbow_right": 108.0,
+   "shoulder_left": 83.55,
+   "shoulder_right": 80.89
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_05.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 111.3,
+    "shoulder": 75.25
+   },
+   "elbow_left": 86.46,
+   "elbow_right": 111.3,
+   "shoulder_left": 72.07,
+   "shoulder_right": 75.25
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_06.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 112.97,
+    "shoulder": 100.93
+   },
+   "elbow_left": 105.51,
+   "elbow_right": 112.97,
+   "shoulder_left": 90.33,
+   "shoulder_right": 100.93
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_07.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 126.75,
+    "shoulder": 83.33
+   },
+   "elbow_left": 100.34,
+   "elbow_right": 126.75,
+   "shoulder_left": 77.68,
+   "shoulder_right": 83.33
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_08.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 121.61,
+    "shoulder": 91.65
+   },
+   "elbow_left": 117.73,
+   "elbow_right": 121.61,
+   "shoulder_left": 90.75,
+   "shoulder_right": 91.65
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_09.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 133.44,
+    "shoulder": 132.5
+   },
+   "elbow_left": 119.36,
+   "elbow_right": 133.44,
+   "shoulder_left": 121.5,
+   "shoulder_right": 132.5
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_10.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 137.98,
+    "shoulder": 123.05
+   },
+   "elbow_left": 137.98,
+   "elbow_right": 120.27,
+   "shoulder_left": 123.05,
+   "shoulder_right": 122.23
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_11.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 133.51,
+    "shoulder": 129.02
+   },
+   "elbow_left": 133.51,
+   "elbow_right": 125.7,
+   "shoulder_left": 129.02,
+   "shoulder_right": 128.12
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_12.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 130.82,
+    "shoulder": 135.75
+   },
+   "elbow_left": 130.82,
+   "elbow_right": 126.57,
+   "shoulder_left": 132.29,
+   "shoulder_right": 135.75
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_13.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 144.77,
+    "shoulder": 128.79
+   },
+   "elbow_left": 144.77,
+   "elbow_right": 139.45,
+   "shoulder_left": 128.79,
+   "shoulder_right": 127.64
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_14.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 113.2,
+    "shoulder": 89.57
+   },
+   "elbow_left": 113.2,
+   "elbow_right": 90.29,
+   "shoulder_left": 81.37,
+   "shoulder_right": 89.57
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_15.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 118.92,
+    "shoulder": 88.15
+   },
+   "elbow_left": 118.92,
+   "elbow_right": 108.43,
+   "shoulder_left": 76.34,
+   "shoulder_right": 88.15
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_16.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 116.38,
+    "shoulder": 88.22
+   },
+   "elbow_left": 116.38,
+   "elbow_right": 101.83,
+   "shoulder_left": 74.64,
+   "shoulder_right": 88.22
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_17.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 153.3,
+    "shoulder": 126.98
+   },
+   "elbow_left": 121.95,
+   "elbow_right": 153.3,
+   "shoulder_left": 117.63,
+   "shoulder_right": 126.98
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_18.mp4",
+   "phase": "contact",
+   "pipeline": {
+    "elbow": 102.96,
+    "shoulder": 90.89
+   },
+   "elbow_left": 98.06,
+   "elbow_right": 102.96,
+   "shoulder_left": 90.89,
+   "shoulder_right": 87.12
+  }
+ ]
+}

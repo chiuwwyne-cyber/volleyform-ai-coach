@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260908-frontend-sync-v96"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260914-frontend-sync-v101"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1298,6 +1298,7 @@ const phaseIssueTips = {
   wrist_low: "舉球出手點要在額頭上方，不要讓球掉到臉前才推出去。",
   receive_platform_unbalanced: "接球平台兩手高度要一致，先移動腳步再固定前臂。",
   receive_hands_apart: "雙手要先扣好再接球，避免球碰到單邊手臂。",
+  elbow_shoulder_mismatch: "讓肩膀和手肘一起往上延伸，不要一個先到位、另一個還留著。",
   lobster_receive_risk: "接球時不要用彎手肘去撈球，容易變成羅波球或讓手肘代償。",
   setting_hands_not_detected: "請讓雙手完整入鏡，舉球判斷才會穩。",
   setting_fingers_closed: "手指打開成碗狀，讓球從指腹離手。",
@@ -1362,6 +1363,8 @@ const phaseProblemPhrases = {
   elbow_position_bad: "手肘位置沒抓好",
   knee_bad: "膝蓋沒有跟著一起彎、吸震不夠",
   knee_too_bent: "膝蓋彎得太多",
+  elbow_shoulder_mismatch: "手肘和肩膀沒有一起動",
+  lobster_receive_risk: "用彎手肘去撈球，容易變成羅波球",
   wrist_low: "手腕位置太低",
 };
 
