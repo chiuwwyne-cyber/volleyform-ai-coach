@@ -1,0 +1,3075 @@
+{
+ "rows": [
+  {
+   "action": "spike",
+   "clip": "pexels_6179970.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 166.71,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6179970.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 121.51,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6179970.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 129.83,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216849.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 157.28,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216849.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 153.63,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216849.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 144.14,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216850.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 155.85,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216850.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 91.93,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216850.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 138.45,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216851.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 141.89,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216851.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 158.74,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216851.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 111.59,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216852.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 172.54,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216852.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 171.21,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216852.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 145.9,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216861.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 122.14,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216861.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 26.36,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216863.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 91.42,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216863.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 81.16,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216865.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 156.51,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216865.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 159.55,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216962.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 145.28,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216962.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 116.02,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216963.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 167.8,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216963.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 160.24,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6216963.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 68.05,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217187.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 153.75,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217187.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 144.62,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217187.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 149.17,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217189.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 151.93,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217189.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 131.7,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217189.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 76.98,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217269.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 166.22,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217269.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 147.87,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217269.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 137.25,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217330.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 165.85,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217330.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 173.69,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217330.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 139.8,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217334.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 114.23,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217334.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 160.95,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217335.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 139.03,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217335.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 148.33,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217335.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 143.52,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217338.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 157.36,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217338.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 159.92,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "pexels_6217338.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 148.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_01.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 163.94,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_01.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 123.0,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_01.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 101.81,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_02.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 161.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_02.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 119.08,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_02.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 117.06,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_03.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 156.11,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_03.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 158.59,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "spike",
+   "clip": "usertut_spike_03.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 125.0,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_10350521.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 145.24,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_10350521.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 136.25,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_10350521.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 105.87,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_10350524.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 147.9,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_10350524.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 112.1,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_10350524.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 137.76,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_12169479.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 135.52,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_12169479.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 79.47,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_12169479.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 161.45,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_12169508.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 106.9,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_12169508.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 121.72,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_12169508.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 116.01,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6216953.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 146.69,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6216953.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 130.4,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6216953.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 149.02,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6216964.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 148.77,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6216964.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 107.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6216964.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 151.34,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217069.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 114.68,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217069.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 64.41,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217069.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 153.02,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217175.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 116.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217175.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 157.04,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217175.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 150.51,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217188.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 162.9,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217188.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 124.63,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217188.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 148.73,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217265.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 177.41,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217265.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 157.0,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217265.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 99.36,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217331.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 164.04,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217331.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 140.18,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217331.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 97.66,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217332.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 159.64,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217332.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 133.01,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217332.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 163.26,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217337.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 132.07,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217337.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 79.96,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217337.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 167.41,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217339.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 166.27,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217339.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 154.77,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "pexels_6217339.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 144.5,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_01.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 167.06,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_01.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 133.88,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_02.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 155.68,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_02.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 130.05,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_03.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 163.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_03.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 130.75,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_04.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 163.82,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_04.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 132.17,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_05.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 162.58,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_05.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 124.46,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_05.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 135.76,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_06.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 164.67,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_06.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 125.42,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_07.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 173.11,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_07.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 151.64,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_08.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 140.52,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_08.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 148.89,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_09.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 165.39,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_09.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 152.13,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_09.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 152.66,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_11.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 163.36,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_11.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 145.57,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_11.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 167.82,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_12.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 169.1,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_12.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 155.96,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_12.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 170.92,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_13.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 152.96,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_13.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 150.19,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "serve",
+   "clip": "usertut_serve_13.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 161.87,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350518.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 164.09,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350518.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 148.4,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350518.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 23.55,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350520.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 155.07,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350520.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 151.36,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_10350520.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 153.7,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179826.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 135.2,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179826.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 138.78,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179826.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 141.05,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179836.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 155.94,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179836.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 167.08,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179836.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 88.51,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179961.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 168.06,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179961.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 132.42,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6179961.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 120.13,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6216855.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 158.69,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6216855.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 146.07,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6216855.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 99.76,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217064.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 140.62,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217064.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 139.63,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217064.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 121.72,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217113.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 149.89,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217113.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 135.29,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217113.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 121.49,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217180.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 87.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217180.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 63.64,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217180.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 153.89,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217270.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 152.47,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217270.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 126.14,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217270.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 125.59,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217333.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 161.75,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217333.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 141.84,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217333.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 128.31,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217349.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 164.06,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217349.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 170.97,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "pexels_6217349.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 151.95,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_01.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 161.85,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_01.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 157.39,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_01.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 137.35,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_02.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 141.91,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_02.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 124.19,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_02.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 157.09,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_03.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 162.03,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_03.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 138.57,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_03.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 148.46,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_04.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 150.14,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_04.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 126.48,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_04.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 158.91,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_05.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 154.06,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_05.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 148.55,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_06.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 173.86,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_block_06.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 165.09,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_08.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 124.41,
+   "kept": false,
+   "scoped_out": true,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_08.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 149.37,
+   "kept": false,
+   "scoped_out": true,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_08.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 105.42,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_09.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 138.89,
+   "kept": false,
+   "scoped_out": true,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_09.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 131.34,
+   "kept": false,
+   "scoped_out": true,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_09.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 80.89,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_10.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 123.22,
+   "kept": false,
+   "scoped_out": true,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_10.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 89.66,
+   "kept": false,
+   "scoped_out": true,
+   "offscreen": false
+  },
+  {
+   "action": "block",
+   "clip": "usertut_blockgame_10.mp4",
+   "phase": "crouch",
+   "joint": "knee",
+   "angle": 151.09,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169404.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 145.28,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169404.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 129.99,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169404.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 81.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169435.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 96.52,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169435.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 95.26,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169435.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 16.83,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169454.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 159.31,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169454.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 111.9,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169454.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 76.64,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169455.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 170.08,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169455.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 145.18,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169455.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 45.28,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169640.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 159.44,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169640.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 133.4,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169640.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 27.01,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6179955.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 174.16,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6179955.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 138.79,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6179955.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 51.12,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216862.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 173.59,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216862.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 102.47,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216862.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 76.09,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216965.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 145.7,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216965.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 84.03,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216965.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 23.77,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217278.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 150.03,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217278.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 128.46,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217278.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 38.6,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217340.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 164.77,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217340.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 146.27,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217340.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 49.05,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217342.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 137.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217342.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 150.08,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217342.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 29.05,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217344.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 147.43,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217344.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 160.13,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217344.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 40.74,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_01.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 157.21,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_01.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 121.38,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_01.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 60.26,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_02.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 96.51,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_02.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 149.23,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_02.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 147.84,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_03.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 171.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_03.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 121.23,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_03.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 132.41,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_04.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 171.5,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_04.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 91.73,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_04.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 73.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_05.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 160.26,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_05.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 96.3,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_05.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 96.38,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_06.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 167.04,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_06.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 103.97,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_06.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 58.74,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_07.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 170.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_07.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 66.76,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_07.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 65.06,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_08.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 162.35,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_08.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 150.42,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_08.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 59.8,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_09.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 161.37,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_09.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 130.61,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_09.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 22.1,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_10.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 162.82,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_10.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 136.4,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_10.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 33.41,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_11.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 168.65,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_11.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 90.3,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_11.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 101.28,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_12.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 156.31,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_12.mp4",
+   "phase": "contact",
+   "joint": "knee",
+   "angle": 149.64,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_12.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 125.55,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6179974.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 154.37,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6179974.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 144.76,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217115.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 151.29,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217115.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 130.77,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217116.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 111.57,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217116.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 102.15,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217125.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 98.03,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217125.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 84.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217182.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 172.79,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217182.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 133.29,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217341.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 177.82,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217341.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 166.44,
+   "kept": false,
+   "scoped_out": false,
+   "offscreen": true
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_01.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 119.42,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_01.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 117.17,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_02.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 121.88,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_02.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 109.6,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_03.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 99.17,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_03.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 102.52,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_04.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 108.0,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_04.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 83.55,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_05.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 111.3,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_05.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 75.25,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_06.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 112.97,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_06.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 100.93,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_07.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 126.75,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_07.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 83.33,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_08.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 121.61,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_08.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 91.65,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_09.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 133.44,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_09.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 132.5,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_10.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 137.98,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_10.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 123.05,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_11.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 133.51,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_11.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 129.02,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_12.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 130.82,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_12.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 135.75,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_13.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 144.77,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_13.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 128.79,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_14.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 113.2,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_14.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 89.57,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_15.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 118.92,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_15.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 88.15,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_16.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 116.38,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_16.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 88.22,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_17.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 153.3,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_17.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 126.98,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_18.mp4",
+   "phase": "contact",
+   "joint": "elbow",
+   "angle": 102.96,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_18.mp4",
+   "phase": "contact",
+   "joint": "shoulder",
+   "angle": 90.89,
+   "kept": true,
+   "scoped_out": false,
+   "offscreen": false
+  }
+ ],
+ "skipped_clips": []
+}
