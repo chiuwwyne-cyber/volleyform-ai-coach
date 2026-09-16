@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-08-18",
+  "generated": "2026-09-16",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -146,74 +146,74 @@
       }
     },
     "block": {
-      "clips": 21,
+      "clips": 23,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 16,
-            "raw_count": 17,
+            "count": 18,
+            "raw_count": 19,
             "outliers": 1,
             "min": 87.6,
-            "p10": 141.3,
-            "p25": 150.1,
-            "p50": 156.9,
-            "p75": 162.5,
-            "p90": 166.1,
+            "p10": 141.5,
+            "p25": 150.0,
+            "p50": 154.6,
+            "p75": 162.0,
+            "p90": 165.3,
             "max": 173.9,
             "max_kept": 173.9,
-            "tolerance": 15.4,
+            "tolerance": 15.1,
             "accepted_range": [
-              125.9,
+              126.4,
               180.0
             ],
-            "convergence": 0.83,
+            "convergence": 0.88,
             "convergence_state": "stable",
             "dropped_offscreen": 1,
-            "clips_available": 18
+            "clips_available": 20
           },
           "shoulder": {
-            "count": 17,
-            "raw_count": 18,
+            "count": 19,
+            "raw_count": 20,
             "outliers": 1,
             "min": 63.6,
-            "p10": 126.3,
-            "p25": 135.3,
+            "p10": 126.4,
+            "p25": 136.1,
             "p50": 141.8,
-            "p75": 151.4,
-            "p90": 165.9,
+            "p75": 154.4,
+            "p90": 167.3,
             "max": 171.0,
             "max_kept": 171.0,
-            "tolerance": 16.7,
+            "tolerance": 16.8,
             "accepted_range": [
               109.6,
               180.0
             ],
-            "convergence": 0.83,
+            "convergence": 0.87,
             "convergence_state": "stable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 7,
-            "raw_count": 7,
+            "count": 9,
+            "raw_count": 9,
             "outliers": 0,
             "min": 80.9,
-            "p10": 95.6,
-            "p25": 113.5,
-            "p50": 125.6,
-            "p75": 139.7,
-            "p90": 151.4,
+            "p10": 82.0,
+            "p25": 105.4,
+            "p50": 121.5,
+            "p75": 128.3,
+            "p90": 151.3,
             "max": 151.9,
             "max_kept": 151.9,
-            "tolerance": 23.4,
+            "tolerance": 22.2,
             "accepted_range": [
-              72.2,
+              59.8,
               168.0
             ],
-            "convergence": 0.54,
+            "convergence": 0.6,
             "convergence_state": "usable",
             "dropped_offscreen": 12,
-            "clips_available": 19
+            "clips_available": 21
           }
         }
       }

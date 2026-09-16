@@ -203,7 +203,7 @@ pushed p10 down to ~45. All 11 backend + 1 frontend tests pass.
 | usertut_set_01..08.mp4 | user-provided single-player set tutorial (trimmed) |
 | usertut_set_09..18.mp4 | 2nd user set tutorial (videoplayback (10), trimmed) |
 
-## block (21 clips; 3 are crouch-only, see clip_phase_scope.json)
+## block (23 clips; 3 are crouch-only, see clip_phase_scope.json)
 
 Expanded 6->12 (2026-08-05, Pexels) then 12->18 (2026-08-07) with 6 clips
 (usertut_block_01..06) trimmed from a user-provided single-player over-net
@@ -599,3 +599,119 @@ Quote those floors against the sample count, not the clip count.
 > have never been error-measured, and the standing (~110–150) and jump (~90–105)
 > ranges are only 5 degrees apart at the nearest edge — so a low value is a reason
 > to look, not a classification.
+
+## block 21 -> 23, and three videos rejected (2026-09-16)
+
+Block was the only action where adding clips could still move anything: its
+crouch.knee band rested on 7 samples after the visibility gate, with a minimum of
+120.1 before 2026-08-18 and only one genuinely deep load (80.9) after. contact
+elbow/shoulder were at 17 and 18 of the 20-clip target, so those were nearly full
+and gaining little. Four user-supplied videos were processed; two were used.
+
+**Accepted: usertut_block_07.mp4** — trimmed from a 10.4s portrait (360x640)
+tutorial whose on-screen captions number four drills. Steps 1-3 are standing
+footwork with the knees never bending (the shape that forced the 2026-08-07
+receive revert), so only step 4 was taken: frames 235-311, one complete rep of
+crouch, jump and land.
+
+Everything this clip needs to be usable was measured rather than assumed:
+
+- **Legs in frame the whole time.** The visibility gate drops nothing. This is the
+  binding constraint for block — 8 of the 12 existing Pexels block clips lose
+  their crouch sample to off-frame legs, a 33% hit rate.
+- **He really leaves the ground.** Ankle y runs 0.755 at rest and 0.589 at the
+  peak, a lift of 0.175 of frame height, airborne from frame 272 to 288.
+- **It is a two-arm block, not a one-arm reach.** At the peak both wrists sit at
+  0.11-0.16 with a gap of 0.01-0.04.
+- **The static net-touch in step 3 did not steal the contact frame.** That was the
+  live risk: `_segment_overhead` takes the globally highest smoothed wrist, and a
+  held overhead reach can beat a real strike (the reason usertut_serve_10 was
+  quarantined). Measured, contact lands on frame 282, mid-flight.
+- **The trim does not change the answer.** Whole video gives crouch 81.9 / elbow
+  143.6 / shoulder 137.9; the trimmed clip gives 82.3 / 143.9 / 136.9.
+
+Contribution: crouch.knee 7 -> 8 samples, p10 95.6 -> 81.9, accepted floor
+72.2 -> 57.9. **The looser floor is the same correction as 2026-08-18, not a
+relaxation** — the band now has a second independent clip saying a block load
+reaches ~82 degrees, where before it had one. The floor moves because tolerance is
+23.4 at n=8; it tightens again as samples arrive. Convergence: contact.elbow
+0.83 -> 0.85, contact.shoulder 0.83 -> 0.86, crouch.knee 0.54 (unchanged — the
+extra sample's count credit was cancelled by the wider IQR). All 14 tests pass.
+
+**Accepted: usertut_block_11.mp4** — frames 261-336 of a 13.2s portrait technique
+demo that alternates correct and incorrect blocks, labelled on screen with a green
+tick and a red cross. The overlay was used to segment the video automatically by
+sampling the icon's colour: three correct spans (0-59, 117-197, 261-336) and three
+incorrect (60-113, 204-257, 342-396).
+
+**The incorrect spans are the hazard in this video and none were taken.** The
+dataset is built from assumed-correct footage; a deliberate demonstration of wrong
+technique would teach the band that wrong form is correct.
+
+Of the three correct spans only one was used:
+
+- **0-59 rejected** — ankle y 1.058 with visibility 0.06, so the gate drops the
+  crouch anyway, and hip tracking jumps 0.135 per step (above the 0.08 seen in
+  clean footage).
+- **117-197 not taken** — usable (legs visible, tracking 0.065) but it is a FRONT
+  view, where knee flexion happens almost entirely along the depth axis MediaPipe
+  estimates worst. Held back rather than rejected; measured crouch 130.7.
+- **261-336 accepted** — side view, the most reliable angle for a knee, and the
+  steadiest tracking of the three (0.043).
+
+Contribution: crouch.knee 8 -> 9, p10 82.0 (the deep end is preserved), IQR
+34.4 -> 22.9, convergence 0.54 -> 0.60. Its contact.shoulder of 167.9 sits above
+the band's p90 of 165.7; recorded rather than excluded because block's shoulder
+rule carries only a low-side code (`hands_not_high`), so nothing watches the high
+side and the sample cannot produce a false positive.
+
+| File | Source |
+|---|---|
+| usertut_block_07.mp4 | user-supplied numbered block tutorial, step 4 only (frames 235-311) |
+| usertut_block_11.mp4 | user-supplied correct/incorrect block demo, side-view correct span only (frames 261-336) |
+
+### Rejected whole: talking-head block tutorial (2026-09-16)
+
+A 16-minute, 29017-frame explainer (640x360). The captions are genuinely about
+blocking — T-SPREADS, THUMB POINTS, TIGER POUNCE, SUPPORT THE SPIKER'S SPACE —
+but the video is a man standing in a gym talking to camera. **The content is
+right and the form is unusable: it teaches concepts, it does not demonstrate
+reps.**
+
+A 96-frame visual sample across the whole video showed zero jumps. A coarse
+MediaPipe sweep (every 15th frame, 1911 frames) then produced 62 moments with
+both wrists above the nose and legs nominally in frame, knees ranging 78.9 to
+170.2 — which looks promising until the frames are rendered. **Every one of the
+nine best candidates is the man standing still, gesturing while he talks.**
+
+The top-ranked candidate, at 78.9 degrees, is a hallucination: the video's minimum
+knee angle over the whole sweep is 12.1 degrees, which is anatomically impossible
+and is the tell that off-frame or dark legs are being invented. This is the same
+failure as the jump-serve tutorial (2026-08-16), where 13 candidate moments
+yielded 0 real contacts — and the same lesson as 2026-08-17: **a ranking metric
+can put the least useful frame first and report no error while doing it.**
+
+### Rejected whole: broadcast highlights compilation (2026-09-16)
+
+An 11-second 480x640 montage carrying a #VNL2023 banner and a PW VOLLEYBALL 25
+watermark. Real blocking, unusable footage, and licence provenance unclear.
+
+- 7 hip jumps above 0.15 in 11 seconds — hard cuts roughly every 1.4s, across at
+  least six venues and teams
+- only 46 of 127 posed frames (36%) have legs in frame; long stretches are
+  close-ups of arms above the net
+- 4 frames read a knee below 40 degrees, so hallucinated landmarks are present
+- most frames hold 2 to 6 players
+
+Its best continuous span (frames 10-70) was still trimmed and measured rather than
+rejected on appearance, because 2026-08-18 nearly discarded usable footage on a
+guess. Tracking there is stable (0.059) and contact is sound — elbow 151.1,
+shoulder 139.3, both near the band median. **The crouch is the problem: 129.8
+degrees at frame 2 of the span, with ankle visibility 0.19.** A highlights editor
+cuts in at the jump, so the clip contains no gather; `_crouch_before` then returns
+"the lowest hip available", which here is a player shuffling along the net.
+
+That sample would have raised p10 and tightened the floor — the opposite of what
+the band needs — while contributing a contact sample to the two bands that are
+already nearly full. Rejected rather than scoped to contact-only: the gain is
+near zero and the provenance is weaker than the other sources.
