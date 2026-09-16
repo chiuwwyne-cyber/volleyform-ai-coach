@@ -203,7 +203,7 @@ pushed p10 down to ~45. All 11 backend + 1 frontend tests pass.
 | usertut_set_01..08.mp4 | user-provided single-player set tutorial (trimmed) |
 | usertut_set_09..18.mp4 | 2nd user set tutorial (videoplayback (10), trimmed) |
 
-## block (23 clips; 3 are crouch-only, see clip_phase_scope.json)
+## block (26 clips; 3 are crouch-only, see clip_phase_scope.json)
 
 Expanded 6->12 (2026-08-05, Pexels) then 12->18 (2026-08-07) with 6 clips
 (usertut_block_01..06) trimmed from a user-provided single-player over-net
@@ -758,3 +758,93 @@ rescue the clip: at 180-198 px wide the athlete is too small for a usable pose.
 
 Rejected. The drill format itself is the problem -- 2 to 4 people in frame at all
 times, with whoever is resting standing closest to the camera.
+
+## block 23 -> 26, and the trim fence nearly ate the deep samples (2026-09-16, later)
+
+Two more videos. The second one is routine; the first produced the most important
+finding of the day, which is about the calibration rather than the footage.
+
+### usertut_block_14.mp4 — and why it was nearly rejected
+
+A 13.3s clip of one player doing repeated blocks at the net. It measures well:
+100% of frames with legs in view, zero knees under 40 degrees, tracking steady,
+and **seven separate overhead reps**, each with genuine lift (ankle rises
+0.073-0.158 of frame height) and each passing the wrist-above-nose check. Four
+reps survive trimming and camera cuts, with contact elbows of 151-174 and
+shoulders of 125-157.
+
+**The crouches are all shallow — 119.9, 131.0, 131.6, 146.1.** A repeated net
+drill does not fully load every rep. Adding them looked harmless and helps
+convergence, so the effect was computed before committing:
+
+| what is added | n | p10 | accepted floor | convergence | IQR fence | trimmed |
+|---|---|---|---|---|---|---|
+| nothing | 9 | 82.0 | 59.8 | 0.60 | [71.0, 162.7] | none |
+| one (119.9) | 10 | 82.2 | 60.9 | 0.64 | [79.8, 156.3] | none |
+| **two (+131.0)** | **11** | **115.2** | **95.1** | **0.69** | **[84.4, 156.8]** | **80.9, 82.3** |
+| four | 13 | 117.7 | 96.8 | 0.70 | [96.9, 152.4] | 80.9, 82.3 |
+
+**Two shallow samples make the IQR fence tight enough to discard both genuinely
+deep block loads** — including the 82.3 collected earlier the same day — and the
+accepted floor jumps to 95.1, worse than the 72.2 it started at. Convergence goes
+UP while this happens, from 0.60 to 0.69.
+
+`_trim_outliers` is doing exactly what it was written to do. It cannot tell "rare
+but real" from "mis-measured", and a deep block load is rare by nature, so it
+will always look like an outlier to a band dominated by shallow ones. **The
+lesson is about ordering: collect the rare end FIRST, or the common end will
+fence it out.**
+
+Only the deepest rep (119.9) was taken, and only after the two clips below had
+widened the fence to [19.2, 191.6], at which point it costs nothing.
+
+### usertut_block_12.mp4, usertut_block_13.mp4 — the clips the band needed
+
+Frames 65-129 and 221-289 of a 9.7s "Block Timing" tutorial that demonstrates
+jumping too early, on time, too late, and on time again, labelled on screen. The
+label was read by colour from a fixed region (green tick ~1100 px against red
+arrow ~780, cleanly separated) and **neither incorrect span contributed a single
+frame**.
+
+The mistimed spans are a subtler hazard than vp10's wrong-technique ones: the
+posture in a mistimed block may be fine, and the error is *when* it happens. That
+is invisible to a band that measures joint angles at the contact frame, so a
+mistimed rep would be absorbed as correct form. Excluded on the same principle.
+
+This is the cleanest footage processed today — 100% legs in frame, zero
+hallucinated knees, zero subject switches in a single continuous shot, tracking
+steady at 0.011 and 0.015, both reps airborne (lift 0.110 and 0.107), and both
+passing the wrist-above-nose check. **Crouch knees of 83.0 and 84.7: the deep
+loads the band has been short of since the visibility gate.**
+
+Their contact shoulders of 114.9 and 115.9 sit below the band's p10 of 126.4,
+inside the accepted range but in the lower tail. Kept, and treated as a
+correction: both are explicitly-labelled correct blocks where the arms press
+forward over the net rather than straight up, and the band had no evidence of
+that shape. It lowers the floor on `hands_not_high`, which is the conservative
+direction for a check whose false positive tells a correct blocker they are wrong.
+
+Effect on crouch.knee: 9 -> 11 samples, p10 82.0 -> 82.3, and the deep evidence
+doubles from two clips to four. The IQR widens 22.9 -> 43.2 and convergence falls
+0.60 -> 0.58. **That fall is the band getting better, not worse** — block loads
+genuinely range from 83 to 152 degrees, and the band now carries both ends
+instead of one. It also opens the trim fence to [19.2, 191.6], which is what made
+usertut_block_14 safe to add afterwards.
+
+| File | Source |
+|---|---|
+| usertut_block_12.mp4 | user-supplied Block Timing tutorial, first "on time" span (frames 65-129) |
+| usertut_block_13.mp4 | user-supplied Block Timing tutorial, second "on time" span (frames 221-289) |
+| usertut_block_14.mp4 | user-supplied repeated net drill, deepest of seven reps (frames 185-225) |
+
+### A check this process was missing
+
+Five of the seven videos handed over today were multi-person or multi-cut, and
+the existing checks — legs in frame, hallucinated knees, hip-jump stability —
+passed a video where MediaPipe tracked a bystander for its entire length. The
+check that catches it costs nothing and is now used on every clip:
+
+**at the chosen contact frame, the tracked person's own wrist must be above the
+tracked person's own nose.** For an OVERHEAD_ACTIONS clip this is true by
+definition, and it is false whenever the tracker has locked onto someone
+standing around.

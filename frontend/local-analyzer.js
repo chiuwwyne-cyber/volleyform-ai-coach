@@ -726,74 +726,74 @@ const REFERENCE_STANDARDS = {
       }
     },
     "block": {
-      "clips": 23,
+      "clips": 26,
       "phases": {
         "contact": {
           "elbow": {
-            "count": 18,
-            "raw_count": 19,
+            "count": 21,
+            "raw_count": 22,
             "outliers": 1,
             "min": 87.6,
-            "p10": 141.5,
-            "p25": 150.0,
-            "p50": 154.6,
-            "p75": 162.0,
-            "p90": 165.3,
-            "max": 173.9,
-            "max_kept": 173.9,
-            "tolerance": 15.1,
+            "p10": 141.9,
+            "p25": 149.9,
+            "p50": 155.1,
+            "p75": 163.2,
+            "p90": 168.1,
+            "max": 174.2,
+            "max_kept": 174.2,
+            "tolerance": 15.0,
             "accepted_range": [
-              126.4,
+              126.9,
               180.0
             ],
-            "convergence": 0.88,
+            "convergence": 0.89,
             "convergence_state": "stable",
             "dropped_offscreen": 1,
-            "clips_available": 20
+            "clips_available": 23
           },
           "shoulder": {
-            "count": 19,
-            "raw_count": 20,
+            "count": 22,
+            "raw_count": 23,
             "outliers": 1,
             "min": 63.6,
-            "p10": 126.4,
-            "p25": 136.1,
-            "p50": 141.8,
-            "p75": 154.4,
-            "p90": 167.3,
+            "p10": 124.2,
+            "p25": 128.0,
+            "p50": 139.2,
+            "p75": 150.7,
+            "p90": 166.9,
             "max": 171.0,
             "max_kept": 171.0,
-            "tolerance": 16.8,
+            "tolerance": 17.2,
             "accepted_range": [
-              109.6,
+              107.0,
               180.0
             ],
-            "convergence": 0.87,
+            "convergence": 0.84,
             "convergence_state": "stable"
           }
         },
         "crouch": {
           "knee": {
-            "count": 9,
-            "raw_count": 9,
+            "count": 12,
+            "raw_count": 12,
             "outliers": 0,
             "min": 80.9,
-            "p10": 82.0,
-            "p25": 105.4,
-            "p50": 121.5,
-            "p75": 128.3,
-            "p90": 151.3,
+            "p10": 82.4,
+            "p25": 84.3,
+            "p50": 118.8,
+            "p75": 126.3,
+            "p90": 148.8,
             "max": 151.9,
             "max_kept": 151.9,
-            "tolerance": 22.2,
+            "tolerance": 23.4,
             "accepted_range": [
-              59.8,
+              59.0,
               168.0
             ],
             "convergence": 0.6,
             "convergence_state": "usable",
             "dropped_offscreen": 12,
-            "clips_available": 21
+            "clips_available": 24
           }
         }
       }
