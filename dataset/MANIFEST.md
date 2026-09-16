@@ -715,3 +715,46 @@ That sample would have raised p10 and tightened the floor — the opposite of wh
 the band needs — while contributing a contact sample to the two bands that are
 already nearly full. Rejected rather than scoped to contact-only: the gain is
 near zero and the provenance is weaker than the other sources.
+
+### Rejected whole: multi-player block drill (2026-09-16)
+
+A 13.1s portrait clip of five players taking turns blocking at a net, each turn
+marked on screen with a green tick and the last with a red cross. It scores
+better than either accepted clip on every check this process had been using:
+
+| check | this video | the two accepted clips |
+|---|---|---|
+| legs in frame | **92%** | gate drops nothing, but 8 of 12 Pexels block clips fail this |
+| knees under 40 degrees (hallucination tell) | **0** | 0 |
+| hip jump per step (subject switch) | **0.019-0.043** | 0.043-0.065 |
+| minimum knee over the video | **78.6** | 82.3 |
+
+**All four passed and the video is still unusable, because MediaPipe spent the
+whole clip tracking a bystander.** Rendering the tracked skeleton onto the chosen
+key frames shows it locked onto the player waiting his turn in the foreground
+while the blocker jumped at the net behind him. That is why the segmenter
+returned contact elbows of 104-136 and shoulders of 66-121 against band p10s of
+141.4 and 126.4, why two of four spans found no crouch at all, and why the two
+that did read 155 degrees -- a man standing still.
+
+**A stability metric cannot tell "tracked consistently" from "tracked the right
+person", and it reads BETTER on the wrong one**: a bystander stands still, so hip
+motion between frames is smaller than for the athlete. 2026-08-18 worried about
+the tracker switching subjects mid-window and that turned out to be a
+measurement artefact; this is the opposite failure and the existing checks are
+blind to it.
+
+The cheap decisive check is the one that settled it: at the chosen contact frame,
+is the tracked person's wrist above their own nose? For an OVERHEAD_ACTIONS clip
+it must be. Here it was not. Sorting the whole video by knee angle says the same
+thing -- 11 of the 12 deepest knees have the hands BELOW the nose with shoulder
+angles of 31-49 degrees, so the deep readings are bystanders bending over, not
+blockers loading to jump.
+
+Cropping was tried before rejecting, since the video's other properties are the
+best of the batch. Narrowing to the net region still measured elbow 121-137 and
+crouch knees of 155-156, and dropped ankle visibility to 0.36, so it does not
+rescue the clip: at 180-198 px wide the athlete is too small for a usable pose.
+
+Rejected. The drill format itself is the problem -- 2 to 4 people in frame at all
+times, with whoever is resting standing closest to the camera.
