@@ -26,9 +26,6 @@ MAX_ACTUAL_SEQUENCE_FRAMES = 40
 ISSUE_JOINT_STATUS = {
     "elbow_bad": {"elbow": "yellow"},
     "elbow_not_straight": {"elbow": "yellow", "shoulder": "yellow"},
-    # Both joints, because the fault IS the relationship between them -- there is
-    # no single joint to adjust, which is why the message says "together".
-    "elbow_shoulder_mismatch": {"elbow": "yellow", "shoulder": "yellow"},
     "hands_not_high": {"shoulder": "yellow", "wrist": "yellow"},
     "shoulder_low": {"shoulder": "yellow"},
     "knee_bad": {"knee": "yellow"},

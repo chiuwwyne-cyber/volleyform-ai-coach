@@ -11,7 +11,6 @@ committed; the clips themselves stay out of the repository.
 
 import json
 import math
-import random
 import os
 import sys
 from datetime import date
@@ -272,158 +271,6 @@ def _band(values, joint, has_high_rule=False):
     }
 
 
-# Which actions get a joint elbow/shoulder model on top of the independent bands.
-# Measured, not assumed. Elbow and shoulder correlate inside every overhead action
-# (block r=0.87, set r=0.74, serve r=0.53, spike r=0.50), but correlation alone does
-# not mean a joint model earns its place: for spike and serve the independent bands
-# are already TIGHTER than the joint 99% region, so adding one rejects ~0% of what
-# the bands accept while risking new false positives. Only block and set have a real
-# gap. _joint_model measures that gap every build and main() refuses to ship a model
-# that has stopped paying for itself.
-JOINT_MODEL_PHASES = {
-    "block": ("contact", ("elbow", "shoulder")),
-    "set": ("contact", ("elbow", "shoulder")),
-}
-# A model must reject at least this much of the box the independent bands accept,
-# or it is a second check that agrees with the first and only adds failure modes.
-JOINT_MODEL_MIN_GAIN = 0.05
-# Two constraints on the cutoff, and the binding one differs per action:
-#   (1) above every clip the bands already accept -> adds no new flag on the dataset
-#   (2) at least sqrt(chi2(0.99, df=2)) -> never rejects more than ~1% of its own
-#       distribution. Constraint (1) alone produced 1.6 for spike, which is 1.6 SD and
-#       would reject 28% of the fitted model -- a false-positive storm on real users.
-MAHALANOBIS_FLOOR = 3.03
-MAHALANOBIS_MARGIN = 1.25
-MAHALANOBIS_EDGE_MARGIN = 1.05
-
-
-def _mean_cov(vectors):
-    """Sample mean and covariance of 2-D vectors, without pulling in numpy.
-
-    The evaluator has to run this same arithmetic in Python AND in JavaScript, so
-    keeping it dependency-free here keeps one implementation to compare against.
-    """
-    n = len(vectors)
-    mx = sum(v[0] for v in vectors) / n
-    my = sum(v[1] for v in vectors) / n
-    sxx = sum((v[0] - mx) ** 2 for v in vectors) / (n - 1)
-    syy = sum((v[1] - my) ** 2 for v in vectors) / (n - 1)
-    sxy = sum((v[0] - mx) * (v[1] - my) for v in vectors) / (n - 1)
-    return [mx, my], [[sxx, sxy], [sxy, syy]]
-
-
-def _invert_2x2(cov):
-    det = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0]
-    if abs(det) < 1e-9:
-        return None
-    return [[cov[1][1] / det, -cov[0][1] / det],
-            [-cov[1][0] / det, cov[0][0] / det]]
-
-
-def _mahalanobis(point, mean, inv_cov):
-    dx = point[0] - mean[0]
-    dy = point[1] - mean[1]
-    q = (dx * (inv_cov[0][0] * dx + inv_cov[0][1] * dy)
-         + dy * (inv_cov[1][0] * dx + inv_cov[1][1] * dy))
-    return math.sqrt(max(0.0, q))
-
-
-def _joint_model(vectors, band_ranges, band_medians):
-    """Fit the elbow/shoulder pair and decide whether the fit earns its place.
-
-    Returns None when the model would not add anything, and main() treats that as a
-    reason to ship no model rather than a reason to lower the bar. The independent
-    bands stay either way -- this is an extra check, never a replacement, because the
-    bands are auditable back to individual clips and a fitted ellipse is not.
-    """
-    if len(vectors) < 12:
-        # A 2x2 covariance is 3 parameters. Below ~12 samples the ellipse orientation
-        # is mostly noise, and an ellipse pointed the wrong way rejects correct form.
-        return {"skipped": f"only {len(vectors)} complete vectors"}
-
-    mean, cov = _mean_cov(vectors)
-    inv_cov = _invert_2x2(cov)
-    if inv_cov is None:
-        return {"skipped": "covariance is singular"}
-
-    # Which clips do the independent bands ALREADY flag? The cutoff has to clear every
-    # clip they accept, otherwise the new check invents a false positive on footage the
-    # calibration itself called correct. Deliberately using the full band rather than a
-    # leave-one-out band: the full band is wider, so fewer clips count as flagged, so
-    # more clips must be cleared -- the conservative direction.
-    accepted = []
-    for index, vector in enumerate(vectors):
-        inside = all(low <= value <= high
-                     for value, (low, high) in zip(vector, band_ranges))
-        if inside:
-            accepted.append(index)
-    if not accepted:
-        return {"skipped": "the bands accept none of their own samples"}
-
-    worst_accepted = 0.0
-    for index in accepted:
-        others = vectors[:index] + vectors[index + 1:]
-        loo_mean, loo_cov = _mean_cov(others)
-        loo_inv = _invert_2x2(loo_cov)
-        if loo_inv is None:
-            continue
-        worst_accepted = max(worst_accepted,
-                             _mahalanobis(vectors[index], loo_mean, loo_inv))
-
-    # Rounded UP, not to nearest. round(3.03, 1) is 3.0, which lands below the floor
-    # it was supposed to enforce -- rounding a threshold toward the permissive side
-    # quietly cancels the constraint that produced it. joint_model_threshold test
-    # caught this on set, where the floor was the binding constraint.
-    # Constraint three, and the app's actual promise to the user: a single joint
-    # sitting anywhere inside its own band, with the other joint typical, must never
-    # be called a mismatch. The joint model exists to catch combinations, not to
-    # second-guess one joint the bands already cleared -- and angle_acceptance_test
-    # encodes exactly that promise. It caught set: elbow near its accepted ceiling
-    # with a median shoulder measured 3.45 against a 3.1 cutoff.
-    #
-    # A smaller margin than the 1.25 above on purpose. Those are observed clips and
-    # real variation can reach past them; these corners are exact points defined by
-    # the bands themselves, so clearing them is enough and anything more just erodes
-    # what the model is for.
-    worst_edge = 0.0
-    for index, (low, high) in enumerate(band_ranges):
-        for edge in (low, high):
-            corner = list(band_medians)
-            corner[index] = edge
-            worst_edge = max(worst_edge, _mahalanobis(corner, mean, inv_cov))
-
-    raw = max(worst_accepted * MAHALANOBIS_MARGIN,
-              MAHALANOBIS_FLOOR,
-              worst_edge * MAHALANOBIS_EDGE_MARGIN)
-    threshold = math.ceil(raw * 10.0) / 10.0
-
-    # How much of what the bands accept does this cutoff newly reject? Sampled rather
-    # than derived: the accepted region is a rectangle and the model is an ellipse, and
-    # a fixed seed makes the answer reproducible across builds.
-    rng = random.Random(20260914)
-    draws = 200000
-    rejected = 0
-    for _ in range(draws):
-        point = [rng.uniform(low, high) for low, high in band_ranges]
-        if _mahalanobis(point, mean, inv_cov) > threshold:
-            rejected += 1
-    gain = rejected / draws
-
-    return {
-        "n": len(vectors),
-        "mean": [round(value, 3) for value in mean],
-        "cov": [[round(value, 4) for value in row] for row in cov],
-        # Pre-inverted on purpose. Both evaluators only ever need the quadratic form,
-        # and two hand-written 2x2 inversions (one Python, one JavaScript) is two
-        # chances to differ on a number neither side can easily check.
-        "inv_cov": [[round(value, 8) for value in row] for row in inv_cov],
-        "threshold": threshold,
-        "max_accepted_md": round(worst_accepted, 2),
-        "max_band_edge_md": round(worst_edge, 2),
-        "newly_rejected": round(gain, 4),
-    }
-
-
 def _process_clip(video_path):
     frames = []
     for pose_data in get_pose_from_video(
@@ -471,10 +318,6 @@ def main():
             phase: {joint: [] for joint in joints}
             for phase, joints in phase_joints.items()
         }
-        # Per-clip joint vectors, kept alongside the flat per-joint lists because a
-        # joint model needs to know WHICH clip each angle came from -- two lists of
-        # angles cannot be re-paired once the clip identity is thrown away.
-        vectors = {}
         dropped = {}
         scoped_out = {}
         used_clips = 0
@@ -504,9 +347,6 @@ def main():
                             (clip_name, round(frames[index]["angles"][joint], 1)))
                         continue
                     samples[phase][joint].append(frames[index]["angles"][joint])
-                    model_spec = JOINT_MODEL_PHASES.get(action)
-                    if model_spec and phase == model_spec[0] and joint in model_spec[1]:
-                        vectors.setdefault(clip_name, {})[joint] = frames[index]["angles"][joint]
             used_clips += 1
 
         if used_clips == 0:
@@ -531,43 +371,8 @@ def main():
             if phase_stats:
                 phases[phase] = phase_stats
 
-        entry = {"clips": used_clips, "phases": phases}
-        model_spec = JOINT_MODEL_PHASES.get(action)
-        if model_spec:
-            model_phase, model_joints = model_spec
-            complete = [[values[joint] for joint in model_joints]
-                        for values in vectors.values()
-                        if all(joint in values for joint in model_joints)]
-            band_ranges = [phases.get(model_phase, {}).get(joint, {}).get("accepted_range")
-                           for joint in model_joints]
-            if complete and all(band_ranges):
-                band_medians = [phases.get(model_phase, {}).get(joint, {}).get("p50")
-                                for joint in model_joints]
-                model = _joint_model(complete, band_ranges, band_medians)
-                if "skipped" in model:
-                    print(f"  JOINT MODEL skipped for {action}: {model['skipped']}")
-                else:
-                    model["phase"] = model_phase
-                    model["joints"] = list(model_joints)
-                    entry["joint_model"] = model
-        result["actions"][action] = entry
+        result["actions"][action] = {"clips": used_clips, "phases": phases}
         print(f"[{action}] calibrated from {used_clips}/{len(clips)} clips")
-        # Printed AFTER the action header, not while the model is being fitted.
-        # Emitting it inline put block's model under the [serve] heading in the
-        # build log, which is the kind of detail someone reads back months later
-        # and mis-attributes.
-        if "joint_model" in entry:
-            model = entry["joint_model"]
-            gain = model["newly_rejected"]
-            print(f"  joint model {model['phase']} {'+'.join(model['joints'])}: "
-                  f"n={model['n']} threshold={model['threshold']} "
-                  f"(clips {model['max_accepted_md']}, band-edge {model['max_band_edge_md']}) "
-                  f"rejects {gain:.1%} of the accepted box")
-            if gain < JOINT_MODEL_MIN_GAIN:
-                # Not an exception: the build still writes it so the drop is visible
-                # in the diff, and phase_reference_test fails on it.
-                print(f"  ^ WARNING: below the {JOINT_MODEL_MIN_GAIN:.0%} bar -- this "
-                      "model now agrees with the bands and only adds risk")
         for phase, names in sorted(scoped_out.items()):
             print(f"  SCOPED OUT {len(names)} clip(s) from {phase} by "
                   f"dataset/clip_phase_scope.json: {', '.join(sorted(names))}")

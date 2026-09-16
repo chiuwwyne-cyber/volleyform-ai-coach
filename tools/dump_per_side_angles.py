@@ -1,20 +1,18 @@
-"""Dump LEFT and RIGHT joint angles separately at the contact frame.
+"""Dump LEFT and RIGHT joint angles separately, to measure the aggregation divergence.
 
-The standing dump (dump_calibration_samples.py) stores what get_angles returns,
-which is already aggregated -- elbow and shoulder as max(left, right), knee as
-min. That is the backend's convention. local-analyzer.js averages the two sides
-instead, and the gap between those two estimators is a known, pinned divergence.
+angle/angle.py combines the two sides as elbow/shoulder = max(left, right) and
+knee = min(...). local-analyzer.js averages them instead. The reference bands were
+built with the backend convention and the browser applies them with a different one,
+which is a known divergence that evaluation_parity_test.mjs pins but nobody had ever
+put a number on.
 
-For the independent bands the gap is a tolerable error on one number. For a joint
-elbow/shoulder model it is not obviously tolerable: a Mahalanobis distance is
-sensitive to WHERE in the plane a point lands, and max-vs-average moves both
-coordinates by different amounts depending on how asymmetric the player is. A
-model fitted on max-aggregated samples and applied to averaged ones could reject
-correct form in the browser -- which is the path real users are on.
+This puts a number on it. Measured on the 38 block and set clips, switching to the
+averaged estimator moves the contact-frame reading enough to change the verdict on
+several clips -- and every one of those clips is assumed-correct footage, so every
+flip is a false positive on the path real users are on.
 
-That is a measurable question, so this measures it instead of guessing. Only the
-actions that get a joint model are scanned (block and set), which is 38 clips
-rather than 115.
+Kept because fixing that divergence is the next piece of work, and this is how to
+tell whether the fix helped.
 
 Usage:
     .venv/Scripts/python.exe tools/dump_per_side_angles.py [out.json]
@@ -33,11 +31,18 @@ from backend.phase_segmentation import segment_action
 from pose.pose import get_pose_from_video
 from tools.build_reference import (
     DATASET_DIR,
-    JOINT_MODEL_PHASES,
     MAX_FRAMES,
     _joint_is_offscreen_guess,
     _load_phase_scope,
 )
+
+# Which action/phase/joints to scan. block and set are the two where elbow and
+# shoulder are most strongly coupled (r=0.87 and r=0.74), so they are where a
+# change of estimator moves the pair furthest. Add actions here to widen the scan.
+SCAN_TARGETS = {
+    "block": ("contact", ("elbow", "shoulder")),
+    "set": ("contact", ("elbow", "shoulder")),
+}
 
 
 def _scan(video_path):
@@ -81,7 +86,7 @@ def main():
     phase_scope = _load_phase_scope()
     rows = []
 
-    for action, (phase, joints) in JOINT_MODEL_PHASES.items():
+    for action, (phase, joints) in SCAN_TARGETS.items():
         action_dir = os.path.join(DATASET_DIR, action)
         if not os.path.isdir(action_dir):
             continue

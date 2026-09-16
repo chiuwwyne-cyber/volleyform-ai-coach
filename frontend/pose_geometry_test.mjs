@@ -274,48 +274,6 @@ assert.ok(Math.max(...torsoSpread) - Math.min(...torsoSpread) > 30,
       tight.join("; "));
 }
 
-// ---- the demo must also clear the JOINT model ----------------------------
-// block and set judge elbow and shoulder together as well as separately, because
-// the two correlate (r=0.87 and r=0.74) and the pair of independent bands accepts
-// corners no reference clip occupies. The demo has to sit inside the ellipse too:
-// a demonstration the app would call an impossible combination is worse than one
-// that merely sits near a threshold, because there is no single joint to adjust.
-{
-  const standards = JSON.parse(
-    fs.readFileSync(path.join(root, "backend", "reference_standards.json"), "utf8"),
-  ).actions;
-  const DEMO_PHASE = { block: "block_press", set: "set_release" };
-  const TRIPLES = {
-    elbow:    [[11, 13, 15], [12, 14, 16]],
-    shoulder: [[13, 11, 23], [14, 12, 24]],
-  };
-  let checked = 0;
-  for (const [action, demoPhase] of Object.entries(DEMO_PHASE)) {
-    const model = standards[action]?.joint_model;
-    assert.ok(model, `${action} lost its joint_model; rebuild the reference`);
-    const points = at(action, demoPhase);
-    // Backend aggregation, matching how the model was fitted.
-    const value = (joint) => Math.max(...TRIPLES[joint].map(([a, b, c]) =>
-      jointAngle(points[a], points[b], points[c])));
-    const dx = value(model.joints[0]) - model.mean[0];
-    const dy = value(model.joints[1]) - model.mean[1];
-    const inv = model.inv_cov;
-    const distance = Math.sqrt(Math.max(0,
-      dx * (inv[0][0] * dx + inv[0][1] * dy) + dy * (inv[1][0] * dx + inv[1][1] * dy)));
-    assert.ok(distance < model.threshold, 
-      `${action} demo is ${distance.toFixed(2)} from the reference centre, past the ` +
-      `${model.threshold} cutoff: the app would tell a user copying its own demo ` +
-      "that their elbow and shoulder do not go together");
-    // Margin, not just a pass: the spike load knee shipped at 4.3 degrees inside a
-    // threshold and that was the bug, not the fix.
-    assert.ok(model.threshold - distance > 0.8,
-      `${action} demo clears the joint model by only ` +
-      `${(model.threshold - distance).toFixed(2)} -- too close to rely on`);
-    checked += 1;
-  }
-  assert.strictEqual(checked, 2, "expected joint models for block and set");
-}
-
 // ---- nothing may go non-finite ------------------------------------------
 for (const action of ["spike", "serve", "receive", "block", "set"]) {
   for (const f of framesOf(action)) {
@@ -324,4 +282,4 @@ for (const action of ["spike", "serve", "receive", "block", "set"]) {
 }
 
 console.log("pose geometry ok");
-console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability, smiley facing marker, demo clears its own standard, demo clears the joint model");
+console.log("checked: trunk turn, square block, turn direction, one-piece body, torso mesh, receive platform, replay size stability, smiley facing marker, demo clears its own standard");

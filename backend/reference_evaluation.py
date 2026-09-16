@@ -7,7 +7,6 @@ use one central heuristic profile so the rule can be replaced by data later.
 """
 
 import json
-import math
 import os
 
 from backend.phase_segmentation import segment_action
@@ -264,63 +263,6 @@ def _evaluate_joint(
     }
 
 
-def _mahalanobis_2d(point, mean, inv_cov):
-    dx = point[0] - mean[0]
-    dy = point[1] - mean[1]
-    quad = (dx * (inv_cov[0][0] * dx + inv_cov[0][1] * dy)
-            + dy * (inv_cov[1][0] * dx + inv_cov[1][1] * dy))
-    return math.sqrt(max(0.0, quad))
-
-
-def _evaluate_joint_model(action_type, entry, frames, segments, issues, issue_frames, report):
-    """Judge the elbow and shoulder together, for the actions where that adds anything.
-
-    The bands judge every joint on its own, which quietly assumes the joints are
-    independent. They are not: elbow and shoulder correlate at r=0.87 in block and
-    r=0.74 in set, so the bands accept a rectangle where real players only ever
-    occupy a diagonal band inside it. Measured, 18% (block) and 27% (set) of that
-    rectangle is somewhere no reference clip has ever been.
-
-    Only fires when BOTH joints are inside their own bands. This check exists to
-    catch what the bands miss, so letting it also fire on a pose they already caught
-    would just say the same thing twice, and every extra message spends the trust
-    that makes the other messages worth reading.
-    """
-    model = (entry or {}).get("joint_model")
-    if not model or "inv_cov" not in model:
-        return
-
-    phase = model.get("phase")
-    phase_index = segments.get(phase)
-    if phase_index is None:
-        return
-
-    joints = model.get("joints") or []
-    angles = frames[phase_index].get("angles", {})
-    point = [angles.get(joint) for joint in joints]
-    if len(point) != 2 or any(value is None for value in point):
-        return
-
-    phase_payload = report["phases"].get(phase, {})
-    scored = phase_payload.get("joints", {})
-    if any(scored.get(joint, {}).get("status") == "red" for joint in joints):
-        return
-
-    distance = _mahalanobis_2d(point, model["mean"], model["inv_cov"])
-    threshold = float(model.get("threshold", 0) or 0)
-    flagged = threshold > 0 and distance > threshold
-    if flagged:
-        _add_issue(issues, issue_frames, "elbow_shoulder_mismatch", phase_index)
-
-    phase_payload["joint_model"] = {
-        "joints": list(joints),
-        "distance": round(distance, 2),
-        "threshold": threshold,
-        "status": "red" if flagged else "green",
-        "clips": model.get("n"),
-    }
-
-
 def _positions_for(frame):
     positions = frame.get("positions") or {}
     if "wrist_y" in positions and "head_y" in positions:
@@ -408,8 +350,6 @@ def evaluate_with_reference(action_type, frames):
             if joint_payload:
                 phase_payload["joints"][joint] = joint_payload
         report["phases"][phase] = phase_payload
-
-    _evaluate_joint_model(action_type, entry, frames, segments, issues, issue_frames, report)
 
     contact = segments["contact"]
     _evaluate_hand_shape(action_type, frames, contact, issues, issue_frames)

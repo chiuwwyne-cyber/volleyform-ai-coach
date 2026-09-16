@@ -580,7 +580,7 @@ function checkAction(action, angles, positions, hands) {
 
 const REFERENCE_STANDARDS = {
   "version": 1,
-  "generated": "2026-09-14",
+  "generated": "2026-08-18",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -796,42 +796,6 @@ const REFERENCE_STANDARDS = {
             "clips_available": 19
           }
         }
-      },
-      "joint_model": {
-        "n": 17,
-        "mean": [
-          151.844,
-          138.518
-        ],
-        "cov": [
-          [
-            377.9461,
-            393.5144
-          ],
-          [
-            393.5144,
-            544.1053
-          ]
-        ],
-        "inv_cov": [
-          [
-            0.01071307,
-            -0.00774804
-          ],
-          [
-            -0.00774804,
-            0.00744151
-          ]
-        ],
-        "threshold": 3.4,
-        "max_accepted_md": 2.66,
-        "max_band_edge_md": 3.14,
-        "newly_rejected": 0.1669,
-        "phase": "contact",
-        "joints": [
-          "elbow",
-          "shoulder"
-        ]
       }
     },
     "receive": {
@@ -956,42 +920,6 @@ const REFERENCE_STANDARDS = {
             "clips_available": 24
           }
         }
-      },
-      "joint_model": {
-        "n": 21,
-        "mean": [
-          123.275,
-          105.57
-        ],
-        "cov": [
-          [
-            337.3586,
-            272.6836
-          ],
-          [
-            272.6836,
-            402.9542
-          ]
-        ],
-        "inv_cov": [
-          [
-            0.00654319,
-            -0.00442785
-          ],
-          [
-            -0.00442785,
-            0.00547805
-          ]
-        ],
-        "threshold": 4.0,
-        "max_accepted_md": 2.11,
-        "max_band_edge_md": 3.72,
-        "newly_rejected": 0.1172,
-        "phase": "contact",
-        "joints": [
-          "elbow",
-          "shoulder"
-        ]
       }
     }
   }
@@ -1474,7 +1402,6 @@ const MAX_ACTUAL_SEQUENCE_FRAMES = 40;
 const ISSUE_JOINT_STATUS = {
   elbow_bad: { elbow: "yellow" },
   elbow_not_straight: { elbow: "yellow", shoulder: "yellow" },
-  elbow_shoulder_mismatch: { elbow: "yellow", shoulder: "yellow" },
   hands_not_high: { shoulder: "yellow", wrist: "yellow" },
   shoulder_low: { shoulder: "yellow" },
   knee_bad: { knee: "yellow" },

@@ -99,13 +99,6 @@ ERROR_FEEDBACK = {
         "fixes": ["雙手同時接球、同時推出。", "靠牆托球，觀察球是否直上直下。"],
         "video_url": "https://www.youtube.com/results?search_query=volleyball+setting+no+spin+hand+balance",
     },
-    "elbow_shoulder_mismatch": {
-        "title": "手肘和肩膀沒有一起動",
-        "severity": "medium",
-        "message": "手臂的伸展沒有連起來——手肘打開的程度和肩膀抬起的程度對不上，力量會斷在肩膀。",
-        "fixes": ["讓肩膀和手肘一起往上延伸，不要一個先到位。", "放慢速度做定格，停在最高點檢查兩個關節是不是同時到。"],
-        "video_url": "https://www.youtube.com/results?search_query=volleyball+arm+swing+shoulder+elbow+timing",
-    },
     "lobster_receive_risk": {
         "title": "吃蘿蔔風險偏高",
         "severity": "high",
@@ -220,12 +213,6 @@ ISSUE_DETAILS = {
         "instant_cue": "兩手同時接、同時推。",
         "practice_drill": "靠牆托球 20 下，要求球不旋轉並回到額頭前。",
         "why_it_matters": "左右手高度不一致會讓球旋轉或偏向一側。",
-    },
-    "elbow_shoulder_mismatch": {
-        "body_part": "肩膀與手肘的連動",
-        "instant_cue": "肩膀跟手肘一起伸出去。",
-        "practice_drill": "慢速做 10 次定格，每次停在最高點，確認肩膀和手肘是同時到位而不是一前一後。",
-        "why_it_matters": "這兩個關節在正確動作裡是連動的。只有一個到位時，兩個角度單看都還在合理範圍，但合起來是真實球員不會出現的姿勢，力量會斷在肩關節。",
     },
     "lobster_receive_risk": {
         "body_part": "接球平台",

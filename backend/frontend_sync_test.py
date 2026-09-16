@@ -51,7 +51,10 @@ def test_every_issue_code_has_frontend_text():
     the on-device path gets a real problem described in words that tell them nothing,
     and every test still passes.
 
-    Found while adding elbow_shoulder_mismatch, the first new code in a while.
+    Found while adding a new issue code, which is when the gap became visible: the
+    guard caught lobster_receive_risk -- the app's ONLY high-severity code -- with no
+    entry in phaseProblemPhrases, so on-device users saw the vaguest possible text
+    for the most serious thing the app can report.
     """
     import sys
 
@@ -93,13 +96,12 @@ def test_every_issue_code_has_frontend_text():
                   for joints in phases.values()
                   for rule in joints.values()
                   for code in rule.values()}
-    extra_codes = {"lobster_receive_risk", "elbow_shoulder_mismatch"}
+    extra_codes = {"lobster_receive_risk"}
     required = (band_codes | extra_codes) & set(ERROR_FEEDBACK)
 
     # Same gap, different table: a code with no ISSUE_JOINT_STATUS entry is reported
     # in words while the 3D figure and the error skeleton stay entirely green, so the
-    # user is told something is wrong and shown nothing. elbow_shoulder_mismatch was
-    # missing from both copies of that table when it was added.
+    # user is told something is wrong and shown nothing.
     from backend.analyzer import ISSUE_JOINT_STATUS
 
     missing_status = sorted(required - set(ISSUE_JOINT_STATUS))
