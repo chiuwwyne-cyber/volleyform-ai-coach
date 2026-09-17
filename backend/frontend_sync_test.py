@@ -96,7 +96,19 @@ def test_every_issue_code_has_frontend_text():
                   for joints in phases.values()
                   for rule in joints.values()
                   for code in rule.values()}
-    extra_codes = {"lobster_receive_risk"}
+    # Shape checks live in the reference file rather than ACTION_RULES, so they
+    # would otherwise slip past this guard entirely -- the same way
+    # lobster_receive_risk shipped for months with no phaseProblemPhrases entry
+    # and showed on-device as the generic "this part needs adjusting". Reading
+    # the shipped file means a code is covered the moment it can be raised.
+    from backend.reference_evaluation import _load_reference
+
+    shape_codes = {band.get("code")
+                   for entry in _load_reference().get("actions", {}).values()
+                   for band in (entry.get("shape_checks") or {}).values()
+                   if band.get("code")}
+
+    extra_codes = {"lobster_receive_risk"} | shape_codes
     required = (band_codes | extra_codes) & set(ERROR_FEEDBACK)
 
     # Same gap, different table: a code with no ISSUE_JOINT_STATUS entry is reported

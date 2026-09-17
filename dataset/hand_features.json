@@ -1,0 +1,484 @@
+{
+ "rows": [
+  {
+   "action": "set",
+   "clip": "pexels_6179974.mp4",
+   "frame": 70,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217115.mp4",
+   "frame": 105,
+   "hands_detected": 1,
+   "hand_span": 0.0679,
+   "finger_extension": 0.889,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217116.mp4",
+   "frame": 273,
+   "hands_detected": 2,
+   "hand_span": 0.0725,
+   "finger_extension": 1.2,
+   "hand_center_gap": 0.0009,
+   "hands_level_gap": 0.002
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217125.mp4",
+   "frame": 10,
+   "hands_detected": 1,
+   "hand_span": 0.0852,
+   "finger_extension": 1.303,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217182.mp4",
+   "frame": 63,
+   "hands_detected": 1,
+   "hand_span": 0.0386,
+   "finger_extension": 0.856,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "pexels_6217341.mp4",
+   "frame": 209,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_01.mp4",
+   "frame": 2,
+   "hands_detected": 2,
+   "hand_span": 0.0724,
+   "finger_extension": 1.384,
+   "hand_center_gap": 0.0006,
+   "hands_level_gap": 0.0004
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_02.mp4",
+   "frame": 0,
+   "hands_detected": 2,
+   "hand_span": 0.062,
+   "finger_extension": 1.382,
+   "hand_center_gap": 0.0003,
+   "hands_level_gap": 0.001
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_03.mp4",
+   "frame": 66,
+   "hands_detected": 2,
+   "hand_span": 0.0568,
+   "finger_extension": 1.43,
+   "hand_center_gap": 0.0008,
+   "hands_level_gap": 0.0316
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_04.mp4",
+   "frame": 28,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_05.mp4",
+   "frame": 55,
+   "hands_detected": 1,
+   "hand_span": 0.1574,
+   "finger_extension": 1.372,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_06.mp4",
+   "frame": 96,
+   "hands_detected": 1,
+   "hand_span": 0.0483,
+   "finger_extension": 1.389,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_07.mp4",
+   "frame": 114,
+   "hands_detected": 1,
+   "hand_span": 0.0435,
+   "finger_extension": 1.244,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_08.mp4",
+   "frame": 49,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_09.mp4",
+   "frame": 30,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_10.mp4",
+   "frame": 34,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_11.mp4",
+   "frame": 44,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_12.mp4",
+   "frame": 8,
+   "hands_detected": 1,
+   "hand_span": 0.0394,
+   "finger_extension": 1.186,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_13.mp4",
+   "frame": 4,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_14.mp4",
+   "frame": 3,
+   "hands_detected": 1,
+   "hand_span": 0.0492,
+   "finger_extension": 0.833,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_15.mp4",
+   "frame": 4,
+   "hands_detected": 2,
+   "hand_span": 0.0735,
+   "finger_extension": 1.184,
+   "hand_center_gap": 0.0829,
+   "hands_level_gap": 0.0167
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_16.mp4",
+   "frame": 0,
+   "hands_detected": 2,
+   "hand_span": 0.0712,
+   "finger_extension": 1.106,
+   "hand_center_gap": 0.1258,
+   "hands_level_gap": 0.0293
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_17.mp4",
+   "frame": 6,
+   "hands_detected": 1,
+   "hand_span": 0.0764,
+   "finger_extension": 1.334,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "set",
+   "clip": "usertut_set_18.mp4",
+   "frame": 3,
+   "hands_detected": 1,
+   "hand_span": 0.0396,
+   "finger_extension": 0.815,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169404.mp4",
+   "frame": 21,
+   "hands_detected": 2,
+   "hand_span": 0.0367,
+   "finger_extension": 0.647,
+   "hand_center_gap": 0.0028,
+   "hands_level_gap": 0.0052
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169435.mp4",
+   "frame": 42,
+   "hands_detected": 2,
+   "hand_span": 0.1519,
+   "finger_extension": 1.32,
+   "hand_center_gap": 0.0001,
+   "hands_level_gap": 0.0
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169454.mp4",
+   "frame": 67,
+   "hands_detected": 2,
+   "hand_span": 0.1008,
+   "finger_extension": 1.229,
+   "hand_center_gap": 0.001,
+   "hands_level_gap": 0.0006
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169455.mp4",
+   "frame": 63,
+   "hands_detected": 2,
+   "hand_span": 0.0462,
+   "finger_extension": 0.954,
+   "hand_center_gap": 0.001,
+   "hands_level_gap": 0.0001
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_12169640.mp4",
+   "frame": 51,
+   "hands_detected": 2,
+   "hand_span": 0.0267,
+   "finger_extension": 0.987,
+   "hand_center_gap": 0.0,
+   "hands_level_gap": 0.0019
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6179955.mp4",
+   "frame": 80,
+   "hands_detected": 2,
+   "hand_span": 0.0663,
+   "finger_extension": 0.821,
+   "hand_center_gap": 0.009,
+   "hands_level_gap": 0.0058
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216862.mp4",
+   "frame": 19,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6216965.mp4",
+   "frame": 43,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217278.mp4",
+   "frame": 99,
+   "hands_detected": 1,
+   "hand_span": 0.0391,
+   "finger_extension": 1.165,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217340.mp4",
+   "frame": 14,
+   "hands_detected": 2,
+   "hand_span": 0.0428,
+   "finger_extension": 1.223,
+   "hand_center_gap": 0.001,
+   "hands_level_gap": 0.0034
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217342.mp4",
+   "frame": 135,
+   "hands_detected": 2,
+   "hand_span": 0.0836,
+   "finger_extension": 1.176,
+   "hand_center_gap": 0.0,
+   "hands_level_gap": 0.0
+  },
+  {
+   "action": "receive",
+   "clip": "pexels_6217344.mp4",
+   "frame": 91,
+   "hands_detected": 2,
+   "hand_span": 0.0306,
+   "finger_extension": 1.177,
+   "hand_center_gap": 0.0101,
+   "hands_level_gap": 0.0196
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_01.mp4",
+   "frame": 46,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_02.mp4",
+   "frame": 53,
+   "hands_detected": 1,
+   "hand_span": 0.1448,
+   "finger_extension": 1.2,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_03.mp4",
+   "frame": 91,
+   "hands_detected": 2,
+   "hand_span": 0.1191,
+   "finger_extension": 1.046,
+   "hand_center_gap": 0.0039,
+   "hands_level_gap": 0.0032
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_04.mp4",
+   "frame": 40,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_05.mp4",
+   "frame": 11,
+   "hands_detected": 1,
+   "hand_span": 0.0939,
+   "finger_extension": 0.822,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_06.mp4",
+   "frame": 6,
+   "hands_detected": 1,
+   "hand_span": 0.068,
+   "finger_extension": 0.949,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_07.mp4",
+   "frame": 9,
+   "hands_detected": 2,
+   "hand_span": 0.0712,
+   "finger_extension": 0.625,
+   "hand_center_gap": 0.0002,
+   "hands_level_gap": 0.0032
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_08.mp4",
+   "frame": 15,
+   "hands_detected": 2,
+   "hand_span": 0.0991,
+   "finger_extension": 1.375,
+   "hand_center_gap": 0.0923,
+   "hands_level_gap": 0.0056
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_09.mp4",
+   "frame": 18,
+   "hands_detected": 1,
+   "hand_span": 0.068,
+   "finger_extension": 0.921,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_10.mp4",
+   "frame": 6,
+   "hands_detected": 1,
+   "hand_span": 0.0638,
+   "finger_extension": 0.969,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_11.mp4",
+   "frame": 17,
+   "hands_detected": 0,
+   "hand_span": 0.0,
+   "finger_extension": 0.0,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  },
+  {
+   "action": "receive",
+   "clip": "usertut_dig_12.mp4",
+   "frame": 17,
+   "hands_detected": 1,
+   "hand_span": 0.0559,
+   "finger_extension": 1.161,
+   "hand_center_gap": null,
+   "hands_level_gap": null
+  }
+ ]
+}

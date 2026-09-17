@@ -20,7 +20,11 @@ EXPECTED_LOW_ISSUES = {
     "spike": {"contact": {"elbow": "elbow_bad", "shoulder": "shoulder_low"}},
     "serve": {"contact": {"elbow": "elbow_bad", "shoulder": "shoulder_low"}},
     "block": {
-        "contact": {"elbow": "elbow_not_straight", "shoulder": "hands_not_high"}
+        "contact": {"elbow": "elbow_not_straight", "shoulder": "hands_not_high"},
+        # The only crouch-phase elbow rule in the project. Listed here so it gets
+        # the same two-sided treatment as every other low-side code: a load just
+        # inside the floor must pass, and a clearly dropped arm must fire.
+        "crouch": {"elbow": "block_arms_dropped"},
     },
     "receive": {"contact": {"elbow": "elbow_bad"}},
     "set": {"contact": {"elbow": "elbow_position_bad", "shoulder": "shoulder_low"}},

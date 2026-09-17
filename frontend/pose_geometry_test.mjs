@@ -200,7 +200,9 @@ assert.ok(Math.max(...torsoSpread) - Math.min(...torsoSpread) > 30,
     serve:   { serve_contact: "contact", serve_load: "crouch" },
     block:   { block_press: "contact", block_load: "crouch" },
     receive: { receive_platform: "contact" },
-    set:     { set_release: "contact" },
+    // set_cushion is the demo's load: _crouch_near picks the lowest hip
+    // within four frames of the release, which is that frame.
+    set:     { set_release: "contact", set_cushion: "crouch" },
   };
   // Backend aggregation: angle/angle.py takes knee = min(left, right) and
   // elbow/shoulder = max(...). The bands were built with these semantics, so the
@@ -224,9 +226,15 @@ assert.ok(Math.max(...torsoSpread) - Math.min(...torsoSpread) > 30,
     "serve.crouch.knee": ["low", "high"],
     "block.contact.elbow": ["low"], "block.contact.shoulder": ["low"],
     "block.crouch.knee": ["low", "high"],
+    // Added 2026-09-17 with block_arms_dropped. The demo is the app's statement
+    // of correct form, so it has to satisfy the new standard like every other.
+    "block.crouch.elbow": ["low"],
     "receive.contact.elbow": ["low"], "receive.contact.knee": ["low", "high"],
     "receive.contact.shoulder": [],
     "set.contact.elbow": ["low", "high"], "set.contact.shoulder": ["low"],
+    // Added 2026-09-17 with set_legs_not_used. High side only: a deeper
+    // squat is not an error, locked knees are.
+    "set.crouch.knee": ["high"],
   };
   const MIN_MARGIN = 10;
   const tight = [];

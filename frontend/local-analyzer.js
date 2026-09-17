@@ -26,6 +26,39 @@ const FEEDBACK = {
     why_it_matters: "手肘角度不足會讓力量斷在前臂，球路容易飄或噴飛。",
     video_url: "https://www.youtube.com/results?search_query=volleyball+elbow+arm+position+drill",
   },
+  block_arms_dropped: {
+    title: "蓄力時手臂垂下",
+    severity: "medium",
+    message: "起跳前手臂垂到身側，來不及在球過網前把手伸上去。",
+    fixes: ["蓄力時雙手保持在胸前、掌心朝網。", "靠壓腿取得高度，不要靠甩手臂。"],
+    body_part: "蓄力時的手臂位置",
+    instant_cue: "手不要放下來，維持在胸前。",
+    practice_drill: "在網前連續做 8 次蹲跳，全程雙手不低於胸口。",
+    why_it_matters: "手臂從身側舉上去比從胸前多花一段時間，球已經過網了手才到。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+block+hands+ready+position",
+  },
+  set_hands_off_forehead: {
+    title: "觸球點沒有在額頭正上方",
+    severity: "medium",
+    message: "雙手偏到頭部的一側,球的落點會偏,也比較難用手指均勻施力。",
+    fixes: ["先用腳步把身體移到球的正下方,再舉手。", "出手時讓額頭、雙手、球在同一條垂直線上。"],
+    body_part: "觸球點與腳步",
+    instant_cue: "腳先到位,讓球落在額頭正上方。",
+    practice_drill: "對牆連續舉 10 球,每一球都要求自己先移動到球下方再出手。",
+    why_it_matters: "手偏一邊時,兩隻手施力不一樣,球會旋轉、落點也難控制。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+ball+above+forehead+drill",
+  },
+  set_legs_not_used: {
+    title: "舉球沒有用到下半身",
+    severity: "medium",
+    message: "膝蓋幾乎打直，球完全靠手臂推出去，距離與穩定度都會受限。",
+    fixes: ["出手前先微蹲，讓膝蓋和腳踝一起送。", "把球想成從腳底推上來，不是從手腕彈出去。"],
+    body_part: "膝蓋與下半身",
+    instant_cue: "出手前先蹲一點，用腿把球送出去。",
+    practice_drill: "靠牆連續舉 10 球，每一球都要感覺膝蓋先彎再伸。",
+    why_it_matters: "只用手臂舉球，長距離會不夠、手腕負擔也大，球的落點更難控制。",
+    video_url: "https://www.youtube.com/results?search_query=volleyball+setting+use+your+legs+drill",
+  },
   elbow_not_straight: {
     title: "手臂沒有完全伸展",
     severity: "medium",
@@ -580,7 +613,7 @@ function checkAction(action, angles, positions, hands) {
 
 const REFERENCE_STANDARDS = {
   "version": 1,
-  "generated": "2026-09-16",
+  "generated": "2026-09-17",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -599,6 +632,7 @@ const REFERENCE_STANDARDS = {
             "p90": 167.0,
             "max": 172.5,
             "max_kept": 172.5,
+            "min_kept": 122.1,
             "tolerance": 15.3,
             "accepted_range": [
               125.7,
@@ -619,6 +653,7 @@ const REFERENCE_STANDARDS = {
             "p90": 163.0,
             "max": 173.7,
             "max_kept": 173.7,
+            "min_kept": 81.2,
             "tolerance": 19.5,
             "accepted_range": [
               91.7,
@@ -641,6 +676,7 @@ const REFERENCE_STANDARDS = {
             "p90": 148.7,
             "max": 149.2,
             "max_kept": 149.2,
+            "min_kept": 101.8,
             "tolerance": 20.7,
             "accepted_range": [
               94.8,
@@ -670,6 +706,7 @@ const REFERENCE_STANDARDS = {
             "p90": 168.7,
             "max": 177.4,
             "max_kept": 177.4,
+            "min_kept": 132.1,
             "tolerance": 15.3,
             "accepted_range": [
               126.2,
@@ -690,6 +727,7 @@ const REFERENCE_STANDARDS = {
             "p90": 155.7,
             "max": 157.0,
             "max_kept": 157.0,
+            "min_kept": 107.6,
             "tolerance": 17.1,
             "accepted_range": [
               105.2,
@@ -712,6 +750,7 @@ const REFERENCE_STANDARDS = {
             "p90": 167.7,
             "max": 170.9,
             "max_kept": 170.9,
+            "min_kept": 116.0,
             "tolerance": 19.5,
             "accepted_range": [
               118.9,
@@ -741,6 +780,7 @@ const REFERENCE_STANDARDS = {
             "p90": 168.1,
             "max": 174.2,
             "max_kept": 174.2,
+            "min_kept": 135.2,
             "tolerance": 15.0,
             "accepted_range": [
               126.9,
@@ -763,6 +803,7 @@ const REFERENCE_STANDARDS = {
             "p90": 166.9,
             "max": 171.0,
             "max_kept": 171.0,
+            "min_kept": 114.9,
             "tolerance": 17.2,
             "accepted_range": [
               107.0,
@@ -785,6 +826,7 @@ const REFERENCE_STANDARDS = {
             "p90": 148.8,
             "max": 151.9,
             "max_kept": 151.9,
+            "min_kept": 80.9,
             "tolerance": 23.4,
             "accepted_range": [
               59.0,
@@ -793,6 +835,29 @@ const REFERENCE_STANDARDS = {
             "convergence": 0.6,
             "convergence_state": "usable",
             "dropped_offscreen": 12,
+            "clips_available": 24
+          },
+          "elbow": {
+            "count": 22,
+            "raw_count": 22,
+            "outliers": 0,
+            "min": 88.0,
+            "p10": 92.6,
+            "p25": 112.5,
+            "p50": 140.3,
+            "p75": 157.5,
+            "p90": 163.1,
+            "max": 170.2,
+            "max_kept": 170.2,
+            "min_kept": 88.0,
+            "tolerance": 18.5,
+            "accepted_range": [
+              74.1,
+              180.0
+            ],
+            "convergence": 0.78,
+            "convergence_state": "stable",
+            "dropped_offscreen": 2,
             "clips_available": 24
           }
         }
@@ -814,6 +879,7 @@ const REFERENCE_STANDARDS = {
             "p90": 171.5,
             "max": 174.2,
             "max_kept": 174.2,
+            "min_kept": 137.3,
             "tolerance": 14.9,
             "accepted_range": [
               130.8,
@@ -836,6 +902,7 @@ const REFERENCE_STANDARDS = {
             "p90": 149.7,
             "max": 160.1,
             "max_kept": 160.1,
+            "min_kept": 66.8,
             "tolerance": 22.2,
             "accepted_range": [
               66.8,
@@ -858,6 +925,7 @@ const REFERENCE_STANDARDS = {
             "p90": 100.8,
             "max": 132.4,
             "max_kept": 132.4,
+            "min_kept": 16.8,
             "tolerance": 19.1,
             "accepted_range": [
               5.0,
@@ -887,6 +955,7 @@ const REFERENCE_STANDARDS = {
             "p90": 150.6,
             "max": 172.8,
             "max_kept": 154.4,
+            "min_kept": 98.0,
             "tolerance": 16.3,
             "accepted_range": [
               87.2,
@@ -909,6 +978,7 @@ const REFERENCE_STANDARDS = {
             "p90": 132.5,
             "max": 135.8,
             "max_kept": 135.8,
+            "min_kept": 75.2,
             "tolerance": 19.2,
             "accepted_range": [
               64.3,
@@ -919,6 +989,52 @@ const REFERENCE_STANDARDS = {
             "dropped_offscreen": 3,
             "clips_available": 24
           }
+        },
+        "crouch": {
+          "knee": {
+            "count": 12,
+            "raw_count": 12,
+            "outliers": 0,
+            "min": 106.5,
+            "p10": 111.0,
+            "p25": 118.9,
+            "p50": 133.0,
+            "p75": 150.1,
+            "p90": 150.2,
+            "max": 158.2,
+            "max_kept": 158.2,
+            "min_kept": 106.5,
+            "tolerance": 23.0,
+            "accepted_range": [
+              88.0,
+              168.0
+            ],
+            "convergence": 0.64,
+            "convergence_state": "usable",
+            "dropped_offscreen": 12,
+            "clips_available": 24
+          }
+        }
+      },
+      "shape_checks": {
+        "contact.hands_off_center": {
+          "count": 21,
+          "raw_count": 21,
+          "outliers": 0,
+          "min": 0.0038,
+          "p10": 0.0118,
+          "p50": 0.1913,
+          "p90": 0.2414,
+          "max": 0.327,
+          "max_kept": 0.327,
+          "min_kept": 0.0038,
+          "iqr": 0.1249,
+          "accepted_range": [
+            null,
+            0.429
+          ],
+          "side": "high",
+          "code": "set_hands_off_forehead"
         }
       }
     }
@@ -969,7 +1085,11 @@ const PHASE_RULES = {
   },
   block: {
     contact: { elbow: { low: "elbow_not_straight" }, shoulder: { low: "hands_not_high" } },
-    crouch: { knee: { low: "knee_too_bent", high: "knee_bad" } },
+    // Low side only on the load elbow: hands held high is correct blocking.
+    crouch: {
+      knee: { low: "knee_too_bent", high: "knee_bad" },
+      elbow: { low: "block_arms_dropped" },
+    },
   },
   receive: {
     contact: {
@@ -979,6 +1099,8 @@ const PHASE_RULES = {
     },
   },
   set: {
+    // High side only: a deeper squat is not an error, locked knees are.
+    crouch: { knee: { high: "set_legs_not_used" } },
     contact: {
       elbow: { low: "elbow_position_bad", high: "elbow_position_bad" },
       shoulder: { low: "shoulder_low" },
@@ -991,7 +1113,7 @@ const PHASE_LABELS = {
   serve: { contact: "serve_contact", crouch: "load" },
   block: { contact: "max_reach", crouch: "pre_jump" },
   receive: { contact: "platform_contact" },
-  set: { contact: "set_release" },
+  set: { contact: "set_release", crouch: "set_load" },
 };
 
 function smoothValues(values, window = 3) {
@@ -1168,6 +1290,14 @@ function evaluatePhaseJoint(action, entry, frames, phase, frameIndex, joint, rul
   if (!bandInfo) return null;
   const value = frames[frameIndex].angles[joint];
   if (!Number.isFinite(value)) return null;
+  // Mirrors _evaluate_joint: refuse an angle computed on landmarks MediaPipe
+  // placed outside the frame. The calibration has dropped these samples since
+  // 2026-08-17; until now the app judged them anyway, so a user whose feet left
+  // the shot was told about knees no camera saw.
+  const points = frames[frameIndex].landmarks;
+  if (points && landmarksOffscreen(points, JOINT_LANDMARKS[joint] || [])) {
+    return { judged: false, reason: "offscreen", status: "unknown" };
+  }
   const { band, tolerance, source } = bandInfo;
   const lo = Math.max(0, band.p10 - tolerance);
   // Mirrors _band_range in backend/reference_evaluation.py. When the high side
@@ -1212,11 +1342,26 @@ function evaluatePhaseJoint(action, entry, frames, phase, frameIndex, joint, rul
   };
 }
 
+// Mirrors _hand_pair_is_usable. Two wrists closer than a tenth of one hand span
+// are one hand detected twice: measured on the reference set, 4 of the 6 set
+// clips with both hands detected read a gap under 1.5% of a span, and all 4 were
+// flagged setting_hand_spacing_bad. Only the between-hand measures are gated;
+// finger_extension describes a single hand and survives the collapse.
+const HAND_PAIR_MIN_SEPARATION = 0.1;
+
+function handPairIsUsable(hands) {
+  if ((hands?.hands_detected || 0) < 2) return false;
+  const span = hands.hand_span || 0;
+  const gap = hands.hand_center_gap;
+  if (gap === null || gap === undefined || span <= 0) return false;
+  return gap >= HAND_PAIR_MIN_SEPARATION * span;
+}
+
 function evaluatePhaseHands(action, frames, contact, issues, issueFrames) {
   const frame = frames[contact];
   const hands = frame.handFeatures || {};
   if (action === "receive") {
-    if (hands.hands_detected >= 2) {
+    if (handPairIsUsable(hands)) {
       if ((hands.hands_level_gap || 0) > 0.08) {
         addPhaseIssue(issues, issueFrames, "receive_platform_unbalanced", contact);
       }
@@ -1242,6 +1387,7 @@ function evaluatePhaseHands(action, frames, contact, issues, issueFrames) {
     if ((hands.finger_extension || 0) < 1.08) {
       addPhaseIssue(issues, issueFrames, "setting_fingers_closed", contact);
     }
+    if (!handPairIsUsable(hands)) return;
     if (hands.hand_center_gap !== null && hands.hand_center_gap !== undefined) {
       if (hands.hand_center_gap < 0.06 || hands.hand_center_gap > 0.32) {
         addPhaseIssue(issues, issueFrames, "setting_hand_spacing_bad", contact);
@@ -1250,6 +1396,129 @@ function evaluatePhaseHands(action, frames, contact, issues, issueFrames) {
     if ((hands.hands_level_gap || 0) > 0.08) {
       addPhaseIssue(issues, issueFrames, "setting_hands_unbalanced", contact);
     }
+  }
+}
+
+// Mirrors angle/angle.py: SHAPE_LANDMARKS, OFFSCREEN_*, landmarks_offscreen and
+// get_shape_features. Unlike the angle path, this one reads the SAME image
+// landmarks the backend reads, so there is no aggregation divergence to pin here
+// -- the two sides compute the same number from the same points.
+// Mirrors angle/angle.py. Both sides of the left/right pair are listed because
+// the angle aggregation can pick either one, so one invented side is enough.
+const JOINT_LANDMARKS = {
+  knee: [23, 24, 25, 26, 27, 28],
+  elbow: [11, 12, 13, 14, 15, 16],
+  shoulder: [11, 12, 13, 14, 23, 24],
+};
+
+const SHAPE_LANDMARKS = {
+  // Every feature divides by torso length, so 11/12/23/24 appear in all of them.
+  hand_level_gap: [11, 12, 15, 16, 23, 24],
+  hand_gap: [11, 12, 15, 16, 23, 24],
+  stance_width: [11, 12, 23, 24, 27, 28],
+  wrist_above_shoulder: [11, 12, 15, 16, 23, 24],
+  hands_off_center: [0, 11, 12, 15, 16, 23, 24],
+  trunk_lean: [11, 12, 23, 24],
+  shoulder_hip_width_ratio: [11, 12, 23, 24],
+  low_wrist_above_shoulder: [11, 12, 15, 16, 23, 24],
+  frontality: [11, 12, 23, 24],
+  torso: [11, 12, 23, 24],
+};
+const OFFSCREEN_MARGIN = 0.1;
+const OFFSCREEN_VISIBILITY = 0.5;
+
+// MediaPipe does not report that it cannot see a limb -- it reports a confident
+// position outside the frame. The gap between two invented hands looks exactly
+// like a real one, so anything past the edge is refused rather than judged.
+// Two tiers, both measured: clearly outside is dropped at any confidence, while
+// a landmark merely clipped by the edge is trusted unless the model itself is
+// unsure. The strict single-tier version cut the block knee samples from 16 to 3.
+function landmarksOffscreen(landmarks, indices) {
+  for (const index of indices) {
+    const point = landmarks[index];
+    if (!point) return true;
+    const beyond = Math.max(
+      point.y - 1, -point.y,
+      (point.x ?? 0.5) - 1, -(point.x ?? 0.5),
+    );
+    if (beyond <= 0) continue;
+    if (beyond > OFFSCREEN_MARGIN) return true;
+    if ((point.visibility ?? 0) < OFFSCREEN_VISIBILITY) return true;
+  }
+  return false;
+}
+
+function shapeFeatures(landmarks) {
+  const shoulderX = (landmarks[11].x + landmarks[12].x) / 2;
+  const shoulderY = (landmarks[11].y + landmarks[12].y) / 2;
+  const hipX = (landmarks[23].x + landmarks[24].x) / 2;
+  const hipY = (landmarks[23].y + landmarks[24].y) / 2;
+  const torso = Math.hypot(shoulderX - hipX, shoulderY - hipY);
+  if (torso < 1e-4) return {};
+  const shoulderW = Math.abs(landmarks[11].x - landmarks[12].x);
+  return {
+    hand_level_gap: Math.abs(landmarks[15].y - landmarks[16].y) / torso,
+    hand_gap: Math.abs(landmarks[15].x - landmarks[16].x) / torso,
+    stance_width: Math.abs(landmarks[27].x - landmarks[28].x) / torso,
+    wrist_above_shoulder:
+      (shoulderY - Math.min(landmarks[15].y, landmarks[16].y)) / torso,
+    // Hands sideways from the head: a set is played from above the forehead.
+    hands_off_center:
+      Math.abs((landmarks[15].x + landmarks[16].x) / 2 - landmarks[0].x) / torso,
+    // Shoulders forward of the hips: a blocker leaning into the net.
+    trunk_lean: Math.abs(shoulderX - hipX) / torso,
+    // In-plane shadow of trunk rotation: the shoulder line foreshortens when the
+    // shoulders turn and the hips do not.
+    shoulder_hip_width_ratio:
+      shoulderW / Math.max(Math.abs(landmarks[23].x - landmarks[24].x), 1e-6),
+    // The LOWER hand, where wrist_above_shoulder takes the higher one.
+    low_wrist_above_shoulder:
+      (shoulderY - Math.max(landmarks[15].y, landmarks[16].y)) / torso,
+    frontality: shoulderW / torso,
+    torso,
+  };
+}
+
+// Relationships BETWEEN limbs, which the per-joint bands cannot express. Three
+// block segments a technique video labels wrong cleared every angle band,
+// because the faults were in how the two hands related to each other.
+function evaluateShapeChecks(entry, frames, segments, issues, issueFrames, report) {
+  const checks = entry?.shape_checks;
+  if (!checks) return;
+
+  for (const [key, band] of Object.entries(checks)) {
+    const dot = key.indexOf(".");
+    const phase = key.slice(0, dot);
+    const feature = key.slice(dot + 1);
+    const frameIndex = segments[phase];
+    if (frameIndex === undefined || frameIndex === null) continue;
+    const landmarks = frames[frameIndex]?.landmarks;
+    if (!landmarks || landmarks.length < 29) continue;
+    // No entry means nobody declared which landmarks this feature reads, so the
+    // gate has nothing to check. Refuse rather than judge it ungated.
+    const indices = SHAPE_LANDMARKS[feature];
+    if (!indices || landmarksOffscreen(landmarks, indices)) continue;
+    const value = shapeFeatures(landmarks)[feature];
+    if (value === undefined) continue;
+
+    const [low, high] = band.accepted_range || [null, null];
+    let direction = "ok";
+    if (low !== null && low !== undefined && value < low) direction = "low";
+    else if (high !== null && high !== undefined && value > high) direction = "high";
+    if (direction !== "ok" && band.code) {
+      addPhaseIssue(issues, issueFrames, band.code, frameIndex);
+    }
+
+    if (!report.phases[phase]) report.phases[phase] = {};
+    if (!report.phases[phase].shape) report.phases[phase].shape = {};
+    report.phases[phase].shape[feature] = {
+      value: Number(value.toFixed(3)),
+      accepted_range: [low ?? null, high ?? null],
+      reference: [band.p10 ?? null, band.p90 ?? null],
+      status: direction === "ok" ? "green" : "red",
+      direction,
+      issue_code: direction === "ok" ? null : band.code,
+    };
   }
 }
 
@@ -1286,6 +1555,7 @@ function evaluatePhaseAware(action, frames) {
     report.phases[phase] = payload;
   }
 
+  evaluateShapeChecks(entry, frames, segments, issues, issueFrames, report);
   evaluatePhaseHands(action, frames, segments.contact, issues, issueFrames);
   report.issues = [...issues];
   report.issue_frames = Object.fromEntries(issueFrames);
@@ -1388,9 +1658,12 @@ const JOINT_CHAIN = {
 const ISSUE_SEVERITY = {
   elbow_bad: "medium",
   elbow_not_straight: "medium",
+  block_arms_dropped: "medium",
   hands_not_high: "medium",
   shoulder_low: "medium",
   knee_bad: "medium",
+  set_legs_not_used: "medium",
+  set_hands_off_forehead: "medium",
   knee_too_bent: "high",
   elbow_position_bad: "medium",
   wrist_low: "medium",
@@ -1402,9 +1675,12 @@ const MAX_ACTUAL_SEQUENCE_FRAMES = 40;
 const ISSUE_JOINT_STATUS = {
   elbow_bad: { elbow: "yellow" },
   elbow_not_straight: { elbow: "yellow", shoulder: "yellow" },
+  block_arms_dropped: { elbow: "yellow", wrist: "yellow" },
   hands_not_high: { shoulder: "yellow", wrist: "yellow" },
   shoulder_low: { shoulder: "yellow" },
   knee_bad: { knee: "yellow" },
+  set_legs_not_used: { knee: "yellow" },
+  set_hands_off_forehead: { wrist: "yellow", shoulder: "yellow" },
   knee_too_bent: { knee: "red" },
   wrist_low: { wrist: "red" },
   elbow_position_bad: { elbow: "yellow", wrist: "yellow" },

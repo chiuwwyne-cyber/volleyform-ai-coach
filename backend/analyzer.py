@@ -25,10 +25,13 @@ PRIMARY_ISSUE_LIMIT = 6
 MAX_ACTUAL_SEQUENCE_FRAMES = 40
 ISSUE_JOINT_STATUS = {
     "elbow_bad": {"elbow": "yellow"},
+    "block_arms_dropped": {"elbow": "yellow", "wrist": "yellow"},
     "elbow_not_straight": {"elbow": "yellow", "shoulder": "yellow"},
     "hands_not_high": {"shoulder": "yellow", "wrist": "yellow"},
     "shoulder_low": {"shoulder": "yellow"},
     "knee_bad": {"knee": "yellow"},
+    "set_legs_not_used": {"knee": "yellow"},
+    "set_hands_off_forehead": {"wrist": "yellow", "shoulder": "yellow"},
     "knee_too_bent": {"knee": "red"},
     "wrist_low": {"wrist": "red"},
     "elbow_position_bad": {"elbow": "yellow", "wrist": "yellow"},
@@ -36,6 +39,7 @@ ISSUE_JOINT_STATUS = {
     "setting_fingers_closed": {"wrist": "yellow"},
     "setting_hand_spacing_bad": {"wrist": "yellow"},
     "setting_hands_unbalanced": {"wrist": "yellow", "shoulder": "yellow"},
+    # 兩個都標手腕：錯誤出在兩隻手之間的關係，不在單一關節的角度。
     "lobster_receive_risk": {"elbow": "red", "wrist": "yellow"},
     "receive_platform_unbalanced": {"elbow": "yellow", "wrist": "yellow"},
     "receive_hands_apart": {"wrist": "yellow"},

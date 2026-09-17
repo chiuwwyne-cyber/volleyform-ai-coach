@@ -446,7 +446,13 @@ function shapeBlockHands(points, phase) {
   const centerX = (points[11][0] + points[12][0]) / 2;
   const ready = {
     block_ready: { wristY: head[1] - 0.02, spread: 0.2, z: head[2] - 0.02, reach: 0.06 },
-    block_load: { wristY: head[1] + 0.06, spread: 0.22, z: head[2] - 0.04, reach: 0.04 },
+    // The hands must NOT dip as the legs load. This used to read head[1] + 0.06,
+    // below the ready position, and the demo's load elbow measured 65.2 degrees --
+    // more folded than all 22 reference blocks, whose loads run 88 to 170. That is
+    // the exact shape block_arms_dropped now flags, so the app was demonstrating
+    // its own error. Raised level with the rise and given forward reach: 111.2
+    // degrees, just inside the reference p25 of 112.5.
+    block_load: { wristY: head[1] - 0.06, spread: 0.3, z: head[2] - 0.04, reach: 0.2 },
     block_rise: { wristY: head[1] - 0.38, spread: 0.2, z: head[2] - 0.06, reach: 0.22 },
     block_press: { wristY: head[1] - 0.5, spread: 0.23, z: head[2] - 0.1, reach: 0.34 },
     block_landing: { wristY: head[1] - 0.16, spread: 0.18, z: head[2] - 0.02, reach: 0.1 },

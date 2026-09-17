@@ -19,7 +19,13 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-from angle.angle import get_angles
+from angle.angle import (
+    JOINT_LANDMARKS,
+    SHAPE_LANDMARKS,
+    get_angles,
+    get_shape_features,
+    landmarks_offscreen,
+)
 from backend.phase_segmentation import segment_action
 from pose.pose import get_pose_from_video
 from backend.reference_evaluation import ACTION_RULES, _band_range
@@ -40,13 +46,25 @@ ACTION_PHASE_JOINTS = {
     },
     "block": {
         "contact": ("elbow", "shoulder"),
-        "crouch": ("knee",),
+        # The elbow is sampled at the load too, which no other action does.
+        # The only labelled-wrong block footage this project has separates on
+        # exactly this number: three spans a tutorial marks with a red cross
+        # measure 79.2, 51.6 and 134.7 where the three it marks correct measure
+        # 140.0, 125.7 and 142.8. Hand spacing, which was the first guess, does
+        # not separate them at all.
+        "crouch": ("knee", "elbow"),
     },
     "receive": {
         "contact": ("elbow", "knee", "shoulder"),
     },
     "set": {
         "contact": ("elbow", "shoulder"),
+        # The segmenter has always returned a crouch for set (_crouch_near, the
+        # lowest hip within four frames of the release) and nothing read it. A
+        # setter who never bends their legs pushes the ball with the arms alone,
+        # which is the error this samples for. 12 of 24 clips contribute -- the
+        # other half have ankles off-screen at that frame.
+        "crouch": ("knee",),
     },
 }
 MAX_FRAMES = 300
@@ -104,24 +122,6 @@ def _trim_outliers(values):
     return ordered, trimmed, outliers
 
 
-# 每個關節實際用到的 landmark。左右兩側都列,因為 get_angles 取
-# knee=min(左,右)、elbow/shoulder=max(左,右)——只要**一側**是幻覺就可能正好被選中。
-JOINT_LANDMARKS = {
-    "knee": (23, 24, 25, 26, 27, 28),
-    "elbow": (11, 12, 13, 14, 15, 16),
-    "shoulder": (11, 12, 13, 14, 23, 24),
-}
-# 兩層規則,兩層都是量出來的:
-#   * 明顯在畫面外(超過邊界 0.10 以上)—— **不管信心多高都丟**。
-#     `pexels_6217341` 是鏡頭在拍天花板追球、只有指尖在畫面下緣,MediaPipe 卻
-#     「有信心地」(vis 0.69-0.78)把整個上半身放在 y=1.01-1.14,算出 177.8° 的手肘。
-#     原本只看低信心的版本擋不掉它:**高信心的幻覺仍然是幻覺**。
-#   * 剛好切到邊(0 到 0.10)—— 只在低信心時丟。腳踝 y=1.02、可見度 0.82 是被裁到
-#     一點點,那個角度還可信,不該誤殺。
-OFFSCREEN_MARGIN = 0.10      # 超過畫面邊界多少算「明顯在外」
-OFFSCREEN_VISIBILITY = 0.5   # 邊緣地帶才用得到的信心門檻
-
-
 PHASE_SCOPE_PATH = os.path.join(DATASET_DIR, "clip_phase_scope.json")
 
 
@@ -160,30 +160,10 @@ def _load_phase_scope():
 def _joint_is_offscreen_guess(landmarks, joint):
     """這個關節的角度是不是算在「畫面外硬猜」的 landmark 上?
 
-    2026-08-17 加。`block` 的 crouch.knee 最小值曾是 **23.6°**——解剖學上不可能——
-    因為那一格兩隻腳踝都在畫面下方外面(y=1.36/1.42)、可見度只有 0.07/0.12。
-    MediaPipe 對看不見的部位仍會輸出座標,校準流程卻從不檢查,所以幻覺出來的角度
-    直接進了 band。全資料集掃過後,block 的 crouch.knee 有 13/16 個樣本是這樣來的。
-
-    **兩個條件要同時成立才丟**,這點是量出來的、不是猜的:
-      * 只看可見度會誤殺**遮擋**(手肘在畫面正中央被身體擋住,vis 0.41,估計仍可用)
-      * 只看出畫面會誤殺**剛好被裁到邊**(腳踝 y=1.02 但 vis 0.82,角度合理)
-    先前試過「vis<0.5 或出畫面就丟」的嚴格版,會把 block 膝角從 16 個砍到 3 個,
-    那不是修正是把資料集毀掉。目前這組門檻只動到 14 個 band 裡的 5 個。
+    規則本身住在 angle.angle.landmarks_offscreen,判定端也用同一份——校準時
+    擋掉的幻覺,上線時不該又被當成真的。這裡只負責把關節翻成 landmark 編號。
     """
-    for index in JOINT_LANDMARKS[joint]:
-        landmark = landmarks[index]
-        # x 跟 y 都要看。只檢查 y 的話,跑出畫面左右邊界的 landmark 仍會被採用,
-        # 而那同樣是沒被觀測到的位置。
-        beyond = max(landmark.y - 1.0, -landmark.y,
-                     getattr(landmark, "x", 0.5) - 1.0, -getattr(landmark, "x", 0.5))
-        if beyond <= 0.0:
-            continue
-        if beyond > OFFSCREEN_MARGIN:
-            return True   # 明顯在外:沒被觀測到就是沒被觀測到
-        if landmark.visibility < OFFSCREEN_VISIBILITY:
-            return True   # 只是擦邊,但模型自己也沒把握
-    return False
+    return landmarks_offscreen(landmarks, JOINT_LANDMARKS[joint])
 
 
 def _adaptive_tolerance(ordered, joint):
@@ -251,6 +231,12 @@ def _band(values, joint, has_high_rule=False):
         # widen the standard. set.contact.elbow shows the gap: max 177.8 against a
         # p90 of 154.0.
         "max_kept": round(trimmed[-1], 1),
+        # And the smallest, for the same reason on the other side. Every low-side
+        # rule needs it to prove its floor sits below the reference: `min` above is
+        # pre-trim, so a floor checked against it can look safe while sitting above
+        # a sample the band actually kept. Added 2026-09-17 with the first low-side
+        # band whose whole purpose is to fire near the bottom of the data.
+        "min_kept": round(trimmed[0], 1),
         "tolerance": tolerance,
         # Computed through the evaluator's own _band_range, not re-derived here.
         # This field used to be `p10/p90 +/- tolerance` while the evaluator capped
@@ -268,6 +254,80 @@ def _band(values, joint, has_high_rule=False):
         ],
         "convergence": convergence,
         "convergence_state": _convergence_state(convergence, raw_count),
+    }
+
+
+# Shape checks: errors the angle bands cannot express.
+#
+# elbow/shoulder/knee describe ONE joint each. Coaching references list block
+# faults that live in the relationship BETWEEN the two hands -- one hand lower
+# than the other leaves a gap a hitter aims at, hands too far apart let the ball
+# through the middle. Measured on three segments a technique video itself labels
+# wrong, all three passed every angle band; the errors are simply not in those
+# three numbers.
+#
+# Values are ratios (normalised by shoulder or hip width), not degrees, so the
+# degree-based JOINT_TOLERANCE does not apply. The threshold rule instead follows
+# the one used for the joint model: it must clear every reference sample, because
+# every dataset clip is assumed-correct and flagging one is a false positive by
+# construction.
+# Shape checks to publish, as (action, phase, feature) -> side and issue code.
+#
+# Deliberately EMPTY. Two block hand checks were built here and taken back out
+# on 2026-09-17: measured against the only labelled-wrong footage this project
+# has, all three wrong segments sat inside the range of the three correct ones.
+# The footage turned out to demonstrate a dropped arm, which separates cleanly
+# on the crouch elbow and not at all on hand spacing.
+#
+# That is not evidence hand spacing is fine -- it is the absence of any evidence
+# that a check on it would fire for a real reason. A check nobody can demonstrate
+# catching a genuine error is only a new way to flag correct technique.
+#
+# The machinery below and in backend/reference_evaluation.py stays, with tests:
+# three receive candidates are still shape checks awaiting their distributions.
+SHAPE_CHECKS = {
+    # A set is played from directly above the forehead. Hands drifting sideways
+    # is a standard fault that no angle band can express -- the elbow and shoulder
+    # read the same whether the hands are above the head or beside it.
+    #
+    # 21 reference samples run 0.004 to 0.327 torso-lengths with nothing trimmed,
+    # the tightest of the eight distributions measured (ceiling 2.2x the median;
+    # trunk_lean came out at 6-18x, which is a threshold no body can reach).
+    ("set", "contact", "hands_off_center"): {"side": "high",
+                                             "code": "set_hands_off_forehead"},
+}
+# How far past the reference spread a threshold sits, in IQR units.
+SHAPE_TOLERANCE_K = 1.5
+# And never inside the observed samples, whatever the IQR says.
+SHAPE_CLEARANCE = 1.15
+
+
+def _shape_band(values, side):
+    """Percentiles plus a threshold that no reference sample reaches.
+
+    Two rules, and the binding one differs by feature:
+      * p90 + k*IQR (or p10 - k*IQR) -- scaled to how much correct players vary
+      * beyond the largest (smallest) kept sample by SHAPE_CLEARANCE -- so a
+        clip the calibration accepted can never be flagged, which is the rule the
+        joint model uses and the reason it shipped without a single new flag.
+    """
+    ordered, trimmed, outliers = _trim_outliers(values)
+    p10 = round(_percentile(trimmed, 0.10), 4)
+    p50 = round(_percentile(trimmed, 0.50), 4)
+    p90 = round(_percentile(trimmed, 0.90), 4)
+    iqr = max(0.0, _percentile(trimmed, 0.75) - _percentile(trimmed, 0.25))
+    lo = hi = None
+    if side in ("high", "both"):
+        hi = round(max(p90 + SHAPE_TOLERANCE_K * iqr, trimmed[-1] * SHAPE_CLEARANCE), 3)
+    if side in ("low", "both"):
+        lo = round(min(p10 - SHAPE_TOLERANCE_K * iqr, trimmed[0] / SHAPE_CLEARANCE), 3)
+        lo = max(0.0, lo)
+    return {
+        "count": len(trimmed), "raw_count": len(values), "outliers": outliers,
+        "min": round(ordered[0], 4), "p10": p10, "p50": p50, "p90": p90,
+        "max": round(ordered[-1], 4), "max_kept": round(trimmed[-1], 4),
+        "min_kept": round(trimmed[0], 4), "iqr": round(iqr, 4),
+        "accepted_range": [lo, hi], "side": side,
     }
 
 
@@ -314,6 +374,7 @@ def main():
             continue
 
         phase_joints = ACTION_PHASE_JOINTS.get(action, {})
+        shape_samples = {}
         samples = {
             phase: {joint: [] for joint in joints}
             for phase, joints in phase_joints.items()
@@ -347,6 +408,17 @@ def main():
                             (clip_name, round(frames[index]["angles"][joint], 1)))
                         continue
                     samples[phase][joint].append(frames[index]["angles"][joint])
+                # Shape features from the SAME frame, gated the same way. Only
+                # the ones SHAPE_CHECKS asks for, so an empty table costs one
+                # dict lookup per phase and writes nothing.
+                for (check_action, check_phase, feature), _spec in SHAPE_CHECKS.items():
+                    if check_action != action or check_phase != phase:
+                        continue
+                    if landmarks_offscreen(landmarks, SHAPE_LANDMARKS[feature]):
+                        continue
+                    value = get_shape_features(landmarks).get(feature)
+                    if value is not None:
+                        shape_samples.setdefault((phase, feature), []).append(value)
             used_clips += 1
 
         if used_clips == 0:
@@ -371,7 +443,24 @@ def main():
             if phase_stats:
                 phases[phase] = phase_stats
 
+        shape_checks = {}
+        for (check_action, phase, feature), spec in SHAPE_CHECKS.items():
+            if check_action != action:
+                continue
+            values = shape_samples.get((phase, feature))
+            if not values:
+                print(f"  WARNING: shape check {action}.{phase}.{feature} has no "
+                      f"samples and was not published")
+                continue
+            band = _shape_band(values, spec["side"])
+            band["code"] = spec["code"]
+            shape_checks[f"{phase}.{feature}"] = band
+            print(f"  shape check {phase}.{feature} from {len(values)} samples: "
+                  f"{band['accepted_range']}")
+
         result["actions"][action] = {"clips": used_clips, "phases": phases}
+        if shape_checks:
+            result["actions"][action]["shape_checks"] = shape_checks
         print(f"[{action}] calibrated from {used_clips}/{len(clips)} clips")
         for phase, names in sorted(scoped_out.items()):
             print(f"  SCOPED OUT {len(names)} clip(s) from {phase} by "

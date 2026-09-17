@@ -29,6 +29,27 @@ ERROR_FEEDBACK = {
         "fixes": ["把手肘往上推直。", "用肩胛把手臂送高，不要只伸手腕。"],
         "video_url": "https://www.youtube.com/results?search_query=volleyball+blocking+arm+extension+drill",
     },
+    "block_arms_dropped": {
+        "title": "蓄力時手臂垂下",
+        "severity": "medium",
+        "message": "起跳前手臂垂到身側，來不及在球過網前把手伸上去。",
+        "fixes": ["蓄力時雙手保持在胸前、掌心朝網。", "靠壓腿取得高度，不要靠甩手臂。"],
+        "video_url": "https://www.youtube.com/results?search_query=volleyball+block+hands+ready+position",
+    },
+    "set_legs_not_used": {
+        "title": "舉球沒有用到下半身",
+        "severity": "medium",
+        "message": "膝蓋幾乎打直，球完全靠手臂推出去，距離與穩定度都會受限。",
+        "fixes": ["出手前先微蹲，讓膝蓋和腳踝一起送。", "把球想成從腳底推上來，不是從手腕彈出去。"],
+        "video_url": "https://www.youtube.com/results?search_query=volleyball+setting+use+your+legs+drill",
+    },
+    "set_hands_off_forehead": {
+        "title": "觸球點沒有在額頭正上方",
+        "severity": "medium",
+        "message": "雙手偏到頭部的一側,球的落點會偏,也比較難用手指均勻施力。",
+        "fixes": ["先用腳步把身體移到球的正下方,再舉手。", "出手時讓額頭、雙手、球在同一條垂直線上。"],
+        "video_url": "https://www.youtube.com/results?search_query=volleyball+setting+ball+above+forehead+drill",
+    },
     "hands_not_high": {
         "title": "雙手高度不足",
         "severity": "medium",
@@ -99,6 +120,8 @@ ERROR_FEEDBACK = {
         "fixes": ["雙手同時接球、同時推出。", "靠牆托球，觀察球是否直上直下。"],
         "video_url": "https://www.youtube.com/results?search_query=volleyball+setting+no+spin+hand+balance",
     },
+    # 攔網的形狀類錯誤。角度 band 量的是肘/肩/膝，量不到「兩隻手之間的關係」——
+    # 而那正是教練文獻列為攔網頭號問題的地方：球從手中間穿過、或從低的那隻手上方過。
     "lobster_receive_risk": {
         "title": "吃蘿蔔風險偏高",
         "severity": "high",
@@ -153,6 +176,24 @@ ISSUE_DETAILS = {
         "instant_cue": "往上伸直，不要只折手腕。",
         "practice_drill": "靠牆做攔網伸手，確認手肘完全打直再落下。",
         "why_it_matters": "手臂沒有伸展時，肩膀會代償，攔網高度與穩定度都會下降。",
+    },
+    "block_arms_dropped": {
+        "body_part": "蓄力時的手臂位置",
+        "instant_cue": "手不要放下來，維持在胸前。",
+        "practice_drill": "在網前連續做蹲跳，全程雙手不低於胸口。",
+        "why_it_matters": "手臂從身側舉上去比從胸前多花一段時間，球已經過網了手才到。",
+    },
+    "set_legs_not_used": {
+        "body_part": "膝蓋與下半身",
+        "instant_cue": "出手前先蹲一點，用腿把球送出去。",
+        "practice_drill": "靠牆連續舉 10 球，每一球都要感覺膝蓋先彎再伸。",
+        "why_it_matters": "只用手臂舉球，長距離會不夠、手腕負擔也大，球的落點更難控制。",
+    },
+    "set_hands_off_forehead": {
+        "body_part": "觸球點與腳步",
+        "instant_cue": "腳先到位,讓球落在額頭正上方。",
+        "practice_drill": "對牆連續舉 10 球,每一球都要求自己先移動到球下方再出手。",
+        "why_it_matters": "手偏一邊時,兩隻手施力不一樣,球會旋轉、落點也難控制。",
     },
     "hands_not_high": {
         "body_part": "雙手高度",

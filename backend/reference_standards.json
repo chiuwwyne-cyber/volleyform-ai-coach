@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-09-16",
+  "generated": "2026-09-17",
   "source": "dataset/MANIFEST.md",
   "actions": {
     "spike": {
@@ -19,6 +19,7 @@
             "p90": 167.0,
             "max": 172.5,
             "max_kept": 172.5,
+            "min_kept": 122.1,
             "tolerance": 15.3,
             "accepted_range": [
               125.7,
@@ -39,6 +40,7 @@
             "p90": 163.0,
             "max": 173.7,
             "max_kept": 173.7,
+            "min_kept": 81.2,
             "tolerance": 19.5,
             "accepted_range": [
               91.7,
@@ -61,6 +63,7 @@
             "p90": 148.7,
             "max": 149.2,
             "max_kept": 149.2,
+            "min_kept": 101.8,
             "tolerance": 20.7,
             "accepted_range": [
               94.8,
@@ -90,6 +93,7 @@
             "p90": 168.7,
             "max": 177.4,
             "max_kept": 177.4,
+            "min_kept": 132.1,
             "tolerance": 15.3,
             "accepted_range": [
               126.2,
@@ -110,6 +114,7 @@
             "p90": 155.7,
             "max": 157.0,
             "max_kept": 157.0,
+            "min_kept": 107.6,
             "tolerance": 17.1,
             "accepted_range": [
               105.2,
@@ -132,6 +137,7 @@
             "p90": 167.7,
             "max": 170.9,
             "max_kept": 170.9,
+            "min_kept": 116.0,
             "tolerance": 19.5,
             "accepted_range": [
               118.9,
@@ -161,6 +167,7 @@
             "p90": 168.1,
             "max": 174.2,
             "max_kept": 174.2,
+            "min_kept": 135.2,
             "tolerance": 15.0,
             "accepted_range": [
               126.9,
@@ -183,6 +190,7 @@
             "p90": 166.9,
             "max": 171.0,
             "max_kept": 171.0,
+            "min_kept": 114.9,
             "tolerance": 17.2,
             "accepted_range": [
               107.0,
@@ -205,6 +213,7 @@
             "p90": 148.8,
             "max": 151.9,
             "max_kept": 151.9,
+            "min_kept": 80.9,
             "tolerance": 23.4,
             "accepted_range": [
               59.0,
@@ -213,6 +222,29 @@
             "convergence": 0.6,
             "convergence_state": "usable",
             "dropped_offscreen": 12,
+            "clips_available": 24
+          },
+          "elbow": {
+            "count": 22,
+            "raw_count": 22,
+            "outliers": 0,
+            "min": 88.0,
+            "p10": 92.6,
+            "p25": 112.5,
+            "p50": 140.3,
+            "p75": 157.5,
+            "p90": 163.1,
+            "max": 170.2,
+            "max_kept": 170.2,
+            "min_kept": 88.0,
+            "tolerance": 18.5,
+            "accepted_range": [
+              74.1,
+              180.0
+            ],
+            "convergence": 0.78,
+            "convergence_state": "stable",
+            "dropped_offscreen": 2,
             "clips_available": 24
           }
         }
@@ -234,6 +266,7 @@
             "p90": 171.5,
             "max": 174.2,
             "max_kept": 174.2,
+            "min_kept": 137.3,
             "tolerance": 14.9,
             "accepted_range": [
               130.8,
@@ -256,6 +289,7 @@
             "p90": 149.7,
             "max": 160.1,
             "max_kept": 160.1,
+            "min_kept": 66.8,
             "tolerance": 22.2,
             "accepted_range": [
               66.8,
@@ -278,6 +312,7 @@
             "p90": 100.8,
             "max": 132.4,
             "max_kept": 132.4,
+            "min_kept": 16.8,
             "tolerance": 19.1,
             "accepted_range": [
               5.0,
@@ -307,6 +342,7 @@
             "p90": 150.6,
             "max": 172.8,
             "max_kept": 154.4,
+            "min_kept": 98.0,
             "tolerance": 16.3,
             "accepted_range": [
               87.2,
@@ -329,6 +365,7 @@
             "p90": 132.5,
             "max": 135.8,
             "max_kept": 135.8,
+            "min_kept": 75.2,
             "tolerance": 19.2,
             "accepted_range": [
               64.3,
@@ -339,6 +376,52 @@
             "dropped_offscreen": 3,
             "clips_available": 24
           }
+        },
+        "crouch": {
+          "knee": {
+            "count": 12,
+            "raw_count": 12,
+            "outliers": 0,
+            "min": 106.5,
+            "p10": 111.0,
+            "p25": 118.9,
+            "p50": 133.0,
+            "p75": 150.1,
+            "p90": 150.2,
+            "max": 158.2,
+            "max_kept": 158.2,
+            "min_kept": 106.5,
+            "tolerance": 23.0,
+            "accepted_range": [
+              88.0,
+              168.0
+            ],
+            "convergence": 0.64,
+            "convergence_state": "usable",
+            "dropped_offscreen": 12,
+            "clips_available": 24
+          }
+        }
+      },
+      "shape_checks": {
+        "contact.hands_off_center": {
+          "count": 21,
+          "raw_count": 21,
+          "outliers": 0,
+          "min": 0.0038,
+          "p10": 0.0118,
+          "p50": 0.1913,
+          "p90": 0.2414,
+          "max": 0.327,
+          "max_kept": 0.327,
+          "min_kept": 0.0038,
+          "iqr": 0.1249,
+          "accepted_range": [
+            null,
+            0.429
+          ],
+          "side": "high",
+          "code": "set_hands_off_forehead"
         }
       }
     }

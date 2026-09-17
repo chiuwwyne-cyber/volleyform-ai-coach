@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260916-frontend-sync-v105"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260917-frontend-sync-v108"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -1278,6 +1278,7 @@ const phaseLabels = {
   pre_jump: "起跳前蓄力",
   platform_contact: "接球平台觸球",
   set_release: "舉球出手瞬間",
+  set_load: "舉球前的蓄力",
 };
 
 const phaseJointLabels = {
@@ -1289,6 +1290,9 @@ const phaseJointLabels = {
 
 const phaseIssueTips = {
   elbow_bad: "先讓上臂帶動前臂，觸球前再完全打開手肘。",
+  block_arms_dropped: "蓄力時雙手保持在胸前，不要垂到身側。",
+  set_legs_not_used: "出手前先微蹲，用腿把球送出去，不要只靠手臂推。",
+  set_hands_off_forehead: "先移動到球的正下方，讓球落在額頭上方再出手。",
   elbow_not_straight: "最高點時把手臂往上延伸，不要提早彎手肘。",
   elbow_position_bad: "舉球時雙手維持在額頭上方，手肘不要夾太緊也不要完全鎖死。",
   knee_bad: "膝蓋對齊腳尖，落地或接球時讓膝蓋和髖一起吸收力量。",
@@ -1358,6 +1362,9 @@ const phaseProblemPhrases = {
   shoulder_low: "手臂（肩膀）抬得不夠高",
   hands_not_high: "手舉得不夠高",
   elbow_bad: "手肘太彎、沒有打開",
+  block_arms_dropped: "起跳前手臂垂到身側",
+  set_legs_not_used: "膝蓋幾乎沒彎，只用手臂推球",
+  set_hands_off_forehead: "觸球點偏到頭的一側",
   elbow_not_straight: "手臂沒有完全伸直",
   elbow_position_bad: "手肘位置沒抓好",
   knee_bad: "膝蓋沒有跟著一起彎、吸震不夠",
@@ -1386,7 +1393,13 @@ function phaseProblemDetails(phaseAnalysis, result = {}) {
     const phaseLabel = phaseLabelFor(action, phaseKey, phasePayload);
     const seconds = Number(phasePayload?.time_seconds);
     for (const [jointKey, jointPayload] of Object.entries(phasePayload?.joints || {})) {
+      // "unknown" means the joint was not judged at all, because MediaPipe put
+      // its landmarks outside the frame. Skipping it is not cosmetic: every
+      // status that is not green is rendered to the user as something they did
+      // wrong, so leaving it in would turn "your feet were out of shot" into
+      // "your knees are wrong".
       if (!jointPayload?.status || jointPayload.status === "green") continue;
+      if (jointPayload.status === "unknown" || jointPayload.judged === false) continue;
       const code = inferPhaseIssueCode(action, phaseKey, jointKey, jointPayload);
       handledCodes.add(code);
       if (Number.isFinite(seconds)) details.times.push(seconds);
