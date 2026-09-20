@@ -371,8 +371,10 @@ def test_receive_shoulder_is_covered_elsewhere():
 # samples (8.6%) are flagged by the bands built from them, which is the same
 # order as the 10.1% leave-one-out rate measured on 2026-09-14.
 #
-# Listed rather than asserted away, because narrowing tolerance until this table
-# empties would widen every band until real errors stopped being caught.
+# Listed rather than asserted away. _band_range is low = p10 - tolerance and
+# high = p90 + tolerance, so emptying this table means ENLARGING tolerance -- which
+# widens every band until real errors stop being caught. (Shrinking it does the
+# opposite: a narrower band flags MORE of the reference, not fewer.)
 KNOWN_FLOORS_INSIDE_THE_DATA = {
     ("spike", "contact", "elbow"): -3.6,
     ("spike", "contact", "shoulder"): -10.5,
