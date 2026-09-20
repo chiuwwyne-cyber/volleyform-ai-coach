@@ -479,6 +479,36 @@ function nextTimestamp(requested, previous) {
   return Math.max(Math.round(requested), previous + 1);
 }
 
+// The bands were calibrated on frames downscaled to 640 wide -- tools/build_reference.py
+// passes process_width=640 to pose/pose.py, and 61 of the 120 reference clips are
+// wider than that. Until now the browser handed MediaPipe the video element at its
+// native size, so the standard and the judgement came from different pre-processing.
+//
+// Measured on ten of the high-resolution clips at 640 against native: the angles
+// themselves barely move (median 1.4 degrees, since landmarks are normalised), but
+// the PHASE SEGMENTER picked a different frame in 8 of the 16 phases it found, once
+// 25 frames apart. Judging a different instant is not a rounding error.
+//
+// Only downscales, never upscales, exactly as _resize_for_processing does.
+const PROCESS_WIDTH = 640;
+let processCanvas = null;
+
+function sourceAtProcessWidth(source) {
+  const width = source.videoWidth || source.naturalWidth || source.width || 0;
+  const height = source.videoHeight || source.naturalHeight || source.height || 0;
+  if (!width || !height || width <= PROCESS_WIDTH) return source;
+  if (!processCanvas) processCanvas = document.createElement("canvas");
+  const scaled = Math.max(1, Math.round((height * PROCESS_WIDTH) / width));
+  if (processCanvas.width !== PROCESS_WIDTH || processCanvas.height !== scaled) {
+    processCanvas.width = PROCESS_WIDTH;
+    processCanvas.height = scaled;
+  }
+  const context = processCanvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return source;
+  context.drawImage(source, 0, 0, PROCESS_WIDTH, scaled);
+  return processCanvas;
+}
+
 function detectPose(detector, source, requestedTimestamp) {
   const timestamp = nextTimestamp(requestedTimestamp, lastPoseTimestamp);
   lastPoseTimestamp = timestamp;
@@ -2120,7 +2150,10 @@ export async function analyzeVideoLocally({
       const sampleTime = Math.min(time, Math.max(0, duration - 0.001));
       await seekVideo(video, sampleTime);
       const timestampMs = performance.now();
-      const poseResult = detectPose(pose, video, timestampMs);
+      // One canvas for both detectors: feeding pose the scaled frame and hands the
+      // native one would have them looking at different images of the same instant.
+      const frameSource = sourceAtProcessWidth(video);
+      const poseResult = detectPose(pose, frameSource, timestampMs);
       const poseLandmarks = poseResult.landmarks?.[0];
       if (!poseLandmarks) {
         onProgress(`分析到${progressTimeLabel(sampleTime)}`, (index + 1) / sampleCount);
@@ -2129,7 +2162,7 @@ export async function analyzeVideoLocally({
       }
 
       const { angles, positions } = poseFeatures(poseLandmarks);
-      const handResult = detectHands(hands, video, timestampMs);
+      const handResult = detectHands(hands, frameSource, timestampMs);
       const features = handFeatures(handResult?.landmarks || []);
       const worldLandmarks = poseResult.worldLandmarks?.[0];
       evalFrames.push({
@@ -2451,7 +2484,8 @@ export async function startRealtimeAnalysis({
     if (video.readyState < 2 || now - lastProcessedAt < interval) return;
     lastProcessedAt = now;
 
-    const poseResult = detectPose(pose, video, now);
+    const frameSource = sourceAtProcessWidth(video);
+    const poseResult = detectPose(pose, frameSource, now);
     const poseLandmarks = poseResult.landmarks?.[0];
     if (!poseLandmarks) {
       issueHistory.length = 0;
@@ -2461,7 +2495,9 @@ export async function startRealtimeAnalysis({
     }
 
     const modalities = getModalities();
-    const handResult = modalities.includes("hands") ? detectHands(hands, video, now) : null;
+    const handResult = modalities.includes("hands")
+      ? detectHands(hands, frameSource, now)
+      : null;
     const handLandmarks = handResult?.landmarks || [];
     const { angles, positions } = poseFeatures(poseLandmarks);
     const handData = handFeatures(handLandmarks);

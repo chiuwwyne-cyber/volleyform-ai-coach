@@ -210,8 +210,38 @@ assert.ok(
   "setting_fingers_closed moved behind the hand-pair gate, but finger extension " +
   "is measured on one hand and survives the pair collapsing");
 
+// --- 7. both sides must estimate pose at the same width ----------------------
+// tools/build_reference.py calls pose/pose.py with process_width=640, and 61 of the
+// 120 reference clips are wider than that. The browser used to hand MediaPipe the
+// video element at its native size, so the standard and the judgement came from
+// different pre-processing -- measured on ten high-resolution clips, the phase
+// segmenter picked a different frame in 8 of 16 phases, once 25 frames apart.
+const buildRef = fs.readFileSync(path.join(root, "tools", "build_reference.py"), "utf8");
+const calibWidth = buildRef.match(/process_width=(\d+)/);
+assert.ok(calibWidth, "build_reference.py no longer states a process_width");
+const browserWidth = source.match(/const PROCESS_WIDTH = (\d+);/);
+assert.ok(browserWidth, "local-analyzer.js no longer caps the pose input width");
+assert.strictEqual(browserWidth[1], calibWidth[1],
+  `the browser estimates pose at ${browserWidth[1]}px while the bands were ` +
+  `calibrated at ${calibWidth[1]}px, so the segmenter can pick a different frame`);
+
+// Only downscale. Upscaling a phone video to 640 would invent detail the camera
+// never captured, and pose.py returns the frame untouched in that case.
+assert.ok(/width <= PROCESS_WIDTH\) return source;/.test(source),
+  "sourceAtProcessWidth must pass small frames through untouched, as " +
+  "_resize_for_processing does");
+
+// Pose and hands must read the SAME frame. Scaling one and not the other would
+// have the two detectors looking at different images of the same instant.
+for (const call of ["detectPose(pose, frameSource", "detectHands(hands, frameSource"]) {
+  assert.ok(source.includes(call),
+    `${call}...) not found -- one detector is still reading the raw video element`);
+}
+assert.ok(!/detect(Pose|Hands)\((pose|hands), video,/.test(source),
+  "a detector is still being handed the video element at native resolution");
+
 console.log("evaluation parity ok");
 console.log("checked: straight-limb floor, max_kept anchor, published ceilings, " +
   "known aggregation divergence, both landmark tables, the runtime gate, " +
-  "shape checks on both sides, the hand-pair gate, " +
+  "shape checks on both sides, the hand-pair gate, the process width, " +
   `${fixture.cases.length} cross-language numeric cases`);
