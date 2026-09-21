@@ -1,0 +1,146 @@
+{
+ "runs": {
+  "spike": {
+   "clip": "pexels_6179970.mp4",
+   "frames": 86,
+   "secs": 9.9,
+   "issues": []
+  },
+  "serve": {
+   "clip": "pexels_10350521.mp4",
+   "frames": 92,
+   "secs": 10.4,
+   "issues": []
+  },
+  "block": {
+   "clip": "pexels_10350518.mp4",
+   "frames": 54,
+   "secs": 8.1,
+   "issues": []
+  },
+  "receive": {
+   "clip": "pexels_12169404.mp4",
+   "frames": 94,
+   "secs": 8.9,
+   "issues": []
+  },
+  "set": {
+   "clip": "pexels_6179974.mp4",
+   "frames": 125,
+   "secs": 11.8,
+   "issues": [
+    "setting_hands_not_detected"
+   ]
+  }
+ },
+ "cases": [
+  {
+   "tc": "VF-TC-01",
+   "name": "動作選擇",
+   "result": "Pass",
+   "note": "可選動作 5 個"
+  },
+  {
+   "tc": "VF-TC-02",
+   "name": "影片分析端到端",
+   "result": "Pass",
+   "note": "五個動作各處理 86/92/54/94/125 影格"
+  },
+  {
+   "tc": "VF-TC-03",
+   "name": "姿勢估計 33 點",
+   "result": "Pass",
+   "note": "每幀 33 個 landmark × 3 維"
+  },
+  {
+   "tc": "VF-TC-04",
+   "name": "階段切割",
+   "result": "Pass",
+   "note": "spike:contact,crouch; serve:contact,crouch; block:contact,crouch; receive:contact; set:contact,crouch"
+  },
+  {
+   "tc": "VF-TC-05",
+   "name": "角度判定帶套用",
+   "result": "Pass",
+   "note": "共 11 個關節被對照判定帶"
+  },
+  {
+   "tc": "VF-TC-06",
+   "name": "教練式回饋完整性",
+   "result": "Pass",
+   "note": "18 個錯誤代碼 × 六個欄位全數齊備"
+  },
+  {
+   "tc": "VF-TC-07",
+   "name": "判定帶可追溯",
+   "result": "Pass",
+   "note": "16 條帶皆含樣本數/百分位/寬容度/收斂度"
+  },
+  {
+   "tc": "VF-TC-08",
+   "name": "教練總結與計畫",
+   "result": "Pass",
+   "note": ""
+  },
+  {
+   "tc": "VF-TC-09",
+   "name": "多模態欄位宣告",
+   "result": "Pass",
+   "note": "已啟用 pose/hands，其餘為保留欄位"
+  },
+  {
+   "tc": "VF-TC-10",
+   "name": "未知動作處理",
+   "result": "Pass",
+   "note": "回傳 None，不硬判"
+  },
+  {
+   "tc": "VF-TC-11",
+   "name": "影格不足時棄權",
+   "result": "Pass",
+   "note": "少於 6 格回傳 None"
+  },
+  {
+   "tc": "VF-TC-12",
+   "name": "3D 姿勢比對資料",
+   "result": "Pass",
+   "note": "你的姿勢/示範姿勢各 33 點，回放序列 40 幀，關節上色 elbow,knee,shoulder,wrist"
+  },
+  {
+   "tc": "VF-TC-13",
+   "name": "問題時間點定位",
+   "result": "Pass",
+   "note": "本批 1 支片被標出問題"
+  },
+  {
+   "tc": "VF-TC-14",
+   "name": "分析參數回報",
+   "result": "Pass",
+   "note": "process_width=640 frame_stride=2"
+  },
+  {
+   "tc": "VF-TC-15",
+   "name": "畫面外 gate",
+   "result": "Pass",
+   "note": "本批共 5 個關節被擋下不判定：spike.crouch.knee(offscreen); serve.crouch.knee(offscreen); block.crouch.knee(offscreen); set.crouch.knee(offscreen)"
+  },
+  {
+   "tc": "VF-TC-16",
+   "name": "不判定即不報錯",
+   "result": "Pass",
+   "note": "無關節在被擋下後仍產生錯誤代碼"
+  },
+  {
+   "tc": "VF-TC-17",
+   "name": "採用資料集標準",
+   "result": "Pass",
+   "note": "五個動作皆 mode=reference，非 heuristic 後備值"
+  },
+  {
+   "tc": "VF-TC-18",
+   "name": "錯誤影格回放",
+   "result": "Pass",
+   "note": "各動作回放 40/40/40/40/40 幀，每幀皆有字幕與時間"
+  }
+ ]
+}
