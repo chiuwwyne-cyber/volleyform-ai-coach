@@ -33,6 +33,20 @@ above_nose——遠景的人在畫面裡比較小，raw 值會系統性偏低，
 import cv2, math, json, os, numpy as np
 from mediapipe import solutions
 
+# 幀品質的判定集中在 tools/dataset_clips/clip_quality.py。
+# 這支掃描器原本自己有一份「腿在不在畫面」的啟發式（可見度門檻 + y 上限），
+# 三支掃描器各自漂移成三個不同答案，而且沒有一個是判定端實際用的那道 gate。
+# 現在共用 angle.angle.landmarks_offscreen，並多了兩件舊版沒有的事：
+# 被追蹤者連續性，以及軀幹下限（遠距退化，與 MAX_NORM 的近拍退化對稱）。
+from tools.dataset_clips.clip_quality import (  # noqa: E402
+    SUBJECT_JUMP,
+    TORSO_FLOOR,
+    frame_is_usable,
+    legs_offscreen,
+    subject_runs,
+    torso_length,
+)
+
 # --- 改這裡 -----------------------------------------------------------------
 SRC = r"C:\path\to\your\serve_tutorial.mp4"
 OUT = r"C:\path\to\output\dir"
