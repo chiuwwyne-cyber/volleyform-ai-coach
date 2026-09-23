@@ -1962,7 +1962,92 @@ function sampleCountForMode(mode) {
   return 26;
 }
 
-function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, handSums) {
+// --- Descriptive approach-step count. Mirrors backend/footwork.py exactly;
+// frontend/footwork_parity_fixture.json pins both engines. Descriptive ONLY: it
+// reports how many foot-contacts precede takeoff so a player can see their
+// approach rhythm -- never a pass/fail, because there is no reference for
+// "correct" footwork. Unreliable when the (sparse) sampling leaves too few
+// frames in the approach window; then it says so instead of guessing. ---
+const FOOTWORK = {
+  L_ANKLE: 27, R_ANKLE: 28, L_HIP: 23, R_HIP: 24, L_SH: 11, R_SH: 12,
+  L_WRIST: 15, R_WRIST: 16,
+  APPROACH_WINDOW_S: 1.4, MERGE_S: 0.12, MIN_PROMINENCE: 0.06,
+  NEIGHBORHOOD: 3, MIN_WINDOW_SAMPLES: 8,
+};
+
+function footworkMedian(values) {
+  const ordered = [...values].sort((a, b) => a - b);
+  const n = ordered.length;
+  if (n === 0) return null;
+  const mid = Math.floor(n / 2);
+  return n % 2 ? ordered[mid] : (ordered[mid - 1] + ordered[mid]) / 2;
+}
+
+const footworkRound2 = (x) => Math.round(x * 100) / 100;
+
+function sampleFromLandmarks(landmarks, timeSeconds) {
+  if (!landmarks || landmarks.length <= FOOTWORK.R_ANKLE || timeSeconds == null) return null;
+  const y = (i) => Number(landmarks[i].y);
+  const vis = (i) => Number(landmarks[i].visibility ?? 1.0);
+  const la = vis(FOOTWORK.L_ANKLE) >= 0.4 && y(FOOTWORK.L_ANKLE) < 0.99 ? y(FOOTWORK.L_ANKLE) : null;
+  const ra = vis(FOOTWORK.R_ANKLE) >= 0.4 && y(FOOTWORK.R_ANKLE) < 0.99 ? y(FOOTWORK.R_ANKLE) : null;
+  const hip = (y(FOOTWORK.L_HIP) + y(FOOTWORK.R_HIP)) / 2;
+  const shoulder = (y(FOOTWORK.L_SH) + y(FOOTWORK.R_SH)) / 2;
+  return {
+    t: Number(timeSeconds), la, ra,
+    wr: Math.min(y(FOOTWORK.L_WRIST), y(FOOTWORK.R_WRIST)),
+    torso: Math.abs(hip - shoulder),
+  };
+}
+
+function footworkContacts(window, key, torsoMed) {
+  const pts = window.filter((s) => s[key] != null).map((s) => [s.t, s[key]]);
+  if (pts.length < 3 || !torsoMed) return [];
+  const ys = pts.map((p) => p[1]);
+  const peaks = [];
+  for (let i = 1; i < pts.length - 1; i += 1) {
+    if (ys[i] > ys[i - 1] && ys[i] >= ys[i + 1]) {
+      const lo = Math.max(0, i - FOOTWORK.NEIGHBORHOOD);
+      const hi = Math.min(ys.length, i + FOOTWORK.NEIGHBORHOOD + 1);
+      const prominence = (ys[i] - Math.min(...ys.slice(lo, hi))) / torsoMed;
+      if (prominence >= FOOTWORK.MIN_PROMINENCE) peaks.push(pts[i][0]);
+    }
+  }
+  const merged = [];
+  for (const t of peaks) {
+    if (merged.length && t - merged[merged.length - 1] < FOOTWORK.MERGE_S) continue;
+    merged.push(t);
+  }
+  return merged;
+}
+
+function countApproachSteps(samples) {
+  const valid = samples.filter((s) => s && s.wr != null);
+  if (valid.length < 3) {
+    return { available: false, reason: "no_pose", steps: null, left: null, right: null, reliable: false };
+  }
+  let takeoff = valid[0];
+  for (const s of valid) if (s.wr < takeoff.wr) takeoff = s;
+  const t0 = takeoff.t;
+  const window = samples.filter(
+    (s) => s && s.t >= t0 - FOOTWORK.APPROACH_WINDOW_S && s.t <= t0 + 0.05,
+  );
+  const torsos = window.filter((s) => s.torso).map((s) => s.torso);
+  const torsoMed = footworkMedian(torsos) || 0.15;
+  const left = footworkContacts(window, "la", torsoMed);
+  const right = footworkContacts(window, "ra", torsoMed);
+  const steps = left.length + right.length;
+  const reliable = window.length >= FOOTWORK.MIN_WINDOW_SAMPLES;
+  const span = Math.max(0, t0 - (window.length ? window[0].t : t0));
+  const cadence = span > 0.2 && reliable ? footworkRound2(steps / span) : null;
+  return {
+    available: true, steps, left: left.length, right: right.length,
+    cadence_per_s: cadence, takeoff_time: footworkRound2(t0),
+    window_seconds: footworkRound2(span), samples_in_window: window.length, reliable,
+  };
+}
+
+function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, handSums, approachSteps) {
   const selected = new Set(selectedModalities);
   const modalities = [
     { id: "pose", label: "3D 身體骨架", description: "全身關節、軀幹與角度", state: "active" },
@@ -1980,6 +2065,7 @@ function modalityPayload(poseFrames, handFrames, selectedModalities, angleSums, 
         frames_with_pose: poseFrames,
         average_elbow_angle: poseFrames ? Math.round(angleSums.elbow / poseFrames) : null,
         average_knee_angle: poseFrames ? Math.round(angleSums.knee / poseFrames) : null,
+        approach_steps: approachSteps || { available: false, reason: "no_pose", steps: null, left: null, right: null, reliable: false },
       },
       hands: {
         frames_with_hands: handFrames,
@@ -2048,6 +2134,7 @@ function analysisResult({
   handSums,
   poseFrames,
   handFrames,
+  approachSteps,
   phaseAnalysis = { mode: "legacy" },
   engine = "mediapipe-web-local",
 }) {
@@ -2065,6 +2152,7 @@ function analysisResult({
     modalities,
     angleSums,
     handSums,
+    approachSteps,
   );
 
   return {
@@ -2249,6 +2337,14 @@ export async function analyzeVideoLocally({
       }
     }
 
+    // Descriptive approach-step count from the sampled pose series. Same engine
+    // as the backend (backend/footwork.py); filter to non-null samples so both
+    // sides feed count_approach_steps the identical input.
+    const footworkSamples = evalFrames
+      .map((frame) => sampleFromLandmarks(frame.landmarks, frame.timeSeconds))
+      .filter(Boolean);
+    const approachSteps = countApproachSteps(footworkSamples);
+
     return analysisResult({
       action,
       powerMode,
@@ -2261,6 +2357,7 @@ export async function analyzeVideoLocally({
       handSums,
       poseFrames,
       handFrames,
+      approachSteps,
       phaseAnalysis,
     });
   } finally {

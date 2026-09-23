@@ -1,3 +1,4 @@
+from backend.footwork import count_approach_steps, sample_from_landmarks
 from backend.modalities import MODALITY_DEFINITIONS, normalize_modalities
 
 
@@ -60,12 +61,18 @@ class PoseMetricsProcessor:
             "knee": 0.0,
             "shoulder": 0.0,
         }
+        # Foot-contact samples for the descriptive approach-step count. Kept as a
+        # time-series (not a running total) because steps are events, not averages.
+        self.footwork_samples = []
 
     def observe(self, context):
         angles = context["angles"]
         self.frames_with_pose += 1
         for key in self.angle_totals:
             self.angle_totals[key] += float(angles.get(key, 0.0))
+        sample = sample_from_landmarks(context.get("landmarks"), context.get("time_seconds"))
+        if sample is not None:
+            self.footwork_samples.append(sample)
 
     def finalize(self):
         return {
@@ -73,6 +80,7 @@ class PoseMetricsProcessor:
             "average_elbow_angle": _average(self.angle_totals["elbow"], self.frames_with_pose),
             "average_knee_angle": _average(self.angle_totals["knee"], self.frames_with_pose),
             "average_shoulder_angle": _average(self.angle_totals["shoulder"], self.frames_with_pose),
+            "approach_steps": count_approach_steps(self.footwork_samples),
         }
 
 

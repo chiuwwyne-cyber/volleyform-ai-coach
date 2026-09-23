@@ -1,4 +1,4 @@
-const CACHE_NAME = "volleyform-shell-v109-9b1cb2e3";
+const CACHE_NAME = "volleyform-shell-v110-0f33961e";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -12,6 +12,29 @@ const APP_SHELL = [
   "./assets/icon-192.png",
   "./assets/icon-512.png",
   "./assets/krunk-parts.json",
+];
+
+// Large binaries the analysis needs but the shell does not: the MediaPipe
+// models and wasm runtime, plus the vendored libraries. Until now these were
+// only cached the first time they were fetched (cache-first at runtime), so a
+// user who installed the PWA and went offline BEFORE ever running one analysis
+// found the models had never been downloaded and analysis failed offline. They
+// are pre-cached on install now, best-effort (see below) so the first offline
+// run works. Kept separate from APP_SHELL because a missing entry here must not
+// fail the whole install, and because these are ~55 MB that need not gate it.
+const PRECACHE_ASSETS = [
+  "./models/pose_landmarker_full.task",
+  "./models/pose_landmarker_lite.task",
+  "./models/hand_landmarker.task",
+  "./vendor/mediapipe/vision_bundle.mjs",
+  "./vendor/mediapipe/wasm/vision_wasm_internal.js",
+  "./vendor/mediapipe/wasm/vision_wasm_internal.wasm",
+  "./vendor/mediapipe/wasm/vision_wasm_module_internal.js",
+  "./vendor/mediapipe/wasm/vision_wasm_module_internal.wasm",
+  "./vendor/mediapipe/wasm/vision_wasm_nosimd_internal.js",
+  "./vendor/mediapipe/wasm/vision_wasm_nosimd_internal.wasm",
+  "./vendor/three/three.module.min.js",
+  "./vendor/qrcode/qrcode.js",
 ];
 
 // App-shell files change often during development, so they must always be
@@ -29,7 +52,17 @@ const NETWORK_FIRST_SUFFIXES = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      // APP_SHELL is required (all-or-nothing); the large assets are best-effort
+      // (individual cache.add under allSettled) so one missing path cannot break
+      // the install and leave the app with no service worker.
+      const shell = cache.addAll(APP_SHELL);
+      return shell.then(() =>
+        Promise.allSettled(PRECACHE_ASSETS.map((asset) => cache.add(asset))),
+      );
+    }),
+  );
   self.skipWaiting();
 });
 

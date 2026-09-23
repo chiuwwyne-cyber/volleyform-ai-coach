@@ -1118,6 +1118,27 @@ h3 {
   display: none;
 }
 
+.footwork-note {
+  margin: 8px 0 0;
+  padding: 9px 11px;
+  color: #cfe8d6;
+  background: #16241b;
+  border: 1px solid #2f5a3f;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.footwork-note.muted {
+  color: #b9c2b9;
+  background: #1e211d;
+  border-color: #3a423a;
+}
+
+.footwork-note[hidden] {
+  display: none;
+}
+
 .pose-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

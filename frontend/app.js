@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20260920-frontend-sync-v109"),
+  String(globalThis.VOLLEYFORM_BUILD || "20260924-frontend-sync-v110"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -26,6 +26,7 @@ const summaryTitle = document.querySelector("#summaryTitle");
 const coachSummary = document.querySelector("#coachSummary");
 const coachPlan = document.querySelector("#coachPlan");
 const frameCount = document.querySelector("#frameCount");
+const footworkNote = document.querySelector("#footworkNote");
 const issues = document.querySelector("#issues");
 const poseViewToggle = document.querySelector("#poseViewToggle");
 const poseCompareActual = document.querySelector("#poseCompareActual");
@@ -1559,10 +1560,35 @@ function renderResult(result) {
   coachSummary.textContent = result.coach_summary;
   frameCount.textContent = `已用 0.1 秒為單位完成分析`;
   renderCoachPlan(result.coach_plan);
+  renderFootwork(result);
   renderIssues(result.primary_issues);
   renderPoseCompare(result.pose_compare, result.action);
   // Low-quality hint: nudge toward 高精度 unless already on it (UC004).
   if (qualityHint) qualityHint.hidden = powerModeInput?.value === "quality";
+}
+
+// Descriptive approach-step readout. It is NOT a judgment -- there is no
+// reference for correct footwork, so it never says the footwork is wrong, only
+// how many foot-contacts preceded takeoff. When the sampling was too sparse to
+// resolve steps, it says so instead of showing a number that cannot be trusted.
+function renderFootwork(result) {
+  if (!footworkNote) return;
+  const steps = result?.modality_results?.pose?.approach_steps;
+  if (!steps || !steps.available) {
+    footworkNote.hidden = true;
+    footworkNote.textContent = "";
+    return;
+  }
+  footworkNote.hidden = false;
+  if (!steps.reliable) {
+    footworkNote.classList.add("muted");
+    footworkNote.textContent = "👣 助跑步伐：這段取樣太疏，數不準——用「高精度」模式或較短的片再試一次。";
+    return;
+  }
+  footworkNote.classList.remove("muted");
+  const cadence = steps.cadence_per_s ? `，節奏約每秒 ${steps.cadence_per_s} 步` : "";
+  footworkNote.textContent =
+    `👣 助跑步伐：起跳前約 ${steps.steps} 次觸地（左 ${steps.left}・右 ${steps.right}）${cadence}。這是紀錄不是評分。`;
 }
 
 function renderIssues(items) {

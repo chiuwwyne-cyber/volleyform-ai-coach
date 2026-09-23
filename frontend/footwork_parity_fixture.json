@@ -1,0 +1,556 @@
+{
+  "_comment": "Backend backend/footwork.py is source of truth; frontend must match. Regenerate with tools/make_footwork_parity_fixture.py.",
+  "cases": [
+    {
+      "name": "clean_two_step_dense",
+      "samples": [
+        {
+          "t": 0.0,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.05,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.1,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.15,
+          "la": 0.88,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.2,
+          "la": 0.93,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.25,
+          "la": 0.88,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.3,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.35,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.4,
+          "la": 0.85,
+          "ra": 0.88,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.45,
+          "la": 0.85,
+          "ra": 0.93,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.5,
+          "la": 0.85,
+          "ra": 0.88,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.55,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.6,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.65,
+          "la": 0.88,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.7,
+          "la": 0.93,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.75,
+          "la": 0.88,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.8,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.85,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.9,
+          "la": 0.85,
+          "ra": 0.88,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.95,
+          "la": 0.85,
+          "ra": 0.93,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.0,
+          "la": 0.85,
+          "ra": 0.88,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.05,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.1,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.15,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.2,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.25,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.3,
+          "la": 0.85,
+          "ra": 0.85,
+          "wr": 0.15,
+          "torso": 0.15
+        }
+      ],
+      "expected": {
+        "available": true,
+        "steps": 4,
+        "left": 2,
+        "right": 2,
+        "cadence_per_s": 3.08,
+        "takeoff_time": 1.3,
+        "window_seconds": 1.3,
+        "samples_in_window": 27,
+        "reliable": true
+      }
+    },
+    {
+      "name": "clean_two_step_sparse",
+      "samples": [
+        {
+          "t": 0.0,
+          "la": 0.88,
+          "ra": 0.85,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.25,
+          "la": 0.93,
+          "ra": 0.88,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.5,
+          "la": 0.88,
+          "ra": 0.93,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.75,
+          "la": 0.93,
+          "ra": 0.88,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.0,
+          "la": 0.88,
+          "ra": 0.93,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.25,
+          "la": 0.85,
+          "ra": 0.88,
+          "wr": 0.15,
+          "torso": 0.15
+        }
+      ],
+      "expected": {
+        "available": true,
+        "steps": 4,
+        "left": 2,
+        "right": 2,
+        "cadence_per_s": null,
+        "takeoff_time": 1.25,
+        "window_seconds": 1.25,
+        "samples_in_window": 6,
+        "reliable": false
+      }
+    },
+    {
+      "name": "standing_still",
+      "samples": [
+        {
+          "t": 0.0,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.05,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.1,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.15,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.2,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.25,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.3,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.35,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.4,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.45,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.5,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.55,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.6,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.65,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.7,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.75,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.8,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.85,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.9,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 0.95,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.0,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.05,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.1,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.15,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.2,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.25,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.5,
+          "torso": 0.15
+        },
+        {
+          "t": 1.3,
+          "la": 0.9,
+          "ra": 0.9,
+          "wr": 0.15,
+          "torso": 0.15
+        }
+      ],
+      "expected": {
+        "available": true,
+        "steps": 0,
+        "left": 0,
+        "right": 0,
+        "cadence_per_s": 0.0,
+        "takeoff_time": 1.3,
+        "window_seconds": 1.3,
+        "samples_in_window": 27,
+        "reliable": true
+      }
+    },
+    {
+      "name": "no_pose",
+      "samples": [
+        {
+          "t": 0.0,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.1,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.2,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.3,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.4,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.5,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.6,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.7,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.8,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        },
+        {
+          "t": 0.9,
+          "la": null,
+          "ra": null,
+          "wr": null,
+          "torso": 0.15
+        }
+      ],
+      "expected": {
+        "available": false,
+        "reason": "no_pose",
+        "steps": null,
+        "left": null,
+        "right": null,
+        "reliable": false
+      }
+    }
+  ]
+}
