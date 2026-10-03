@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20260924-frontend-sync-v110";
+        const currentFrontendBuild = "20261003-frontend-sync-v111";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -47,7 +47,6 @@
     <main class="app-shell">
       <section class="workspace-header" aria-labelledby="pageTitle">
         <div>
-          <span class="section-kicker">VOLLEYFORM / FORM LAB</span>
           <h1 id="pageTitle">排球動作分析工作台</h1>
           <p>選擇動作，開啟鏡頭或匯入一段練習素材。</p>
         </div>
@@ -61,7 +60,6 @@
            不需要看到。功能保留：後端網址仍可用 ?backend= 參數或 localStorage 設定。 -->
       <section class="connection-panel" aria-label="固定網站與後端連線" hidden>
         <div class="connection-summary">
-          <span class="section-kicker">SESSION ENGINE</span>
           <h2>手機本地 AI</h2>
           <p id="connectionNote">
             預設在手機瀏覽器內執行 MediaPipe，影片不需上傳，也不再依賴臨時 tunnel。
@@ -92,7 +90,6 @@
       <section class="workflow-panel" aria-labelledby="setupTitle">
         <div class="panel-heading">
           <div>
-            <span class="step-label">01 / ACTION</span>
             <h2 id="setupTitle">本次訓練動作</h2>
           </div>
           <label class="mode-field">
@@ -135,7 +132,6 @@
 
         <div class="record-tools">
           <div class="console-heading">
-            <span class="step-label">02 / CAPTURE</span>
             <h2 id="captureTitle">取得動作</h2>
           </div>
           <div class="live-feedback" id="liveFeedback" aria-live="polite">
@@ -185,7 +181,6 @@
            讓畫面看起來像未完成。功能保留：selectedModalities() 仍讀這裡的預設值。 -->
       <section class="modality-panel" hidden>
         <div>
-          <span class="step-label">03 / SIGNALS</span>
           <h2>分析通道</h2>
           <p>選擇這次要納入判斷的資料。</p>
         </div>
@@ -208,7 +203,6 @@
       <section class="result-section" aria-labelledby="resultTitle">
         <div class="section-heading">
           <div>
-            <span class="section-kicker">COACH REPORT</span>
             <h2 id="resultTitle">分析結果</h2>
           </div>
           <span id="frameCount">尚未分析</span>
@@ -269,11 +263,6 @@
       </section>
     </main>
 
-    <footer class="site-footer">
-      <strong>VolleyForm AI Coach</strong>
-      <span>Open-source volleyball motion analysis</span>
-    </footer>
-
     <div class="qr-modal" id="qrModal" hidden>
       <div class="qr-modal-card">
         <button class="qr-modal-close" id="qrModalClose" type="button" aria-label="關閉">✕</button>
@@ -285,7 +274,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20260924-frontend-sync-v110";
+        const build = window.VOLLEYFORM_BUILD || "20261003-frontend-sync-v111";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         // app.js is a MODULE. In module scope a duplicate top-level declaration

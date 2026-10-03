@@ -126,6 +126,13 @@ def _joint_status_for_issues(issue_codes):
     return status
 
 
+def _pose_compare(action_type, world_landmarks, issue_codes, actual_sequence):
+    pose_compare = build_pose_compare(action_type, world_landmarks, actual_sequence)
+    if pose_compare.get("available"):
+        pose_compare["joint_status"] = _joint_status_for_issues(issue_codes)
+    return pose_compare
+
+
 def _landmarks_to_triples(world_landmarks):
     return [
         [float(point.x), float(point.y), float(getattr(point, "z", 0.0))]
@@ -361,12 +368,7 @@ def analyze_video(
     )
 
     action_label = ACTION_LABELS.get(action_type, action_type)
-    pose_compare = build_pose_compare(
-        action_type,
-        key_frame_landmarks,
-        key_frame_issue_codes,
-        actual_sequence,
-    )
+    pose_compare = _pose_compare(action_type, key_frame_landmarks, key_frame_issue_codes, actual_sequence)
 
     modality_results = finalize_modality_results(
         modality_processors,

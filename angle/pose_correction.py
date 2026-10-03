@@ -49,21 +49,6 @@ JOINT_CHAIN = {
     "shoulder": (("elbow", "shoulder", "hip"), ("elbow", "wrist", "pinky", "index", "thumb")),
 }
 
-# Mirrors the relevant severities from backend/feedback.py without importing
-# that module (angle/ stays independent of backend/).
-_ISSUE_SEVERITY = {
-    "elbow_bad": "medium",
-    "elbow_not_straight": "medium",
-    "hands_not_high": "medium",
-    "shoulder_low": "medium",
-    "knee_bad": "medium",
-    "knee_too_bent": "high",
-    "elbow_position_bad": "medium",
-    "wrist_low": "medium",
-}
-_SEVERITY_TO_STATUS = {"high": "red", "medium": "yellow", "low": "yellow"}
-_STATUS_RANK = {"green": 0, "yellow": 1, "red": 2}
-
 WRIST_MARGIN = 0.05
 
 
@@ -191,7 +176,8 @@ def _correct_wrist_low(points):
     return True
 
 
-def build_pose_compare(action_type, world_landmarks, issue_codes=None, actual_sequence=None):
+def build_pose_compare(action_type, world_landmarks, actual_sequence=None):
+    """Pose data only: callers colour joints from the report's issues, never from the uncalibrated JOINT_SPECS."""
     actual_sequence = actual_sequence or []
     if (not world_landmarks or len(world_landmarks) < 33) and not actual_sequence:
         return {"available": False}
@@ -206,36 +192,23 @@ def build_pose_compare(action_type, world_landmarks, issue_codes=None, actual_se
     corrected = [list(point) for point in actual]
 
     spec = JOINT_SPECS.get(action_type, {})
-    joint_status = {}
-
     for joint_name in ("elbow", "knee", "shoulder"):
         joint_spec = spec.get(joint_name)
-        status = "green"
-        if joint_spec:
-            names, _distal = JOINT_CHAIN[joint_name]
-            for side_map in (LEFT, RIGHT):
-                a = corrected[side_map[names[0]]]
-                b = corrected[side_map[names[1]]]
-                c = corrected[side_map[names[2]]]
-                current = _angle_between(a, b, c)
-                target = _target_angle(current, joint_spec)
-                if target is not None:
-                    _correct_joint(corrected, side_map, joint_name, target)
-                    side_status = _SEVERITY_TO_STATUS.get(
-                        _ISSUE_SEVERITY.get(joint_spec["code"], "medium"), "yellow"
-                    )
-                    if _STATUS_RANK[side_status] > _STATUS_RANK[status]:
-                        status = side_status
-        joint_status[joint_name] = status
-
-    wrist_status = "green"
-    if action_type == "set" and _correct_wrist_low(corrected):
-        wrist_status = _SEVERITY_TO_STATUS.get(_ISSUE_SEVERITY.get("wrist_low", "medium"), "yellow")
-    joint_status["wrist"] = wrist_status
+        if not joint_spec:
+            continue
+        names, _distal = JOINT_CHAIN[joint_name]
+        for side_map in (LEFT, RIGHT):
+            a = corrected[side_map[names[0]]]
+            b = corrected[side_map[names[1]]]
+            c = corrected[side_map[names[2]]]
+            target = _target_angle(_angle_between(a, b, c), joint_spec)
+            if target is not None:
+                _correct_joint(corrected, side_map, joint_name, target)
+    if action_type == "set":
+        _correct_wrist_low(corrected)
 
     return {
         "available": True,
-        "joint_status": joint_status,
         "actual_landmarks": actual,
         "corrected_landmarks": corrected,
         "actual_sequence": actual_sequence,

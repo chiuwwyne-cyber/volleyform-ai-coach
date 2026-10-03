@@ -1685,20 +1685,6 @@ const JOINT_CHAIN = {
   shoulder: [["elbow", "shoulder", "hip"], ["elbow", "wrist", "pinky", "index", "thumb"]],
 };
 
-const ISSUE_SEVERITY = {
-  elbow_bad: "medium",
-  elbow_not_straight: "medium",
-  block_arms_dropped: "medium",
-  hands_not_high: "medium",
-  shoulder_low: "medium",
-  knee_bad: "medium",
-  set_legs_not_used: "medium",
-  set_hands_off_forehead: "medium",
-  knee_too_bent: "high",
-  elbow_position_bad: "medium",
-  wrist_low: "medium",
-};
-const SEVERITY_TO_STATUS = { high: "red", medium: "yellow", low: "yellow" };
 const STATUS_RANK = { green: 0, yellow: 1, red: 2 };
 const WRIST_MARGIN = 0.05;
 const MAX_ACTUAL_SEQUENCE_FRAMES = 40;
@@ -1887,43 +1873,25 @@ function buildPoseCompare(action, worldLandmarks, issueCodes = [], actualSequenc
     : actualSequence[0].landmarks;
   const corrected = actual.map((point) => [...point]);
   const spec = JOINT_SPECS[action] || {};
-  const jointStatus = {};
 
   for (const jointName of ["elbow", "knee", "shoulder"]) {
     const jointSpec = spec[jointName];
-    let status = "green";
-    if (jointSpec) {
-      const [names] = JOINT_CHAIN[jointName];
-      for (const sideMap of [LEFT_JOINTS, RIGHT_JOINTS]) {
-        const a = corrected[sideMap[names[0]]];
-        const b = corrected[sideMap[names[1]]];
-        const c = corrected[sideMap[names[2]]];
-        const current = angleBetween(a, b, c);
-        const target = targetAngle(current, jointSpec);
-        if (target !== null) {
-          correctJoint(corrected, sideMap, jointName, target);
-          const sideStatus = SEVERITY_TO_STATUS[ISSUE_SEVERITY[jointSpec.code] || "medium"];
-          if (STATUS_RANK[sideStatus] > STATUS_RANK[status]) status = sideStatus;
-        }
-      }
+    if (!jointSpec) continue;
+    const [names] = JOINT_CHAIN[jointName];
+    for (const sideMap of [LEFT_JOINTS, RIGHT_JOINTS]) {
+      const a = corrected[sideMap[names[0]]];
+      const b = corrected[sideMap[names[1]]];
+      const c = corrected[sideMap[names[2]]];
+      const target = targetAngle(angleBetween(a, b, c), jointSpec);
+      if (target !== null) correctJoint(corrected, sideMap, jointName, target);
     }
-    jointStatus[jointName] = status;
   }
-
-  mergeJointStatus(jointStatus, jointStatusForIssues(issueCodes));
-
-  let wristStatus = "green";
-  if (action === "set" && correctWristLow(corrected)) {
-    wristStatus = SEVERITY_TO_STATUS[ISSUE_SEVERITY.wrist_low];
-  }
-  if (STATUS_RANK[wristStatus] > STATUS_RANK[jointStatus.wrist || "green"]) {
-    jointStatus.wrist = wristStatus;
-  }
-  if (!jointStatus.wrist) jointStatus.wrist = "green";
+  if (action === "set") correctWristLow(corrected);
 
   return {
     available: true,
-    joint_status: jointStatus,
+    // Only the report's issues colour joints: JOINT_SPECS are uncalibrated and judge both sides of one frame.
+    joint_status: jointStatusForIssues(issueCodes),
     actual_landmarks: actual,
     corrected_landmarks: corrected,
     actual_sequence: actualSequence,

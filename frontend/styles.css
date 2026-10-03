@@ -279,9 +279,7 @@ h3 {
   line-height: 1.7;
 }
 
-.eyebrow,
-.section-kicker,
-.step-label {
+.eyebrow {
   color: var(--green);
   font-size: 12px;
   font-weight: 950;
@@ -1284,9 +1282,7 @@ h3 {
   letter-spacing: 0;
 }
 
-.workspace-badges span,
-.step-label,
-.section-kicker {
+.workspace-badges span {
   color: var(--accent);
 }
 
@@ -1737,17 +1733,6 @@ body {
   border-radius: 8px;
 }
 
-.site-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  width: min(1180px, 100%);
-  margin: 0 auto;
-  padding: 8px 22px 28px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -1980,12 +1965,6 @@ body {
 
   .issue-meta {
     grid-template-columns: 1fr;
-  }
-
-  .site-footer {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 8px 14px 24px;
   }
 }
 
