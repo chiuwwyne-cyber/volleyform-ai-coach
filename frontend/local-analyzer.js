@@ -1,6 +1,7 @@
 import {
   FilesetResolver,
   HandLandmarker,
+  ObjectDetector,
   PoseLandmarker,
 } from "./vendor/mediapipe/vision_bundle.mjs";
 
@@ -394,6 +395,7 @@ Object.assign(FEEDBACK, {
 let visionFilesetPromise;
 const poseLandmarkerPromises = {};
 let handLandmarkerPromise;
+let personDetectorPromise;
 let lastPoseTimestamp = -1;
 let lastHandTimestamp = -1;
 
@@ -475,6 +477,197 @@ async function handLandmarker() {
   return handLandmarkerPromise;
 }
 
+// Subject lock: Pose follows one person, often not the player, so find everyone and paint out the rest.
+const PERSON_SCORE_MIN = 0.3;
+const LINK_IOU_MIN = 0.1;
+const LINK_DISTANCE_MAX = 0.75;
+const TRACK_MAX_GAP = 3;
+const SUBJECT_KEEP_MARGIN = { side: 0.15, top: 0.1, bottom: 0.35 };
+const MASK_FILL = "rgb(114, 114, 114)";
+
+async function personDetector() {
+  if (!personDetectorPromise) {
+    personDetectorPromise = visionFileset().then((vision) =>
+      ObjectDetector.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: assetUrl("./models/efficientdet_lite0.tflite"),
+          delegate: "CPU",
+        },
+        runningMode: "IMAGE",
+        scoreThreshold: PERSON_SCORE_MIN,
+        categoryAllowlist: ["person"],
+        maxResults: 10,
+      }),
+    );
+  }
+  return personDetectorPromise;
+}
+
+function sourceSize(source) {
+  return [
+    source.videoWidth || source.naturalWidth || source.width || 0,
+    source.videoHeight || source.naturalHeight || source.height || 0,
+  ];
+}
+
+function detectPeople(detector, source) {
+  const [width, height] = sourceSize(source);
+  if (!detector || !width || !height) return [];
+  return (detector.detect(source).detections || []).map(({ boundingBox: box, categories }) => [
+    box.originX / width,
+    box.originY / height,
+    (box.originX + box.width) / width,
+    (box.originY + box.height) / height,
+    categories?.[0]?.score ?? 0,
+  ]);
+}
+
+function boxIoU(a, b) {
+  const inter = Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0]))
+    * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+  const union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter;
+  return union > 0 ? inter / union : 0;
+}
+
+// Samples are ~0.4 s apart, so a moving player's boxes often no longer overlap: fall back to centre distance.
+function linkCost(a, b) {
+  const overlap = boxIoU(a, b);
+  if (overlap >= LINK_IOU_MIN) return 1 - overlap;
+  const height = Math.max(a[3] - a[1], b[3] - b[1], 1e-6);
+  const distance = Math.hypot((a[0] + a[2] - b[0] - b[2]) / 2, (a[1] + a[3] - b[1] - b[3]) / 2) / height;
+  return distance <= LINK_DISTANCE_MAX ? 1 + distance : null;
+}
+
+function trackPeople(perSample) {
+  const tracks = [];
+  perSample.forEach((boxes, t) => {
+    const pairs = [];
+    tracks.forEach((track, ti) => {
+      if (t - track.lastIndex > TRACK_MAX_GAP) return;
+      boxes.forEach((box, bi) => {
+        const cost = linkCost(track.last, box);
+        if (cost !== null) pairs.push([cost, ti, bi]);
+      });
+    });
+    pairs.sort((x, y) => x[0] - y[0]);
+    const usedTracks = new Set();
+    const usedBoxes = new Set();
+    for (const [, ti, bi] of pairs) {
+      if (usedTracks.has(ti) || usedBoxes.has(bi)) continue;
+      usedTracks.add(ti);
+      usedBoxes.add(bi);
+      Object.assign(tracks[ti], { last: boxes[bi], lastIndex: t });
+      tracks[ti].boxes.set(t, boxes[bi]);
+    }
+    boxes.forEach((box, bi) => {
+      if (!usedBoxes.has(bi)) tracks.push({ boxes: new Map([[t, box]]), last: box, lastIndex: t });
+    });
+  });
+  return tracks;
+}
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+// Seen longest and largest = the player; checked against the YOLOX reference subject on 8 multi-person clips.
+// Brief tracks are ignored first, or a passer-by filling the lens for two samples outscores the player.
+function subjectTrack(tracks, sampleCount) {
+  const needed = Math.max(4, Math.ceil(sampleCount / 6));
+  const candidates = tracks.filter((track) => track.boxes.size >= needed);
+  let best = null;
+  let bestScore = -1;
+  for (const track of candidates.length ? candidates : tracks) {
+    const score = track.boxes.size * median([...track.boxes.values()].map((b) => (b[2] - b[0]) * (b[3] - b[1])));
+    if (score > bestScore) {
+      best = track;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+function subjectBoxes(perSample) {
+  const subject = subjectTrack(trackPeople(perSample), perSample.length);
+  const boxes = perSample.map((_, t) => subject?.boxes.get(t) || null);
+  const seen = boxes.flatMap((box, t) => (box ? [t] : []));
+  for (let i = 0; i + 1 < seen.length; i += 1) {
+    const [a, b] = [seen[i], seen[i + 1]];
+    if (b - a > TRACK_MAX_GAP + 1) continue;
+    for (let t = a + 1; t < b; t += 1) {
+      const w = (t - a) / (b - a);
+      boxes[t] = boxes[a].map((value, k) => value + (boxes[b][k] - value) * w);
+    }
+  }
+  return boxes;
+}
+
+function hipInside(landmarks, box) {
+  const x = (landmarks[23].x + landmarks[24].x) / 2;
+  const y = (landmarks[23].y + landmarks[24].y) / 2;
+  const pad = 0.02;
+  return x >= box[0] - pad && x <= box[2] + pad && y >= box[1] - pad && y <= box[3] + pad;
+}
+
+// Only crowded frames where pose is NOT already on the player are redone; every other frame keeps its pose.
+function framesToRelock(samples, keep) {
+  return samples.flatMap((sample, i) => (sample.people.length >= 2 && sample.frame && keep[i]
+    && !(sample.poseLandmarks && hipInside(sample.poseLandmarks, keep[i])) ? [i] : []));
+}
+
+let snapshotCanvas = null;
+
+// Synchronous on purpose. toBlob and OffscreenCanvas.convertToBlob both took
+// ~1000 ms per frame in a hidden tab (Chrome throttles their async encode),
+// against 4-7 ms here, so a user who switched tabs mid-analysis lost a second
+// per crowded frame. The bytes are identical to toBlob's.
+function snapshotJpeg(source) {
+  const [width, height] = sourceSize(source);
+  if (!snapshotCanvas) snapshotCanvas = document.createElement("canvas");
+  if (snapshotCanvas.width !== width || snapshotCanvas.height !== height) {
+    snapshotCanvas.width = width;
+    snapshotCanvas.height = height;
+  }
+  snapshotCanvas.getContext("2d").drawImage(source, 0, 0, width, height);
+  const url = snapshotCanvas.toDataURL("image/jpeg", 0.95);
+  const text = atob(url.slice(url.indexOf(",") + 1));
+  const bytes = new Uint8Array(text.length);
+  for (let i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
+  return new Blob([bytes], { type: "image/jpeg" });
+}
+
+let maskCanvas = null;
+
+function maskOthers(source, people, keep) {
+  const [width, height] = sourceSize(source);
+  const scale = Math.min(1, PROCESS_WIDTH / width);
+  const w = Math.round(width * scale);
+  const h = Math.max(1, Math.round(height * scale));
+  if (!maskCanvas) maskCanvas = document.createElement("canvas");
+  if (maskCanvas.width !== w || maskCanvas.height !== h) {
+    maskCanvas.width = w;
+    maskCanvas.height = h;
+  }
+  const context = maskCanvas.getContext("2d", { willReadFrequently: true });
+  context.drawImage(source, 0, 0, w, h);
+  const bw = keep[2] - keep[0];
+  const bh = keep[3] - keep[1];
+  const x0 = keep[0] - bw * SUBJECT_KEEP_MARGIN.side;
+  const y0 = keep[1] - bh * SUBJECT_KEEP_MARGIN.top;
+  context.save();
+  context.beginPath();
+  context.rect(0, 0, w, h);
+  context.rect(x0 * w, y0 * h, bw * (1 + 2 * SUBJECT_KEEP_MARGIN.side) * w,
+    bh * (1 + SUBJECT_KEEP_MARGIN.top + SUBJECT_KEEP_MARGIN.bottom) * h);
+  context.clip("evenodd");
+  context.fillStyle = MASK_FILL;
+  for (const b of people) context.fillRect(b[0] * w, b[1] * h, (b[2] - b[0]) * w, (b[3] - b[1]) * h);
+  context.restore();
+  return maskCanvas;
+}
+
 function nextTimestamp(requested, previous) {
   return Math.max(Math.round(requested), previous + 1);
 }
@@ -520,6 +713,17 @@ function detectHands(detector, source, requestedTimestamp) {
   const timestamp = nextTimestamp(requestedTimestamp, lastHandTimestamp);
   lastHandTimestamp = timestamp;
   return detector.detectForVideo(source, timestamp);
+}
+
+function poseAndHands(pose, hands, source, timestampMs) {
+  const result = detectPose(pose, source, timestampMs);
+  const poseLandmarks = result.landmarks?.[0] || null;
+  if (!poseLandmarks) return { poseLandmarks: null, worldLandmarks: null, handLandmarks: [] };
+  return {
+    poseLandmarks,
+    worldLandmarks: result.worldLandmarks?.[0] || null,
+    handLandmarks: detectHands(hands, source, timestampMs)?.landmarks || [],
+  };
 }
 
 function average(values) {
@@ -2105,6 +2309,7 @@ function analysisResult({
   approachSteps,
   phaseAnalysis = { mode: "legacy" },
   engine = "mediapipe-web-local",
+  subjectLock = null,
 }) {
   const primaryIssues = [...issueCounts.entries()]
     .map(([code, count]) => issuePayload(code, count, issueTimes.get(code)))
@@ -2142,6 +2347,7 @@ function analysisResult({
       power_mode: powerMode,
       sample_count: sampleCount,
       modalities,
+      ...(subjectLock ? { subject_lock: subjectLock } : {}),
     },
   };
 }
@@ -2201,6 +2407,9 @@ export async function analyzeVideoLocally({
       ? Math.max(180, Math.min(1200, (duration / (sampleCount - 1)) * 1000))
       : 720;
 
+    // An optional extra: if the detector cannot load, the analysis runs exactly as it did without it.
+    const people = await personDetector().catch(() => null);
+    const samples = [];
     for (let index = 0; index < sampleCount; index += 1) {
       const time = sampleCount === 1 ? 0 : (duration * index) / (sampleCount - 1);
       const sampleTime = Math.min(time, Math.max(0, duration - 0.001));
@@ -2209,18 +2418,40 @@ export async function analyzeVideoLocally({
       // One canvas for both detectors: feeding pose the scaled frame and hands the
       // native one would have them looking at different images of the same instant.
       const frameSource = sourceAtProcessWidth(video);
-      const poseResult = detectPose(pose, frameSource, timestampMs);
-      const poseLandmarks = poseResult.landmarks?.[0];
-      if (!poseLandmarks) {
-        onProgress(`分析到${progressTimeLabel(sampleTime)}`, (index + 1) / sampleCount);
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        continue;
-      }
+      const sample = {
+        sampleTime,
+        ...poseAndHands(pose, hands, frameSource, timestampMs),
+        people: detectPeople(people, frameSource),
+      };
+      // Kept as a small JPEG so a re-run needs no second seek, which costs more than the pose itself.
+      if (sample.people.length >= 2) sample.frame = snapshotJpeg(frameSource);
+      samples.push(sample);
+      onProgress(`分析到${progressTimeLabel(sampleTime)}`, (index + 1) / sampleCount);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
 
+    const keep = subjectBoxes(samples.map((sample) => sample.people));
+    const crowded = framesToRelock(samples, keep);
+    for (const [step, i] of crowded.entries()) {
+      const image = await createImageBitmap(samples[i].frame);
+      Object.assign(samples[i], poseAndHands(pose, hands, maskOthers(image, samples[i].people, keep[i]), performance.now()));
+      image.close();
+      onProgress("鎖定主要動作者", (step + 1) / crowded.length);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    const judged = samples.flatMap((sample, i) => (sample.poseLandmarks && keep[i] ? [i] : []));
+    const subjectLock = {
+      available: Boolean(people),
+      people_max: Math.max(0, ...samples.map((sample) => sample.people.length)),
+      relocked_samples: crowded.length,
+      judged_samples: judged.length,
+      on_subject_samples: judged.filter((i) => hipInside(samples[i].poseLandmarks, keep[i])).length,
+    };
+
+    for (const { sampleTime, poseLandmarks, worldLandmarks, handLandmarks } of samples) {
+      if (!poseLandmarks) continue;
       const { angles, positions } = poseFeatures(poseLandmarks);
-      const handResult = detectHands(hands, frameSource, timestampMs);
-      const features = handFeatures(handResult?.landmarks || []);
-      const worldLandmarks = poseResult.worldLandmarks?.[0];
+      const features = handFeatures(handLandmarks);
       evalFrames.push({
         landmarks: poseLandmarks,
         world: worldLandmarks,
@@ -2260,9 +2491,6 @@ export async function analyzeVideoLocally({
         keyFrameLandmarks = worldLandmarks;
         keyFrameIssueCodes = frameIssues;
       }
-
-      onProgress(`分析到${progressTimeLabel(sampleTime)}`, (index + 1) / sampleCount);
-      await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
     const phaseEval = evaluatePhaseAware(action, evalFrames);
@@ -2327,6 +2555,7 @@ export async function analyzeVideoLocally({
       handFrames,
       approachSteps,
       phaseAnalysis,
+      subjectLock,
     });
   } finally {
     video.removeAttribute("src");

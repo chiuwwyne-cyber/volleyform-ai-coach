@@ -11,7 +11,7 @@ the original model's likeness.
 
 ## MediaPipe Tasks Vision
 
-This project includes `@mediapipe/tasks-vision` version `0.10.35` and the official Pose Landmarker Lite, Pose Landmarker Full (used by the high-accuracy mode for low-quality footage), and Hand Landmarker model assets.
+This project includes `@mediapipe/tasks-vision` version `0.10.35` and the official Pose Landmarker Lite, Pose Landmarker Full (used by the high-accuracy mode for low-quality footage), and Hand Landmarker model assets, plus the MediaPipe Object Detector's EfficientDet-Lite0 (int8, COCO-trained) model, used only to find the people in a video frame so the analysis stays on one player.
 
 - Project: https://github.com/google-ai-edge/mediapipe
 - Web documentation: https://ai.google.dev/edge/mediapipe/solutions/guide

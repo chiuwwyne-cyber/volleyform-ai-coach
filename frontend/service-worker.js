@@ -1,4 +1,4 @@
-const CACHE_NAME = "volleyform-shell-v111-06c5c33f";
+const CACHE_NAME = "volleyform-shell-v112-a0eac86b";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -26,6 +26,7 @@ const PRECACHE_ASSETS = [
   "./models/pose_landmarker_full.task",
   "./models/pose_landmarker_lite.task",
   "./models/hand_landmarker.task",
+  "./models/efficientdet_lite0.tflite",
   "./vendor/mediapipe/vision_bundle.mjs",
   "./vendor/mediapipe/wasm/vision_wasm_internal.js",
   "./vendor/mediapipe/wasm/vision_wasm_internal.wasm",
