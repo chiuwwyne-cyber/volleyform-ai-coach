@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20261009-frontend-sync-v115";
+        const currentFrontendBuild = "20261009-frontend-sync-v116";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -48,10 +48,6 @@
       <section class="workspace-header" aria-labelledby="pageTitle">
         <div>
           <h1 id="pageTitle">排球動作分析平台</h1>
-        </div>
-        <div class="workspace-badges" aria-label="目前分析狀態">
-          <span>ON DEVICE</span>
-          <strong>3D POSE + HANDS</strong>
         </div>
       </section>
 
@@ -273,7 +269,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20261009-frontend-sync-v115";
+        const build = window.VOLLEYFORM_BUILD || "20261009-frontend-sync-v116";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         // app.js is a MODULE. In module scope a duplicate top-level declaration
