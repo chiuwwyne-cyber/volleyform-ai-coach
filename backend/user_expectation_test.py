@@ -25,9 +25,9 @@ def test_user_facing_text_is_readable():
     required_text = [
         "產生 QR Code",
         "安裝到手機",
-        "排球動作分析工作台",
+        "排球動作分析平台",
         "本次訓練動作",
-        "取得動作",
+        "動作擷取",
         "即時分析尚未開啟",
         "開始錄影",
         "開始 AI 分析",

@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
     <script>
       (function () {
-        const currentFrontendBuild = "20261003-frontend-sync-v112";
+        const currentFrontendBuild = "20261009-frontend-sync-v114";
         const params = new URLSearchParams(window.location.search);
         const requestedBuild = params.get("build") || "";
         const build = currentFrontendBuild;
@@ -47,8 +47,7 @@
     <main class="app-shell">
       <section class="workspace-header" aria-labelledby="pageTitle">
         <div>
-          <h1 id="pageTitle">排球動作分析工作台</h1>
-          <p>選擇動作，開啟鏡頭或匯入一段練習素材。</p>
+          <h1 id="pageTitle">排球動作分析平台</h1>
         </div>
         <div class="workspace-badges" aria-label="目前分析狀態">
           <span>ON DEVICE</span>
@@ -108,7 +107,6 @@
           <button class="action-choice active" type="button" data-action="spike" role="option" aria-selected="true">
             <span>扣</span>
             <strong>扣球</strong>
-            <small>起跳、揮臂、落地</small>
           </button>
         </div>
       </section>
@@ -132,7 +130,7 @@
 
         <div class="record-tools">
           <div class="console-heading">
-            <h2 id="captureTitle">取得動作</h2>
+            <h2 id="captureTitle">動作擷取</h2>
           </div>
           <div class="live-feedback" id="liveFeedback" aria-live="polite">
             <span class="live-indicator" aria-hidden="true"></span>
@@ -274,7 +272,7 @@
 
     <script>
       (function () {
-        const build = window.VOLLEYFORM_BUILD || "20261003-frontend-sync-v112";
+        const build = window.VOLLEYFORM_BUILD || "20261009-frontend-sync-v114";
         const version = encodeURIComponent(build);
         document.write('<script src="./config.js?v=' + version + '"><\/script>');
         // app.js is a MODULE. In module scope a duplicate top-level declaration
