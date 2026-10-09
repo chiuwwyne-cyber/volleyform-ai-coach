@@ -1,5 +1,5 @@
 const APP_BUILD = encodeURIComponent(
-  String(globalThis.VOLLEYFORM_BUILD || "20261009-frontend-sync-v114"),
+  String(globalThis.VOLLEYFORM_BUILD || "20261009-frontend-sync-v115"),
 );
 
 const serverStatus = document.querySelector("#serverStatus");
@@ -477,6 +477,7 @@ function renderActionChoices(actions) {
     button.innerHTML = `
       <span>${escapeHtml(meta.symbol)}</span>
       <strong>${escapeHtml(action.label || action.id)}</strong>
+      <small>${escapeHtml(meta.description)}</small>
     `;
     button.addEventListener("click", () => selectAction(action.id));
     actionChoices.appendChild(button);
